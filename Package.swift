@@ -21,8 +21,9 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "swift-vulkan-test",
-            dependencies: ["CSDL2", "CVulkan", "Vulkan"]),
+            dependencies: ["CSDL2", "CVulkan", "Vulkan", "CSDL2Vulkan"]),
         .systemLibrary(name: "CVulkan"),
+        .systemLibrary(name: "CSDL2Vulkan"),
         .target(name: "Vulkan", dependencies: ["CVulkan"]),
         .testTarget(
             name: "swift-vulkan-testTests",

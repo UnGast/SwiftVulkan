@@ -283,13 +283,13 @@ public struct DeviceCreateInfo {
     public let queueCreateInfos: [DeviceQueueCreateInfo]
     public let enabledLayers: [String]
     public let enabledExtensions: [String]
-    public let enabledFeatures: PhysicalDeviceFeatures?
+    public let enabledFeatures: PhysicalDeviceFeatures
 
     public init(flags: Flags,
                 queueCreateInfos: [DeviceQueueCreateInfo],
                 enabledLayers: [String],
                 enabledExtensions: [String],
-                enabledFeatures: PhysicalDeviceFeatures?) {
+                enabledFeatures: PhysicalDeviceFeatures) {
         self.flags = flags
         self.queueCreateInfos = queueCreateInfos
         self.enabledLayers = enabledLayers
@@ -316,7 +316,7 @@ public struct DeviceCreateInfo {
         withArrayOfCStrings(self.enabledLayers) { layers in
             withArrayOfCStrings(self.enabledExtensions) { extensions in
 
-                var featureArr = [self.enabledFeatures?.toVulkan()].compactMap { $0 }
+                var featureArr = [self.enabledFeatures.toVulkan()]
                 let dc = VkDeviceCreateInfo(
                         sType: VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
                         pNext: nil,
@@ -762,61 +762,119 @@ public class PipelineShaderStageCreateInfo {
 }
 
 public struct PhysicalDeviceFeatures {
-    let robustBufferAccess: Bool
-    let fullDrawIndexUint32: Bool
-    let imageCubeArray: Bool
-    let independentBlend: Bool
-    let geometryShader: Bool
-    let tessellationShader: Bool
-    let sampleRateShading: Bool
-    let dualSrcBlend: Bool
-    let logicOp: Bool
-    let multiDrawIndirect: Bool
-    let drawIndirectFirstInstance: Bool
-    let depthClamp: Bool
-    let depthBiasClamp: Bool
-    let fillModeNonSolid: Bool
-    let depthBounds: Bool
-    let wideLines: Bool
-    let largePoints: Bool
-    let alphaToOne: Bool
-    let multiViewport: Bool
-    let samplerAnisotropy: Bool
-    let textureCompressionETC2: Bool
-    let textureCompressionASTC_LDR: Bool
-    let textureCompressionBC: Bool
-    let occlusionQueryPrecise: Bool
-    let pipelineStatisticsQuery: Bool
-    let vertexPipelineStoresAndAtomics: Bool
-    let fragmentStoresAndAtomics: Bool
-    let shaderTessellationAndGeometryPointSize: Bool
-    let shaderImageGatherExtended: Bool
-    let shaderStorageImageExtendedFormats: Bool
-    let shaderStorageImageMultisample: Bool
-    let shaderStorageImageReadWithoutFormat: Bool
-    let shaderStorageImageWriteWithoutFormat: Bool
-    let shaderUniformBufferArrayDynamicIndexing: Bool
-    let shaderSampledImageArrayDynamicIndexing: Bool
-    let shaderStorageBufferArrayDynamicIndexing: Bool
-    let shaderStorageImageArrayDynamicIndexing: Bool
-    let shaderClipDistance: Bool
-    let shaderCullDistance: Bool
-    let shaderFloat64: Bool
-    let shaderInt64: Bool
-    let shaderInt16: Bool
-    let shaderResourceResidency: Bool
-    let shaderResourceMinLod: Bool
-    let sparseBinding: Bool
-    let sparseResidencyBuffer: Bool
-    let sparseResidencyImage2D: Bool
-    let sparseResidencyImage3D: Bool
-    let sparseResidency2Samples: Bool
-    let sparseResidency4Samples: Bool
-    let sparseResidency8Samples: Bool
-    let sparseResidency16Samples: Bool
-    let sparseResidencyAliased: Bool
-    let variableMultisampleRate: Bool
-    let inheritedQueries: Bool
+    public let robustBufferAccess: Bool
+    public let fullDrawIndexUint32: Bool
+    public let imageCubeArray: Bool
+    public let independentBlend: Bool
+    public let geometryShader: Bool
+    public let tessellationShader: Bool
+    public let sampleRateShading: Bool
+    public let dualSrcBlend: Bool
+    public let logicOp: Bool
+    public let multiDrawIndirect: Bool
+    public let drawIndirectFirstInstance: Bool
+    public let depthClamp: Bool
+    public let depthBiasClamp: Bool
+    public let fillModeNonSolid: Bool
+    public let depthBounds: Bool
+    public let wideLines: Bool
+    public let largePoints: Bool
+    public let alphaToOne: Bool
+    public let multiViewport: Bool
+    public let samplerAnisotropy: Bool
+    public let textureCompressionETC2: Bool
+    public let textureCompressionASTC_LDR: Bool
+    public let textureCompressionBC: Bool
+    public let occlusionQueryPrecise: Bool
+    public let pipelineStatisticsQuery: Bool
+    public let vertexPipelineStoresAndAtomics: Bool
+    public let fragmentStoresAndAtomics: Bool
+    public let shaderTessellationAndGeometryPointSize: Bool
+    public let shaderImageGatherExtended: Bool
+    public let shaderStorageImageExtendedFormats: Bool
+    public let shaderStorageImageMultisample: Bool
+    public let shaderStorageImageReadWithoutFormat: Bool
+    public let shaderStorageImageWriteWithoutFormat: Bool
+    public let shaderUniformBufferArrayDynamicIndexing: Bool
+    public let shaderSampledImageArrayDynamicIndexing: Bool
+    public let shaderStorageBufferArrayDynamicIndexing: Bool
+    public let shaderStorageImageArrayDynamicIndexing: Bool
+    public let shaderClipDistance: Bool
+    public let shaderCullDistance: Bool
+    public let shaderFloat64: Bool
+    public let shaderInt64: Bool
+    public let shaderInt16: Bool
+    public let shaderResourceResidency: Bool
+    public let shaderResourceMinLod: Bool
+    public let sparseBinding: Bool
+    public let sparseResidencyBuffer: Bool
+    public let sparseResidencyImage2D: Bool
+    public let sparseResidencyImage3D: Bool
+    public let sparseResidency2Samples: Bool
+    public let sparseResidency4Samples: Bool
+    public let sparseResidency8Samples: Bool
+    public let sparseResidency16Samples: Bool
+    public let sparseResidencyAliased: Bool
+    public let variableMultisampleRate: Bool
+    public let inheritedQueries: Bool
+
+    public init() {
+        robustBufferAccess = false
+        fullDrawIndexUint32 = false
+        imageCubeArray = false
+        independentBlend = false
+        geometryShader = false
+        tessellationShader = false
+        sampleRateShading = false
+        dualSrcBlend = false
+        logicOp = false
+        multiDrawIndirect = false
+        drawIndirectFirstInstance = false
+        depthClamp = false
+        depthBiasClamp = false
+        fillModeNonSolid = false
+        depthBounds = false
+        wideLines = false
+        largePoints = false
+        alphaToOne = false
+        multiViewport = false
+        samplerAnisotropy = false
+        textureCompressionETC2 = false
+        textureCompressionASTC_LDR = false
+        textureCompressionBC = false
+        occlusionQueryPrecise = false
+        pipelineStatisticsQuery = false
+        vertexPipelineStoresAndAtomics = false
+        fragmentStoresAndAtomics = false
+        shaderTessellationAndGeometryPointSize = false
+        shaderImageGatherExtended = false
+        shaderStorageImageExtendedFormats = false
+        shaderStorageImageMultisample = false
+        shaderStorageImageReadWithoutFormat = false
+        shaderStorageImageWriteWithoutFormat = false
+        shaderUniformBufferArrayDynamicIndexing = false
+        shaderSampledImageArrayDynamicIndexing = false
+        shaderStorageBufferArrayDynamicIndexing = false
+        shaderStorageImageArrayDynamicIndexing = false
+        shaderClipDistance = false
+        shaderCullDistance = false
+        shaderFloat64 = false
+        shaderInt64 = false
+        shaderInt16 = false
+        shaderResourceResidency = false
+        shaderResourceMinLod = false
+        sparseBinding = false
+        sparseResidencyBuffer = false
+        sparseResidencyImage2D = false
+        sparseResidencyImage3D = false
+        sparseResidency2Samples = false
+        sparseResidency4Samples = false
+        sparseResidency8Samples = false
+        sparseResidency16Samples = false
+        sparseResidencyAliased = false
+        variableMultisampleRate = false
+        inheritedQueries = false
+    }
 
     init(vkFeatures: VkPhysicalDeviceFeatures) {
         self.robustBufferAccess = vkFeatures.robustBufferAccess.toBool()
