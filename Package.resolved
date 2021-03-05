@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "CSDL2",
+        "repositoryURL": "https://github.com/UnGast/CSDL2.git",
+        "state": {
+          "branch": "master",
+          "revision": "4721763511cd8b8aee0612790df579cf5b163148",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}
