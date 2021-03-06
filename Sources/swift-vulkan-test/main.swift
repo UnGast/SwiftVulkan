@@ -278,6 +278,15 @@ public class VulkanApplication {
       depthBiasSlopeFactor: 0,
       lineWidth: 1
     )
+
+    let multisampling = PipelineMultisampleStateCreateInfo(
+      rasterizationSamples: .c1,
+      sampleShadingEnable: false,
+      minSampleShading: 1,
+      sampleMask: nil, 
+      alphaToCoverageEnable: false,
+      alphaToOneEnable: false
+    )
   }
 
   public enum VulkanApplicationError: Error {
