@@ -1,3 +1,4 @@
+import Foundation
 import CSDL2
 import CSDL2Vulkan
 import CVulkan
@@ -52,15 +53,31 @@ public class VulkanApplication {
   let device: Device
   let queue: Queue
   let swapchain: Swapchain
+  let swapchainImageFormat: Format
+  let swapchainExtent: Extent2D
+  let swapchainImages: [Image]
+  let imageViews: [ImageView]
 
   public init() {
     self.instance = try! Self.createInstance()
     self.surface = try! Self.createSurface(instance: self.instance)
     self.physicalDevice = try! Self.pickPhysicalDevice(instance: self.instance)
-    let queueFamilyIndex = try! Self.getQueueFamilyIndex(physicalDevice: self.physicalDevice, surface: self.surface)
-    self.device = try! Self.createDevice(physicalDevice: self.physicalDevice, queueFamilyIndex: queueFamilyIndex)
+
+    let queueFamilyIndex = try! Self.getQueueFamilyIndex(
+      physicalDevice: self.physicalDevice, surface: self.surface)
+
+    self.device = try! Self.createDevice(
+      physicalDevice: self.physicalDevice, queueFamilyIndex: queueFamilyIndex)
+
     self.queue = Queue.create(fromDevice: self.device, presentFamilyIndex: queueFamilyIndex)
-    self.swapchain = try! Self.createSwapchain(physicalDevice: self.physicalDevice, device: self.device, surface: self.surface)
+
+    (self.swapchain, self.swapchainImageFormat, self.swapchainExtent) = try! Self.createSwapchain(
+      physicalDevice: self.physicalDevice, device: self.device, surface: self.surface)
+    self.swapchainImages = try! self.swapchain.getSwapchainImages()
+
+    self.imageViews = try! Self.createImageViews(swapchainImages: self.swapchainImages, swapchainImageFormat: self.swapchainImageFormat, device: self.device)
+
+    try! Self.createaGraphicsPipeline(device: self.device, swapchainExtent: swapchainExtent)
   }
 
   static func createInstance() throws -> Instance {
@@ -90,12 +107,17 @@ public class VulkanApplication {
     return devices[0]
   }
 
-  static func getQueueFamilyIndex(physicalDevice: PhysicalDevice, surface: SurfaceKHR) throws -> UInt32 {
+  static func getQueueFamilyIndex(physicalDevice: PhysicalDevice, surface: SurfaceKHR) throws
+    -> UInt32
+  {
     var queueFamilyIndex: UInt32?
     for properties in physicalDevice.queueFamilyProperties {
-      if /*(properties.queueCount & QueueFamilyProperties.Flags.graphicsBit.rawValue == QueueFamilyProperties.Flags.graphicsBit.rawValue) &&*/
-       (try! physicalDevice.hasSurfaceSupport(for: properties, surface: surface)) {
-          queueFamilyIndex = properties.index
+      if try! physicalDevice.hasSurfaceSupport(
+        for: properties,
+        surface:
+          surface /*(properties.queueCount & QueueFamilyProperties.Flags.graphicsBit.rawValue == QueueFamilyProperties.Flags.graphicsBit.rawValue) &&*/
+      ) {
+        queueFamilyIndex = properties.index
       }
     }
 
@@ -106,54 +128,63 @@ public class VulkanApplication {
     return queueFamilyIndexUnwrapped
   }
 
-  static func createDevice(physicalDevice: PhysicalDevice, queueFamilyIndex: UInt32) throws -> Device {
-    let queueCreateInfo = DeviceQueueCreateInfo(flags: .none, queueFamilyIndex: queueFamilyIndex, queuePriorities: [1.0])
+  static func createDevice(physicalDevice: PhysicalDevice, queueFamilyIndex: UInt32) throws
+    -> Device
+  {
+    let queueCreateInfo = DeviceQueueCreateInfo(
+      flags: .none, queueFamilyIndex: queueFamilyIndex, queuePriorities: [1.0])
 
-    return try physicalDevice.createDevice(createInfo: DeviceCreateInfo(
-      flags: .none,
-      queueCreateInfos: [queueCreateInfo],
-      enabledLayers: [],
-      enabledExtensions: ["VK_KHR_swapchain"],
-      enabledFeatures: PhysicalDeviceFeatures()))
+    return try physicalDevice.createDevice(
+      createInfo: DeviceCreateInfo(
+        flags: .none,
+        queueCreateInfos: [queueCreateInfo],
+        enabledLayers: [],
+        enabledExtensions: ["VK_KHR_swapchain"],
+        enabledFeatures: PhysicalDeviceFeatures()))
   }
 
-  static func createSwapchain(physicalDevice: PhysicalDevice, device: Device, surface: SurfaceKHR) throws -> Swapchain {
+  static func createSwapchain(physicalDevice: PhysicalDevice, device: Device, surface: SurfaceKHR)
+    throws -> (Swapchain, Format, Extent2D)
+  {
     let capabilities = try physicalDevice.getSurfaceCapabilities(surface: surface)
     let surfaceFormat = try selectFormat(for: physicalDevice, surface: surface)
 
     //let presentModes = try gpu.getSurfacePresentModes(surface: surface)
-    let preTransform = capabilities.supportedTransforms.contains(.identity) ?
-            .identity : capabilities.currentTransform
+    let preTransform =
+      capabilities.supportedTransforms.contains(.identity)
+      ? .identity : capabilities.currentTransform
 
     // Find a supported composite alpha mode - one of these is guaranteed to be set
-    var compositeAlpha: CompositeAlphaFlags = .opaque;
+    var compositeAlpha: CompositeAlphaFlags = .opaque
     let desiredCompositeAlpha =
-            [compositeAlpha, .preMultiplied, .postMultiplied, .inherit]
+      [compositeAlpha, .preMultiplied, .postMultiplied, .inherit]
 
     for desired in desiredCompositeAlpha {
-        if capabilities.supportedCompositeAlpha.contains(desired) {
-            compositeAlpha = desired
-            break
-        }
+      if capabilities.supportedCompositeAlpha.contains(desired) {
+        compositeAlpha = desired
+        break
+      }
     }
 
-    return try Swapchain.create(inDevice: device, createInfo: SwapchainCreateInfo(
-      flags: .none,
-      surface: surface,
-      minImageCount: capabilities.maxImageCount,
-      imageFormat: surfaceFormat.format,
-      imageColorSpace: surfaceFormat.colorSpace,
-      imageExtent: capabilities.maxImageExtent,
-      imageArrayLayers: 1,
-      imageUsage: .colorAttachment,
-      imageSharingMode: .exclusive,
-      queueFamilyIndices: [0],
-      preTransform: preTransform,
-      compositeAlpha: compositeAlpha,
-      presentMode: .fifo,
-      clipped: true,
-      oldSwapchain: nil
-    ))
+    return (try Swapchain.create(
+      inDevice: device,
+      createInfo: SwapchainCreateInfo(
+        flags: .none,
+        surface: surface,
+        minImageCount: capabilities.maxImageCount,
+        imageFormat: surfaceFormat.format,
+        imageColorSpace: surfaceFormat.colorSpace,
+        imageExtent: capabilities.maxImageExtent,
+        imageArrayLayers: 1,
+        imageUsage: .colorAttachment,
+        imageSharingMode: .exclusive,
+        queueFamilyIndices: [0],
+        preTransform: preTransform,
+        compositeAlpha: compositeAlpha,
+        presentMode: .fifo,
+        clipped: true,
+        oldSwapchain: nil
+      )), surfaceFormat.format, capabilities.maxImageExtent)
   }
 
   static func selectFormat(for gpu: PhysicalDevice, surface: SurfaceKHR) throws -> SurfaceFormat {
@@ -172,6 +203,81 @@ public class VulkanApplication {
     }
 
     return formats[0]
+  }
+
+  static func createImageViews(swapchainImages: [Image], swapchainImageFormat: Format, device: Device) throws -> [ImageView] {
+    try swapchainImages.map {
+      try ImageView.create(device: device, createInfo: ImageViewCreateInfo(
+        flags: .none, 
+        image: $0, 
+        viewType: .type2D, 
+        format: swapchainImageFormat, 
+        components: .identity, 
+        subresourceRange: ImageSubresourceRange(
+          aspectMask: .color, 
+          baseMipLevel: 0, 
+          levelCount: 1, 
+          baseArrayLayer: 0, 
+          layerCount: 1)))
+    }
+  }
+
+  static func createaGraphicsPipeline(device: Device, swapchainExtent: Extent2D) throws {
+    let vertexShaderCode: Data = try Data(contentsOf: Bundle.module.url(forResource: "vertex", withExtension: "spv")!)
+    let fragmentShaderCode: Data = try Data(contentsOf: Bundle.module.url(forResource: "fragment", withExtension: "spv")!)
+
+    print("VERTE SHARER CODE", vertexShaderCode, vertexShaderCode.count)
+
+    let vertexShaderModule = try ShaderModule(device: device, createInfo: ShaderModuleCreateInfo(
+      code: vertexShaderCode
+    ))
+    let vertexShaderStageCreateInfo = PipelineShaderStageCreateInfo(
+      flags: .none,
+      stage: .vertex,
+      module: vertexShaderModule,
+      name: "main",
+      specializationInfo: nil)
+
+    let fragmentShaderModule = try ShaderModule(device: device, createInfo: ShaderModuleCreateInfo(
+      code: fragmentShaderCode
+    ))
+    let fragmentShaderStageCreateInfo = PipelineShaderStageCreateInfo(
+      flags: .none,
+      stage: .fragment,
+      module: fragmentShaderModule,
+      name: "main",
+      specializationInfo: nil)
+
+    let shaderStages = [vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo]
+
+    let vertexInputInfo = PipelineVertexInputStateCreateInfo(
+      vertexBindingDescriptions: [],
+      vertexAttributeDescriptions: []
+    )
+
+    let inputAssembly = PipelineInputAssemblyStateCreateInfo(topology: .triangleList, primitiveRestartEnable: false)
+
+    let viewport = Viewport(x: 0, y: 0, width: Float(swapchainExtent.width), height: Float(swapchainExtent.height), minDepth: 0, maxDepth: 1)
+
+    let scissor = Rect2D(offset: Offset2D(x: 0, y: 0), extent: swapchainExtent)
+
+    let viewportState = PipelineViewportStateCreateInfo(
+      viewports: [viewport],
+      scissors: [scissor]
+    )
+
+    let rasterizer = PipelineRasterizationStateCreateInfo(
+      depthClampEnable: false,
+      rasterizerDiscardEnable: false,
+      polygonMode: .fill,
+      cullMode: .back,
+      frontFace: .clockwise,
+      depthBiasEnable: false,
+      depthBiasConstantFactor: 0,
+      depthBiasClamp: 0,
+      depthBiasSlopeFactor: 0,
+      lineWidth: 1
+    )
   }
 
   public enum VulkanApplicationError: Error {
