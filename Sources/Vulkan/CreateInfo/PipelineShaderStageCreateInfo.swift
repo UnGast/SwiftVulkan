@@ -1,4 +1,6 @@
-public struct PipelineShaderStageCreateInfo {
+import CVulkan
+
+public struct PipelineShaderStageCreateInfo: WrapperStruct {
     public let flags: Flags
     public let stage: ShaderStageFlags
     public let module: ShaderModule
@@ -25,5 +27,16 @@ public struct PipelineShaderStageCreateInfo {
         }
 
         public static let none = Flags(rawValue: 0)
+    }
+
+    public var vulkan: VkPipelineShaderStageCreateInfo {
+        return VkPipelineShaderStageCreateInfo(
+            sType: VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+            pNext: nil,
+            flags: flags.rawValue,
+            stage: VkShaderStageFlagBits(stage.rawValue),
+            module: module.pointer,
+            pName: name,
+            pSpecializationInfo: nil)
     }
 }

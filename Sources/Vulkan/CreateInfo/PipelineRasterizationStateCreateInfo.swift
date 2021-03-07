@@ -1,4 +1,6 @@
-public struct PipelineRasterizationStateCreateInfo {
+import CVulkan
+
+public struct PipelineRasterizationStateCreateInfo: WrapperStruct {
   public let depthClampEnable: Bool
   public let rasterizerDiscardEnable: Bool
   public let polygonMode: PolygonMode
@@ -32,5 +34,23 @@ public struct PipelineRasterizationStateCreateInfo {
     self.depthBiasClamp = depthBiasClamp
     self.depthBiasSlopeFactor = depthBiasSlopeFactor
     self.lineWidth = lineWidth
+  }
+
+  public var vulkan: VkPipelineRasterizationStateCreateInfo {
+    VkPipelineRasterizationStateCreateInfo(
+      sType: VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+      pNext: nil,
+      flags: 0,
+      depthClampEnable: depthClampEnable.vulkan,
+      rasterizerDiscardEnable: rasterizerDiscardEnable.vulkan,
+      polygonMode: polygonMode.vulkan,
+      cullMode: cullMode.vulkan,
+      frontFace: frontFace.vulkan,
+      depthBiasEnable: depthBiasEnable.vulkan,
+      depthBiasConstantFactor: depthBiasConstantFactor,
+      depthBiasClamp: depthBiasClamp,
+      depthBiasSlopeFactor: depthBiasSlopeFactor,
+      lineWidth: lineWidth
+    )
   }
 }

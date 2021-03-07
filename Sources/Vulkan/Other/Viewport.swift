@@ -1,4 +1,6 @@
-public struct Viewport {
+import CVulkan
+
+public struct Viewport: WrapperStruct {
   public let x: Float
   public let y: Float
   public let width: Float
@@ -13,5 +15,16 @@ public struct Viewport {
     self.height = height
     self.minDepth = minDepth
     self.maxDepth = maxDepth
+  }
+
+  public var vulkan: VkViewport {
+    VkViewport(
+      x: x,
+      y: y,
+      width: width,
+      height: height,
+      minDepth: minDepth,
+      maxDepth: maxDepth
+    )
   }
 }

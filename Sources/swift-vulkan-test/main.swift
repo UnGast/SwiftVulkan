@@ -57,6 +57,8 @@ public class VulkanApplication {
   let swapchainExtent: Extent2D
   let swapchainImages: [Image]
   let imageViews: [ImageView]
+  let renderPass: RenderPass
+  let pipelineLayout: PipelineLayout
 
   public init() {
     self.instance = try! Self.createInstance()
@@ -77,7 +79,9 @@ public class VulkanApplication {
 
     self.imageViews = try! Self.createImageViews(swapchainImages: self.swapchainImages, swapchainImageFormat: self.swapchainImageFormat, device: self.device)
 
-    try! Self.createaGraphicsPipeline(device: self.device, swapchainExtent: swapchainExtent)
+    self.renderPass = try! Self.createRenderPass(swapchainImageFormat: self.swapchainImageFormat, device: self.device)
+
+    self.pipelineLayout = try! Self.createGraphicsPipeline(device: self.device, swapchainExtent: self.swapchainExtent, renderPass: self.renderPass)
   }
 
   static func createInstance() throws -> Instance {
@@ -222,11 +226,46 @@ public class VulkanApplication {
     }
   }
 
-  static func createaGraphicsPipeline(device: Device, swapchainExtent: Extent2D) throws {
+  static func createRenderPass(swapchainImageFormat: Format, device: Device) throws -> RenderPass {
+    let colorAttachment = AttachmentDescription(
+      flags: .none,
+      format: swapchainImageFormat,
+      samples: ._1bit,
+      loadOp: .clear,
+      storeOp: .store,
+      stencilLoadOp: .dontCare,
+      stencilStoreOp: .dontCare,
+      initialLayout: .undefined,
+      finalLayout: .presentSrc 
+    )
+
+    let colorAttachmentRef = AttachmentReference(
+      attachment: 0, layout: .colorAttachmentOptimal 
+    )
+
+    let subpass = SubpassDescription(
+      flags: .none,
+      pipelineBindPoint: .graphics,
+      inputAttachments: nil,
+      colorAttachments: [colorAttachmentRef],
+      resolveAttachments: nil,
+      depthStencilAttachment: nil,
+      preserveAttachments: nil
+    )
+
+    let renderPassInfo = RenderPassCreateInfo(
+      flags: .none,
+      attachments: [colorAttachment],
+      subpasses: [subpass],
+      dependencies: nil
+    )
+
+    return try RenderPass.create(createInfo: renderPassInfo, device: device)
+  }
+
+  static func createGraphicsPipeline(device: Device, swapchainExtent: Extent2D, renderPass: RenderPass) throws -> (PipelineLayout) {
     let vertexShaderCode: Data = try Data(contentsOf: Bundle.module.url(forResource: "vertex", withExtension: "spv")!)
     let fragmentShaderCode: Data = try Data(contentsOf: Bundle.module.url(forResource: "fragment", withExtension: "spv")!)
-
-    print("VERTE SHARER CODE", vertexShaderCode, vertexShaderCode.count)
 
     let vertexShaderModule = try ShaderModule(device: device, createInfo: ShaderModuleCreateInfo(
       code: vertexShaderCode
@@ -280,7 +319,7 @@ public class VulkanApplication {
     )
 
     let multisampling = PipelineMultisampleStateCreateInfo(
-      rasterizationSamples: .c1,
+      rasterizationSamples: ._1bit,
       sampleShadingEnable: false,
       minSampleShading: 1,
       sampleMask: nil, 
@@ -303,10 +342,10 @@ public class VulkanApplication {
       logicOpEnable: false,
       logicOp: .copy,
       attachments: [colorBlendAttachment],
-      blendConstants: [0, 0, 0, 0]
+      blendConstants: (0, 0, 0, 0)
     )
 
-    let dynamicStates = [VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH]
+    let dynamicStates = [DynamicState.VIEWPORT, DynamicState.LINE_WIDTH]
 
     let dynamicState = PipelineDynamicStateCreateInfo(
       dynamicStates: dynamicStates
@@ -318,6 +357,27 @@ public class VulkanApplication {
       pushConstantRanges: [])
 
     let pipelineLayout = try PipelineLayout.create(device: device, createInfo: pipelineLayoutInfo)
+
+    let pipelineInfo = GraphicsPipelineCreateInfo(
+      flags: 0,
+      stages: shaderStages,
+      vertexInputSate: vertexInputInfo,
+      inputAssemblyState: inputAssembly,
+      tessellationState: Void(),
+      viewportState: viewportState,
+      rasterizationState: rasterizer,
+      multisampleState: multisampling,
+      depthStencilState: Void(),
+      colorBlendState: colorBlending,
+      dynamicState: nil,
+      layout: pipelineLayout,
+      renderPass: renderPass,
+      subpass: 0
+    )
+
+    let graphicsPipeline = try Pipeline(device: device, createInfo: pipelineInfo)
+
+    return pipelineLayout
   }
 
   public enum VulkanApplicationError: Error {
@@ -328,3 +388,5 @@ public class VulkanApplication {
 let vulkanApplication = VulkanApplication()
 
 SDL_Delay(100)
+
+print("REACHED HERE")

@@ -1,6 +1,6 @@
 import CVulkan
 
-public struct PipelineColorBlendAttachmentState {
+public struct PipelineColorBlendAttachmentState: WrapperStruct {
   public let blendEnable: Bool
   public let srcColorBlendFactor: BlendFactor
   public let dstColorBlendFactor: BlendFactor
@@ -8,11 +8,7 @@ public struct PipelineColorBlendAttachmentState {
   public let srcAlphaBlendFactor: BlendFactor
   public let dstAlphaBlendFactor: BlendFactor
   public let alphaBlendOp: VkBlendOp
-  public let colorWriteMask: [ColorComponentFlag]
-
-  public enum ColorComponentFlag {
-    case r, g, b, a
-  }
+  public let colorWriteMask: Set<ColorComponentFlag>
 
   public init(
     blendEnable: Bool,
@@ -22,7 +18,7 @@ public struct PipelineColorBlendAttachmentState {
     srcAlphaBlendFactor: BlendFactor,
     dstAlphaBlendFactor: BlendFactor,
     alphaBlendOp: VkBlendOp,
-    colorWriteMask: [ColorComponentFlag]
+    colorWriteMask: Set<ColorComponentFlag>
   ) {
     self.blendEnable = blendEnable
     self.srcColorBlendFactor = srcColorBlendFactor
@@ -32,5 +28,18 @@ public struct PipelineColorBlendAttachmentState {
     self.dstAlphaBlendFactor = dstAlphaBlendFactor
     self.alphaBlendOp = alphaBlendOp
     self.colorWriteMask = colorWriteMask
+  }
+
+  public var vulkan: VkPipelineColorBlendAttachmentState {
+    VkPipelineColorBlendAttachmentState(
+      blendEnable: blendEnable.vulkan,
+      srcColorBlendFactor: srcColorBlendFactor.vulkan,
+      dstColorBlendFactor: dstColorBlendFactor.vulkan,
+      colorBlendOp: colorBlendOp,
+      srcAlphaBlendFactor: srcAlphaBlendFactor.vulkan,
+      dstAlphaBlendFactor: dstAlphaBlendFactor.vulkan,
+      alphaBlendOp: alphaBlendOp,
+      colorWriteMask: colorWriteMask.vulkan
+    )
   }
 }

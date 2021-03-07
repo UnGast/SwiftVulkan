@@ -19,7 +19,6 @@ public class ShaderModule {
 
     let codePtr = UnsafeMutableBufferPointer<UInt32>.allocate(capacity: createInfo.code.count / 4)
     let copiedCount = createInfo.code.copyBytes(to: codePtr)
-    print("COPIED COUNT", copiedCount)
     vkCreateInfo.pCode = UnsafePointer(codePtr.baseAddress)
 
     var shaderModulePtr = VkShaderModule(bitPattern: 0)

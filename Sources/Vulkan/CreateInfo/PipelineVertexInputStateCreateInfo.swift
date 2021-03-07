@@ -1,6 +1,6 @@
 import CVulkan
 
-public struct PipelineVertexInputStateCreateInfo {
+public struct PipelineVertexInputStateCreateInfo: WrapperStruct {
   public let vertexBindingDescriptions: [VertexBindingDescription]
   public let vertexAttributeDescriptions: [VertexAttributeDescription]
 

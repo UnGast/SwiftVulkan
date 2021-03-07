@@ -1,5 +1,7 @@
-public struct PipelineMultisampleStateCreateInfo {
-  public let rasterizationSamples: SampleCount
+import CVulkan
+
+public struct PipelineMultisampleStateCreateInfo: WrapperStruct {
+  public let rasterizationSamples: SampleCountFlags
   public let sampleShadingEnable: Bool
   public let minSampleShading: Float
   public let sampleMask: SampleMask?
@@ -7,7 +9,7 @@ public struct PipelineMultisampleStateCreateInfo {
   public let alphaToOneEnable: Bool
 
   public init(
-    rasterizationSamples: SampleCount,
+    rasterizationSamples: SampleCountFlags,
     sampleShadingEnable: Bool,
     minSampleShading: Float,
     sampleMask: SampleMask?,
@@ -20,5 +22,19 @@ public struct PipelineMultisampleStateCreateInfo {
     self.sampleMask = sampleMask
     self.alphaToCoverageEnable = alphaToCoverageEnable
     self.alphaToOneEnable = alphaToOneEnable
+  }
+
+  public var vulkan: VkPipelineMultisampleStateCreateInfo {
+    VkPipelineMultisampleStateCreateInfo(
+      sType: VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+      pNext: nil,
+      flags: 0,
+      rasterizationSamples: rasterizationSamples.vulkanValue,
+      sampleShadingEnable: sampleShadingEnable.vulkan,
+      minSampleShading: minSampleShading,
+      pSampleMask: nil,
+      alphaToCoverageEnable: alphaToCoverageEnable.vulkan,
+      alphaToOneEnable: alphaToOneEnable.vulkan
+    )
   }
 }

@@ -1,6 +1,6 @@
 import CVulkan
 
-public struct PipelineInputAssemblyStateCreateInfo {
+public struct PipelineInputAssemblyStateCreateInfo: WrapperStruct {
   public let topology: Topology
   public let primitiveRestartEnable: Bool
 
