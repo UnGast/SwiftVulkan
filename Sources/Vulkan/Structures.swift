@@ -714,7 +714,7 @@ public struct PipelineLayoutCreateInfo {
         public static let none = Flags(rawValue: 0)
     }
 
-    var vulkanValue: VkPipelineLayoutCreateInfo {
+    var vulkan: VkPipelineLayoutCreateInfo {
         return VkPipelineLayoutCreateInfo(
                 sType: VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
                 pNext: nil,

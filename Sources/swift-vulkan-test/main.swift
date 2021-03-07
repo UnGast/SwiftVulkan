@@ -287,6 +287,37 @@ public class VulkanApplication {
       alphaToCoverageEnable: false,
       alphaToOneEnable: false
     )
+
+    let colorBlendAttachment = PipelineColorBlendAttachmentState(
+      blendEnable: false,
+      srcColorBlendFactor: .one,
+      dstColorBlendFactor: .zero,
+      colorBlendOp: VK_BLEND_OP_ADD,
+      srcAlphaBlendFactor: .one,
+      dstAlphaBlendFactor: .zero,
+      alphaBlendOp: VK_BLEND_OP_ADD,
+      colorWriteMask: [.r, .g, .b, .a]
+    )
+
+    let colorBlending = PipelineColorBlendStateCreateInfo(
+      logicOpEnable: false,
+      logicOp: .copy,
+      attachments: [colorBlendAttachment],
+      blendConstants: [0, 0, 0, 0]
+    )
+
+    let dynamicStates = [VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH]
+
+    let dynamicState = PipelineDynamicStateCreateInfo(
+      dynamicStates: dynamicStates
+    )
+
+    let pipelineLayoutInfo = PipelineLayoutCreateInfo(
+      flags: .none,
+      setLayouts: [],
+      pushConstantRanges: [])
+
+    let pipelineLayout = try PipelineLayout.create(device: device, createInfo: pipelineLayoutInfo)
   }
 
   public enum VulkanApplicationError: Error {
