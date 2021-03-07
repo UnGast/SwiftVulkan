@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class ImageView {
+public class ImageView: WrapperStruct {
     public let pointer: VkImageView
     public let device: Device
 
@@ -28,6 +28,10 @@ public class ImageView {
         }
 
         return ImageView(pointer: imageView!, device: dev, image: createInfo.image)
+    }
+
+    public var vulkan: VkImageView {
+        pointer
     }
 
     deinit {

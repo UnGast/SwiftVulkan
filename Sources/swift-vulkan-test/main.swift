@@ -58,30 +58,34 @@ public class VulkanApplication {
   let swapchainImages: [Image]
   let imageViews: [ImageView]
   let renderPass: RenderPass
+  let graphicsPipeline: Pipeline
   let pipelineLayout: PipelineLayout
+  let framebuffers: [Framebuffer]
 
-  public init() {
-    self.instance = try! Self.createInstance()
-    self.surface = try! Self.createSurface(instance: self.instance)
-    self.physicalDevice = try! Self.pickPhysicalDevice(instance: self.instance)
+  public init() throws {
+    self.instance = try Self.createInstance()
+    self.surface = try Self.createSurface(instance: self.instance)
+    self.physicalDevice = try Self.pickPhysicalDevice(instance: self.instance)
 
-    let queueFamilyIndex = try! Self.getQueueFamilyIndex(
+    let queueFamilyIndex = try Self.getQueueFamilyIndex(
       physicalDevice: self.physicalDevice, surface: self.surface)
 
-    self.device = try! Self.createDevice(
+    self.device = try Self.createDevice(
       physicalDevice: self.physicalDevice, queueFamilyIndex: queueFamilyIndex)
 
     self.queue = Queue.create(fromDevice: self.device, presentFamilyIndex: queueFamilyIndex)
 
-    (self.swapchain, self.swapchainImageFormat, self.swapchainExtent) = try! Self.createSwapchain(
+    (self.swapchain, self.swapchainImageFormat, self.swapchainExtent) = try Self.createSwapchain(
       physicalDevice: self.physicalDevice, device: self.device, surface: self.surface)
-    self.swapchainImages = try! self.swapchain.getSwapchainImages()
+    self.swapchainImages = try self.swapchain.getSwapchainImages()
 
-    self.imageViews = try! Self.createImageViews(swapchainImages: self.swapchainImages, swapchainImageFormat: self.swapchainImageFormat, device: self.device)
+    self.imageViews = try Self.createImageViews(swapchainImages: self.swapchainImages, swapchainImageFormat: self.swapchainImageFormat, device: self.device)
 
-    self.renderPass = try! Self.createRenderPass(swapchainImageFormat: self.swapchainImageFormat, device: self.device)
+    self.renderPass = try Self.createRenderPass(swapchainImageFormat: self.swapchainImageFormat, device: self.device)
 
-    self.pipelineLayout = try! Self.createGraphicsPipeline(device: self.device, swapchainExtent: self.swapchainExtent, renderPass: self.renderPass)
+    (self.graphicsPipeline, self.pipelineLayout) = try Self.createGraphicsPipeline(device: self.device, swapchainExtent: self.swapchainExtent, renderPass: self.renderPass)
+
+    self.framebuffers = try Self.createFramebuffers(device: self.device, swapchainImageViews: self.imageViews, renderPass: self.renderPass, swapchainExtent: self.swapchainExtent)
   }
 
   static func createInstance() throws -> Instance {
@@ -263,7 +267,7 @@ public class VulkanApplication {
     return try RenderPass.create(createInfo: renderPassInfo, device: device)
   }
 
-  static func createGraphicsPipeline(device: Device, swapchainExtent: Extent2D, renderPass: RenderPass) throws -> (PipelineLayout) {
+  static func createGraphicsPipeline(device: Device, swapchainExtent: Extent2D, renderPass: RenderPass) throws -> (Pipeline, PipelineLayout) {
     let vertexShaderCode: Data = try Data(contentsOf: Bundle.module.url(forResource: "vertex", withExtension: "spv")!)
     let fragmentShaderCode: Data = try Data(contentsOf: Bundle.module.url(forResource: "fragment", withExtension: "spv")!)
 
@@ -377,7 +381,21 @@ public class VulkanApplication {
 
     let graphicsPipeline = try Pipeline(device: device, createInfo: pipelineInfo)
 
-    return pipelineLayout
+    return (graphicsPipeline, pipelineLayout)
+  }
+
+  static func createFramebuffers(device: Device, swapchainImageViews: [ImageView], renderPass: RenderPass, swapchainExtent: Extent2D) throws -> [Framebuffer] {
+    try swapchainImageViews.map { imageView in
+      let framebufferInfo = FramebufferCreateInfo(
+        flags: .none,
+        renderPass: renderPass,
+        attachments: [imageView],
+        width: swapchainExtent.width,
+        height: swapchainExtent.height,
+        layers: 1 
+      )
+      return try Framebuffer(device: device, createInfo: framebufferInfo)
+    }
   }
 
   public enum VulkanApplicationError: Error {
@@ -385,7 +403,7 @@ public class VulkanApplication {
   }
 }
 
-let vulkanApplication = VulkanApplication()
+let vulkanApplication = try VulkanApplication()
 
 SDL_Delay(100)
 
