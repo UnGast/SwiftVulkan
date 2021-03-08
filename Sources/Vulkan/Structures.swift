@@ -29,66 +29,6 @@ public struct ApplicationInfo {
     }
 }
 
-public struct AttachmentDescription {
-    public var flags: AttachmentDescriptionFlags
-    public var format: Format
-    public var samples: SampleCountFlags
-    public var loadOp: AttachmentLoadOp
-    public var storeOp: AttachmentStoreOp
-    public var stencilLoadOp: AttachmentLoadOp
-    public var stencilStoreOp: AttachmentStoreOp
-    public var initialLayout: ImageLayout
-    public var finalLayout: ImageLayout
-
-    public init(flags: AttachmentDescriptionFlags,
-                format: Format,
-                samples: SampleCountFlags,
-                loadOp: AttachmentLoadOp,
-                storeOp: AttachmentStoreOp,
-                stencilLoadOp: AttachmentLoadOp,
-                stencilStoreOp: AttachmentStoreOp,
-                initialLayout: ImageLayout,
-                finalLayout: ImageLayout) {
-        self.flags = flags
-        self.format = format
-        self.samples = samples
-        self.loadOp = loadOp
-        self.storeOp = storeOp
-        self.stencilLoadOp = stencilLoadOp
-        self.stencilStoreOp = stencilStoreOp
-        self.initialLayout = initialLayout
-        self.finalLayout = finalLayout
-    }
-
-    var vulkanValue: VkAttachmentDescription {
-        return VkAttachmentDescription(
-                flags: self.flags.vulkanValue,
-                format: self.format.vulkanValue,
-                samples: self.samples.vulkanValue,
-                loadOp: self.loadOp.vulkanValue,
-                storeOp: self.storeOp.vulkanValue,
-                stencilLoadOp: self.stencilLoadOp.vulkanValue,
-                stencilStoreOp: self.stencilStoreOp.vulkanValue,
-                initialLayout: self.initialLayout.vulkanValue,
-                finalLayout: self.finalLayout.vulkanValue
-        )
-    }
-}
-
-public struct AttachmentReference {
-    public let attachment: UInt32
-    public let layout: ImageLayout
-
-    public init(attachment: UInt32, layout: ImageLayout) {
-        self.attachment = attachment
-        self.layout = layout
-    }
-
-    var vulkanValue: VkAttachmentReference {
-        return VkAttachmentReference(attachment: self.attachment, layout: self.layout.vulkanValue)
-    }
-}
-
 public struct ComponentMapping {
     public let r: ComponentSwizzle
     public let g: ComponentSwizzle
@@ -1037,51 +977,22 @@ public struct RenderPassCreateInfo {
         public static let none = Flags(rawValue: 0)
     }
 
-    private var pAttachments: [VkAttachmentDescription]? = nil
-    private var pSubpasses: [VkSubpassDescription]? = nil
-    private var pDependencies: [VkSubpassDependency]? = nil
-
     mutating func toVulkan() -> VkRenderPassCreateInfo {
-        if let att = self.attachments {
-            pAttachments = att.map {
-                $0.vulkanValue
-            }
-        } else {
-            pAttachments = nil
-        }
-
-        if let sub = self.subpasses {
-            pSubpasses = sub.map {
-                var s = $0
-                return s.toVulkan()
-            }
-        } else {
-            pSubpasses = nil
-        }
-
-        if let deps = self.dependencies {
-            pDependencies = deps.map {
-                $0.vulkanValue
-            }
-        } else {
-            pDependencies = nil
-        }
-
-        return VkRenderPassCreateInfo(
+         VkRenderPassCreateInfo(
                 sType: VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
                 pNext: nil,
                 flags: self.flags.rawValue,
                 attachmentCount: UInt32(self.attachments?.count ?? 0),
-                pAttachments: pAttachments,
+                pAttachments: self.attachments?.vulkanPointer,
                 subpassCount: UInt32(self.subpasses?.count ?? 0),
-                pSubpasses: pSubpasses,
+                pSubpasses: subpasses?.vulkanPointer,
                 dependencyCount: UInt32(self.dependencies?.count ?? 0),
-                pDependencies: pDependencies
+                pDependencies: dependencies?.vulkanPointer
         )
     }
 }
 
-public struct SemaphoreCreateInfo {
+public struct SemaphoreCreateInfo: WrapperStruct {
 
     public var flags: Flags
 
@@ -1099,8 +1010,8 @@ public struct SemaphoreCreateInfo {
         public static let none = Flags(rawValue: 0)
     }
 
-    var vulkanValue: VkSemaphoreCreateInfo {
-        return VkSemaphoreCreateInfo(
+    public var vulkan: VkSemaphoreCreateInfo {
+        VkSemaphoreCreateInfo(
                 sType: VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
                 pNext: nil,
                 flags: self.flags.rawValue
@@ -1108,118 +1019,8 @@ public struct SemaphoreCreateInfo {
     }
 }
 
-// needed class to keep references
-public class SubpassDescription {
-    public let flags: SubpassDescriptionFlags
-    public let pipelineBindPoint: PipelineBindPoint
-    public let inputAttachments: [AttachmentReference]?
-    public let colorAttachments: [AttachmentReference]?
-    public let resolveAttachments: [AttachmentReference]?
-    public let depthStencilAttachment: AttachmentReference?
-    public let preserveAttachments: [UInt32]?
-
-    public init(flags: SubpassDescriptionFlags,
-                pipelineBindPoint: PipelineBindPoint,
-                inputAttachments: [AttachmentReference]?,
-                colorAttachments: [AttachmentReference]?,
-                resolveAttachments: [AttachmentReference]?,
-                depthStencilAttachment: AttachmentReference?,
-                preserveAttachments: [UInt32]?) {
-        self.flags = flags
-        self.pipelineBindPoint = pipelineBindPoint
-        self.inputAttachments = inputAttachments
-        self.colorAttachments = colorAttachments
-        self.resolveAttachments = resolveAttachments
-        self.depthStencilAttachment = depthStencilAttachment
-        self.preserveAttachments = preserveAttachments
-    }
-
-    private var pDepthStencilAttachment: [VkAttachmentReference]? = nil
-    private var pInputAttachments: [VkAttachmentReference]? = nil
-    private var pColorAttachments: [VkAttachmentReference]? = nil
-    private var pResolveAttachments: [VkAttachmentReference]? = nil
-
-    func toVulkan() -> VkSubpassDescription {
-
-        if let input = self.inputAttachments {
-            self.pInputAttachments = input.count == 0 ? nil : input.map { $0.vulkanValue }
-        } else {
-            self.pInputAttachments = nil
-        }
-
-        if let colors = self.colorAttachments {
-            self.pColorAttachments = colors.count == 0 ? nil : colors.map { $0.vulkanValue }
-        } else {
-            self.pColorAttachments = nil
-        }
-
-        if let resolve = self.resolveAttachments {
-            self.pResolveAttachments = resolve.count == 0 ? nil : resolve.map { $0.vulkanValue }
-        } else {
-            self.pResolveAttachments = nil
-        }
-
-        if let att = self.depthStencilAttachment?.vulkanValue {
-            pDepthStencilAttachment = [att]
-        } else {
-            pDepthStencilAttachment = nil
-        }
-
-        return VkSubpassDescription(
-                flags: self.flags.rawValue,
-                pipelineBindPoint: self.pipelineBindPoint.vulkan,
-                inputAttachmentCount: UInt32(self.inputAttachments?.count ?? 0),
-                pInputAttachments: self.pInputAttachments,
-                colorAttachmentCount: UInt32(self.colorAttachments?.count ?? 0),
-                pColorAttachments: self.pColorAttachments,
-                pResolveAttachments: self.pResolveAttachments,
-                pDepthStencilAttachment: self.pDepthStencilAttachment,
-                preserveAttachmentCount: UInt32(self.preserveAttachments?.count ?? 0),
-                pPreserveAttachments: self.preserveAttachments
-        )
-    }
-}
-
 public class SpecializationInfo {
 
-}
-
-public struct SubpassDependency {
-    public let srcSubpass: UInt32
-    public let dstSubpass: UInt32
-    public let srcStageMask: PipelineStageFlags
-    public let dstStageMask: PipelineStageFlags
-    public let srcAccessMask: AccessFlags
-    public let dstAccessMask: AccessFlags
-    public let dependencyFlags: DependencyFlags
-
-    public init(srcSubpass: UInt32,
-                dstSubpass: UInt32,
-                srcStageMask: PipelineStageFlags,
-                dstStageMask: PipelineStageFlags,
-                srcAccessMask: AccessFlags,
-                dstAccessMask: AccessFlags,
-                dependencyFlags: DependencyFlags) {
-        self.srcSubpass = srcSubpass
-        self.dstSubpass = dstSubpass
-        self.srcStageMask = srcStageMask
-        self.dstStageMask = dstStageMask
-        self.srcAccessMask = srcAccessMask
-        self.dstAccessMask = dstAccessMask
-        self.dependencyFlags = dependencyFlags
-    }
-
-    var vulkanValue: VkSubpassDependency {
-        return VkSubpassDependency(
-                srcSubpass: self.srcSubpass,
-                dstSubpass: self.dstSubpass,
-                srcStageMask: self.srcStageMask.rawValue,
-                dstStageMask: self.dstStageMask.rawValue,
-                srcAccessMask: self.srcAccessMask.rawValue,
-                dstAccessMask: self.dstAccessMask.rawValue,
-                dependencyFlags: self.dependencyFlags.rawValue
-        )
-    }
 }
 
 public struct SurfaceCapabilities {

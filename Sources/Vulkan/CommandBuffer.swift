@@ -29,7 +29,7 @@ public class CommandBufferAllocateInfo {
     }
 }
 
-public class CommandBuffer {
+public class CommandBuffer: WrapperStruct {
 
     public let pointer: VkCommandBuffer
 
@@ -54,6 +54,10 @@ public class CommandBuffer {
         }
 
         return CommandBuffer(pointer: output!)
+    }
+
+    public var vulkan: Optional<VkCommandBuffer> {
+        Optional(pointer)
     }
 
     public func begin(_ beginInfo: CommandBufferBeginInfo) {

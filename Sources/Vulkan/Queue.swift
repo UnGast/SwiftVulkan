@@ -14,4 +14,12 @@ public class Queue {
 
         return Queue(fromVulkan: queueArr[0]!)
     }
+
+    public func submit(submits: [SubmitInfo], fence: Fence?) throws {
+        vkQueueSubmit(pointer, UInt32(submits.count), submits.vulkanPointer, fence?.vulkanValue)
+    }
+
+    public func present(presentInfo: PresentInfoKHR) throws {
+        vkQueuePresentKHR(pointer, presentInfo.vulkanPointer)
+    }
 }

@@ -262,7 +262,7 @@ public struct MemoryPropertyFlags: OptionSet {
     }
 }
 
-public struct PipelineStageFlags: OptionSet {
+public struct PipelineStageFlags: WrapperStruct, OptionSet {
     public let rawValue: UInt32
 
     public init(rawValue: UInt32) {
@@ -297,8 +297,8 @@ public struct PipelineStageFlags: OptionSet {
     public static let meshShader = PipelineStageFlags(rawValue: 0x00100000)
     public static let fragmentDensityProcess = PipelineStageFlags(rawValue: 0x00800000)
 
-    var vulkanValue: VkPipelineStageFlagBits {
-        return VkPipelineStageFlagBits(self.rawValue)
+    public var vulkan: VkPipelineStageFlags {
+        VkPipelineStageFlags(self.rawValue)
     }
 }
 

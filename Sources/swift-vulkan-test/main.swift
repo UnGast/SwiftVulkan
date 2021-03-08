@@ -36,6 +36,8 @@ public class VulkanApplication {
   @Deferred var framebuffers: [Framebuffer]
   @Deferred var commandPool: CommandPool
   @Deferred var commandBuffers: [CommandBuffer]
+  @Deferred var imageAvailableSemaphore: Semaphore
+  @Deferred var renderFinishedSemaphore: Semaphore
 
   public init() throws {
     self.setupSdl()
@@ -64,6 +66,8 @@ public class VulkanApplication {
     try self.createCommandPool()
 
     try self.createCommandBuffers()
+
+    try self.createSemaphores()
   }
 
   func setupSdl() {
@@ -273,11 +277,21 @@ public class VulkanApplication {
       preserveAttachments: nil
     )
 
+    let dependency = SubpassDependency(
+      srcSubpass: VK_SUBPASS_EXTERNAL,
+      dstSubpass: 0,
+      srcStageMask: .colorAttachmentOutput,
+      dstStageMask: .colorAttachmentOutput,
+      srcAccessMask: .none,
+      dstAccessMask: .colorAttachmentWrite,
+      dependencyFlags: .none
+    )
+
     let renderPassInfo = RenderPassCreateInfo(
       flags: .none,
       attachments: [colorAttachment],
       subpasses: [subpass],
-      dependencies: nil
+      dependencies: [dependency]
     )
 
     self.renderPass = try RenderPass.create(createInfo: renderPassInfo, device: device)
@@ -439,7 +453,7 @@ public class VulkanApplication {
         renderArea: Rect2D(
           offset: Offset2D(x: 0, y: 0), extent: swapchainExtent
         ),
-        clearValues: [ClearColorValue.float32(0, 0, 0, 1).eraseToAny()]
+        clearValues: [ClearColorValue.float32(1, 0, 0, 1).eraseToAny()]
       ), contents: .inline)
 
       commandBuffer.bindPipeline(pipelineBindPoint: .graphics, pipeline: graphicsPipeline)
@@ -453,8 +467,40 @@ public class VulkanApplication {
     }
   }
 
-  func mainLoop() {
-    SDL_Delay(100)
+  func createSemaphores() throws {
+    imageAvailableSemaphore = try Semaphore.create(info: SemaphoreCreateInfo(
+      flags: .none
+    ), device: device)
+
+    renderFinishedSemaphore = try Semaphore.create(info: SemaphoreCreateInfo(
+      flags: .none
+    ), device: device)
+  }
+
+  func drawFrame() throws {
+    print("DRAW FRAME")
+    let imageIndex = try swapchain.acquireNextImage(timeout: .max, semaphore: imageAvailableSemaphore, fence: nil)
+    try queue.submit(submits: [
+      SubmitInfo(
+        waitSemaphores: [imageAvailableSemaphore],
+        waitDstStageMask: [.colorAttachmentOutput],
+        commandBuffers: [commandBuffers[Int(imageIndex)]],
+        signalSemaphores: [renderFinishedSemaphore]
+      )
+    ], fence: nil)
+    try queue.present(presentInfo: PresentInfoKHR(
+      waitSemaphores: [renderFinishedSemaphore],
+      swapchains: [swapchain],
+      imageIndices: [imageIndex],
+      results: ()
+    ))
+  }
+
+  func mainLoop() throws {
+    for i in 0..<20 {
+      try drawFrame()
+      SDL_Delay(100)
+    }
   }
 
   public enum VulkanApplicationError: Error {
@@ -464,6 +510,6 @@ public class VulkanApplication {
 
 let vulkanApplication = try VulkanApplication()
 
-vulkanApplication.mainLoop()
+try vulkanApplication.mainLoop()
 
 print("REACHED HERE")

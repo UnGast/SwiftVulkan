@@ -5,7 +5,7 @@
 
 import CVulkan
 
-public class Swapchain {
+public class Swapchain: WrapperStruct {
     public let pointer: VkSwapchainKHR
     public let device: Device
 
@@ -15,6 +15,10 @@ public class Swapchain {
         self.pointer = pointer
         self.device = device
         self.surface = surface
+    }
+
+    public var vulkan: Optional<VkSwapchainKHR> {
+        Optional(pointer)
     }
 
     public class func create(inDevice: Device, createInfo: SwapchainCreateInfo) throws -> Swapchain {
@@ -33,8 +37,8 @@ public class Swapchain {
     }
 
     public func acquireNextImage(timeout: UInt64, semaphore: Semaphore?,
-                                 fence: Fence?, imageIndex: UInt32) throws {
-        var localImageIndex = imageIndex
+                                 fence: Fence?) throws -> UInt32 {
+        var localImageIndex: UInt32 = 0
         let opResult = vkAcquireNextImageKHR(
                 self.device.pointer, self.pointer, timeout,
                 semaphore?.vulkanValue, fence?.vulkanValue, &localImageIndex)
@@ -42,6 +46,8 @@ public class Swapchain {
         guard opResult == VK_SUCCESS else {
             throw opResult.toResult()
         }
+
+        return localImageIndex
     }
 
     public func getSwapchainImages() throws -> [Image] {

@@ -30,8 +30,8 @@ public class ImageView: WrapperStruct {
         return ImageView(pointer: imageView!, device: dev, image: createInfo.image)
     }
 
-    public var vulkan: VkImageView {
-        pointer
+    public var vulkan: VkImageView? {
+        Optional(pointer)
     }
 
     deinit {

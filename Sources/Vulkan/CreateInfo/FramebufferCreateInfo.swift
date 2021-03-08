@@ -31,7 +31,7 @@ public struct FramebufferCreateInfo: WrapperStruct {
       flags: flags.rawValue,
       renderPass: renderPass.vulkanValue,
       attachmentCount: UInt32(attachments.count),
-      pAttachments: attachments.map { $0.vulkan },
+      pAttachments: attachments.vulkanPointer,
       width: width,
       height: height,
       layers: layers
