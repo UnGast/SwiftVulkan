@@ -1167,7 +1167,7 @@ public class SubpassDescription {
 
         return VkSubpassDescription(
                 flags: self.flags.rawValue,
-                pipelineBindPoint: self.pipelineBindPoint.vulkanValue,
+                pipelineBindPoint: self.pipelineBindPoint.vulkan,
                 inputAttachmentCount: UInt32(self.inputAttachments?.count ?? 0),
                 pInputAttachments: self.pInputAttachments,
                 colorAttachmentCount: UInt32(self.colorAttachments?.count ?? 0),

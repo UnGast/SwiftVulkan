@@ -46,10 +46,22 @@ public func getSDLInstanceExtensions() throws -> [String] {
   return result
 }
 
+@propertyWrapper
+public class Deferred<T> {
+  private var value: T?
+  public var wrappedValue: T {
+    get { value! }
+    set { value = newValue }
+  }
+
+  public init() {}
+}
+
 public class VulkanApplication {
   let instance: Instance
   let surface: SurfaceKHR
   let physicalDevice: PhysicalDevice
+  let queueFamilyIndex: UInt32
   let device: Device
   let queue: Queue
   let swapchain: Swapchain
@@ -61,13 +73,15 @@ public class VulkanApplication {
   let graphicsPipeline: Pipeline
   let pipelineLayout: PipelineLayout
   let framebuffers: [Framebuffer]
+  let commandPool: CommandPool
+  @Deferred var commandBuffers: [CommandBuffer]
 
   public init() throws {
     self.instance = try Self.createInstance()
     self.surface = try Self.createSurface(instance: self.instance)
     self.physicalDevice = try Self.pickPhysicalDevice(instance: self.instance)
 
-    let queueFamilyIndex = try Self.getQueueFamilyIndex(
+    self.queueFamilyIndex = try Self.getQueueFamilyIndex(
       physicalDevice: self.physicalDevice, surface: self.surface)
 
     self.device = try Self.createDevice(
@@ -86,6 +100,10 @@ public class VulkanApplication {
     (self.graphicsPipeline, self.pipelineLayout) = try Self.createGraphicsPipeline(device: self.device, swapchainExtent: self.swapchainExtent, renderPass: self.renderPass)
 
     self.framebuffers = try Self.createFramebuffers(device: self.device, swapchainImageViews: self.imageViews, renderPass: self.renderPass, swapchainExtent: self.swapchainExtent)
+
+    self.commandPool = try Self.createCommandPool(device: self.device, queueFamilyIndex: self.queueFamilyIndex)
+
+    try self.createCommandBuffers()
   }
 
   static func createInstance() throws -> Instance {
@@ -395,6 +413,44 @@ public class VulkanApplication {
         layers: 1 
       )
       return try Framebuffer(device: device, createInfo: framebufferInfo)
+    }
+  }
+
+  static func createCommandPool(device: Device, queueFamilyIndex: UInt32) throws -> CommandPool {
+    try CommandPool.create(from: device, info: CommandPoolCreateInfo(
+      flags: .none,
+      queueFamilyIndex: queueFamilyIndex
+    ))
+  }
+
+  func createCommandBuffers() throws {
+    self.commandBuffers = try framebuffers.map { framebuffer in
+      let commandBuffer = try CommandBuffer.allocate(device: device, info: CommandBufferAllocateInfo(
+        commandPool: commandPool,
+        level: .primary,
+        commandBufferCount: 1))
+
+      commandBuffer.begin(CommandBufferBeginInfo(
+        flags: [],
+        inheritanceInfo: nil))
+
+      commandBuffer.beginRenderPass(beginInfo: RenderPassBeginInfo(
+        renderPass: renderPass,
+        framebuffer: framebuffer,
+        renderArea: Rect2D(
+          offset: Offset2D(x: 0, y: 0), extent: swapchainExtent
+        ),
+        clearValues: [ClearColorValue.float32(0, 0, 0, 1).eraseToAny()]
+      ), contents: .inline)
+
+      commandBuffer.bindPipeline(pipelineBindPoint: .graphics, pipeline: graphicsPipeline)
+
+      commandBuffer.draw(vertexCount: 3, instanceCount: 1, firstVertex: 0, firstInstance: 0)
+
+      commandBuffer.endRenderPass()
+      commandBuffer.end()
+
+      return commandBuffer
     }
   }
 

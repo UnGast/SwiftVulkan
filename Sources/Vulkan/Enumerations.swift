@@ -809,16 +809,6 @@ public enum PhysicalDeviceType: UInt32 {
          cpu
 }
 
-public enum PipelineBindPoint: UInt32 {
-    case graphics = 0,
-         compute = 1,
-         pointRayTracing = 2
-
-    var vulkanValue: VkPipelineBindPoint {
-        return VkPipelineBindPoint(self.rawValue)
-    }
-}
-
 public enum PresentMode: UInt32 {
     case immediate = 0,
          mailbox = 1,

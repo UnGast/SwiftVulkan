@@ -55,4 +55,28 @@ public class CommandBuffer {
 
         return CommandBuffer(pointer: output!)
     }
+
+    public func begin(_ beginInfo: CommandBufferBeginInfo) {
+        vkBeginCommandBuffer(pointer, beginInfo.vulkanPointer) 
+    }
+
+    public func beginRenderPass(beginInfo: RenderPassBeginInfo, contents: SubpassContents) {
+        vkCmdBeginRenderPass(pointer, beginInfo.vulkanPointer, contents.vulkan)
+    }
+
+    public func bindPipeline(pipelineBindPoint: PipelineBindPoint, pipeline: Pipeline) {
+        vkCmdBindPipeline(pointer, pipelineBindPoint.vulkan, pipeline.pointer)
+    }
+
+    public func draw(vertexCount: UInt32, instanceCount: UInt32, firstVertex: UInt32, firstInstance: UInt32) {
+        vkCmdDraw(pointer, vertexCount, instanceCount, firstVertex, firstInstance)
+    }
+
+    public func endRenderPass() {
+        vkCmdEndRenderPass(pointer)
+    }
+
+    public func end() {
+        vkEndCommandBuffer(pointer)
+    }
 }
