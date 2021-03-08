@@ -175,11 +175,6 @@ public class VulkanApplication {
     let capabilities = try physicalDevice.getSurfaceCapabilities(surface: surface)
     let surfaceFormat = try selectFormat(for: physicalDevice, surface: surface)
 
-    //let presentModes = try gpu.getSurfacePresentModes(surface: surface)
-    let preTransform =
-      capabilities.supportedTransforms.contains(.identity)
-      ? .identity : capabilities.currentTransform
-
     // Find a supported composite alpha mode - one of these is guaranteed to be set
     var compositeAlpha: CompositeAlphaFlags = .opaque
     let desiredCompositeAlpha =
@@ -197,15 +192,15 @@ public class VulkanApplication {
       createInfo: SwapchainCreateInfo(
         flags: .none,
         surface: surface,
-        minImageCount: capabilities.maxImageCount,
+        minImageCount: capabilities.minImageCount + 1,
         imageFormat: surfaceFormat.format,
         imageColorSpace: surfaceFormat.colorSpace,
         imageExtent: capabilities.maxImageExtent,
         imageArrayLayers: 1,
         imageUsage: .colorAttachment,
         imageSharingMode: .exclusive,
-        queueFamilyIndices: [0],
-        preTransform: preTransform,
+        queueFamilyIndices: [],
+        preTransform: capabilities.currentTransform,
         compositeAlpha: compositeAlpha,
         presentMode: .fifo,
         clipped: true,
@@ -217,12 +212,6 @@ public class VulkanApplication {
 
   func selectFormat(for gpu: PhysicalDevice, surface: SurfaceKHR) throws -> SurfaceFormat {
     let formats = try gpu.getSurfaceFormats(for: surface)
-
-    for format in formats {
-      if format.format == .R8G8B8A8_UNORM {
-        return format
-      }
-    }
 
     for format in formats {
       if format.format == .B8G8R8A8_SRGB {
@@ -343,7 +332,7 @@ public class VulkanApplication {
       depthClampEnable: false,
       rasterizerDiscardEnable: false,
       polygonMode: .fill,
-      cullMode: .back,
+      cullMode: .none,
       frontFace: .clockwise,
       depthBiasEnable: false,
       depthBiasConstantFactor: 0,
@@ -453,7 +442,7 @@ public class VulkanApplication {
         renderArea: Rect2D(
           offset: Offset2D(x: 0, y: 0), extent: swapchainExtent
         ),
-        clearValues: [ClearColorValue.float32(1, 0, 0, 1).eraseToAny()]
+        clearValues: [ClearColorValue.float32(0, 0, 0, 1).eraseToAny()]
       ), contents: .inline)
 
       commandBuffer.bindPipeline(pipelineBindPoint: .graphics, pipeline: graphicsPipeline)
