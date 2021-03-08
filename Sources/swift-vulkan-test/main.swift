@@ -6,49 +6,9 @@ import Vulkan
 
 // SPRIV Compiler? https://github.com/stuartcarnie/SwiftSPIRV-Cross
 
-SDL_Init(SDL_INIT_VIDEO)
-
-let window = SDL_CreateWindow(
-  "swift-vulkan-test",
-  Int32(SDL_WINDOWPOS_CENTERED_MASK), Int32(SDL_WINDOWPOS_CENTERED_MASK),
-  800, 600,
-  SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_VULKAN.rawValue
-)
-
-public func getSDLInstanceExtensions() throws -> [String] {
-  var opResult = SDL_FALSE
-  var countArr: [UInt32] = [0]
-  var result: [String] = []
-
-  opResult = SDL_Vulkan_GetInstanceExtensions(window, &countArr, nil)
-  if opResult != SDL_TRUE {
-    fatalError()
-  }
-
-  let count = Int(countArr[0])
-  if count > 0 {
-    let namesPtr = UnsafeMutablePointer<UnsafePointer<Int8>?>.allocate(capacity: count)
-    defer {
-      namesPtr.deallocate()
-    }
-
-    opResult = SDL_Vulkan_GetInstanceExtensions(window, &countArr, namesPtr)
-
-    if opResult == SDL_TRUE {
-      for i in 0..<count {
-        let namePtr = namesPtr[i]
-        let newName = String(cString: namePtr!)
-        result.append(newName)
-      }
-    }
-  }
-
-  return result
-}
-
 @propertyWrapper
 public class Deferred<T> {
-  private var value: T?
+  private var value: T? = nil
   public var wrappedValue: T {
     get { value! }
     set { value = newValue }
@@ -58,55 +18,97 @@ public class Deferred<T> {
 }
 
 public class VulkanApplication {
-  let instance: Instance
-  let surface: SurfaceKHR
-  let physicalDevice: PhysicalDevice
-  let queueFamilyIndex: UInt32
-  let device: Device
-  let queue: Queue
-  let swapchain: Swapchain
-  let swapchainImageFormat: Format
-  let swapchainExtent: Extent2D
-  let swapchainImages: [Image]
-  let imageViews: [ImageView]
-  let renderPass: RenderPass
-  let graphicsPipeline: Pipeline
-  let pipelineLayout: PipelineLayout
-  let framebuffers: [Framebuffer]
-  let commandPool: CommandPool
+  @Deferred var window: OpaquePointer
+  @Deferred var instance: Instance
+  @Deferred var surface: SurfaceKHR
+  @Deferred var physicalDevice: PhysicalDevice
+  @Deferred var queueFamilyIndex: UInt32
+  @Deferred var device: Device
+  @Deferred var queue: Queue
+  @Deferred var swapchain: Swapchain
+  @Deferred var swapchainImageFormat: Format
+  @Deferred var swapchainExtent: Extent2D
+  @Deferred var swapchainImages: [Image]
+  @Deferred var imageViews: [ImageView]
+  @Deferred var renderPass: RenderPass
+  @Deferred var graphicsPipeline: Pipeline
+  @Deferred var pipelineLayout: PipelineLayout
+  @Deferred var framebuffers: [Framebuffer]
+  @Deferred var commandPool: CommandPool
   @Deferred var commandBuffers: [CommandBuffer]
 
   public init() throws {
-    self.instance = try Self.createInstance()
-    self.surface = try Self.createSurface(instance: self.instance)
-    self.physicalDevice = try Self.pickPhysicalDevice(instance: self.instance)
+    self.setupSdl()
 
-    self.queueFamilyIndex = try Self.getQueueFamilyIndex(
-      physicalDevice: self.physicalDevice, surface: self.surface)
+    try self.createInstance()
+    try self.createSurface()
+    try self.pickPhysicalDevice()
 
-    self.device = try Self.createDevice(
-      physicalDevice: self.physicalDevice, queueFamilyIndex: queueFamilyIndex)
+    try self.getQueueFamilyIndex()
+
+    try self.createDevice()
 
     self.queue = Queue.create(fromDevice: self.device, presentFamilyIndex: queueFamilyIndex)
 
-    (self.swapchain, self.swapchainImageFormat, self.swapchainExtent) = try Self.createSwapchain(
-      physicalDevice: self.physicalDevice, device: self.device, surface: self.surface)
+    try self.createSwapchain()
     self.swapchainImages = try self.swapchain.getSwapchainImages()
 
-    self.imageViews = try Self.createImageViews(swapchainImages: self.swapchainImages, swapchainImageFormat: self.swapchainImageFormat, device: self.device)
+    try self.createImageViews()
 
-    self.renderPass = try Self.createRenderPass(swapchainImageFormat: self.swapchainImageFormat, device: self.device)
+    try self.createRenderPass()
 
-    (self.graphicsPipeline, self.pipelineLayout) = try Self.createGraphicsPipeline(device: self.device, swapchainExtent: self.swapchainExtent, renderPass: self.renderPass)
+    try self.createGraphicsPipeline()
 
-    self.framebuffers = try Self.createFramebuffers(device: self.device, swapchainImageViews: self.imageViews, renderPass: self.renderPass, swapchainExtent: self.swapchainExtent)
+    try self.createFramebuffers()
 
-    self.commandPool = try Self.createCommandPool(device: self.device, queueFamilyIndex: self.queueFamilyIndex)
+    try self.createCommandPool()
 
     try self.createCommandBuffers()
   }
 
-  static func createInstance() throws -> Instance {
+  func setupSdl() {
+    SDL_Init(SDL_INIT_VIDEO)
+
+    self.window = SDL_CreateWindow(
+      "swift-vulkan-test",
+      Int32(SDL_WINDOWPOS_CENTERED_MASK), Int32(SDL_WINDOWPOS_CENTERED_MASK),
+      800, 600,
+      SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_VULKAN.rawValue
+    )
+  }
+
+  func getSDLInstanceExtensions() throws -> [String] {
+    var opResult = SDL_FALSE
+    var countArr: [UInt32] = [0]
+    var result: [String] = []
+
+    opResult = SDL_Vulkan_GetInstanceExtensions(window, &countArr, nil)
+    if opResult != SDL_TRUE {
+      fatalError()
+    }
+
+    let count = Int(countArr[0])
+    if count > 0 {
+      let namesPtr = UnsafeMutablePointer<UnsafePointer<Int8>?>.allocate(capacity: count)
+      defer {
+        namesPtr.deallocate()
+      }
+
+      opResult = SDL_Vulkan_GetInstanceExtensions(window, &countArr, namesPtr)
+
+      if opResult == SDL_TRUE {
+        for i in 0..<count {
+          let namePtr = namesPtr[i]
+          let newName = String(cString: namePtr!)
+          result.append(newName)
+        }
+      }
+    }
+
+    return result
+  }
+
+  func createInstance() throws {
     let sdlExtensions = try! getSDLInstanceExtensions()
 
     let createInfo = InstanceCreateInfo(
@@ -115,27 +117,25 @@ public class VulkanApplication {
       enabledExtensionNames: sdlExtensions
     )
 
-    return try Instance.createInstance(createInfo: createInfo)
+    self.instance = try Instance.createInstance(createInfo: createInfo)
   }
 
-  static func createSurface(instance: Instance) throws -> SurfaceKHR {
+  func createSurface() throws {
     var surface = VkSurfaceKHR(bitPattern: 0)
 
     if SDL_Vulkan_CreateSurface(window, instance.pointer, &surface) != SDL_TRUE {
       fatalError("implement SDL errors! -> get the last sdl error")
     }
 
-    return SurfaceKHR(instance: instance, surface: surface!)
+    self.surface = SurfaceKHR(instance: instance, surface: surface!)
   }
 
-  static func pickPhysicalDevice(instance: Instance) throws -> PhysicalDevice {
+  func pickPhysicalDevice() throws {
     let devices = try instance.enumeratePhysicalDevices()
-    return devices[0]
+    self.physicalDevice = devices[0]
   }
 
-  static func getQueueFamilyIndex(physicalDevice: PhysicalDevice, surface: SurfaceKHR) throws
-    -> UInt32
-  {
+  func getQueueFamilyIndex() throws {
     var queueFamilyIndex: UInt32?
     for properties in physicalDevice.queueFamilyProperties {
       if try! physicalDevice.hasSurfaceSupport(
@@ -151,16 +151,14 @@ public class VulkanApplication {
       throw VulkanApplicationError.noSuitableQueueFamily
     }
 
-    return queueFamilyIndexUnwrapped
+    self.queueFamilyIndex = queueFamilyIndexUnwrapped
   }
 
-  static func createDevice(physicalDevice: PhysicalDevice, queueFamilyIndex: UInt32) throws
-    -> Device
-  {
+  func createDevice() throws {
     let queueCreateInfo = DeviceQueueCreateInfo(
       flags: .none, queueFamilyIndex: queueFamilyIndex, queuePriorities: [1.0])
 
-    return try physicalDevice.createDevice(
+    self.device = try physicalDevice.createDevice(
       createInfo: DeviceCreateInfo(
         flags: .none,
         queueCreateInfos: [queueCreateInfo],
@@ -169,9 +167,7 @@ public class VulkanApplication {
         enabledFeatures: PhysicalDeviceFeatures()))
   }
 
-  static func createSwapchain(physicalDevice: PhysicalDevice, device: Device, surface: SurfaceKHR)
-    throws -> (Swapchain, Format, Extent2D)
-  {
+  func createSwapchain() throws {
     let capabilities = try physicalDevice.getSurfaceCapabilities(surface: surface)
     let surfaceFormat = try selectFormat(for: physicalDevice, surface: surface)
 
@@ -192,7 +188,7 @@ public class VulkanApplication {
       }
     }
 
-    return (try Swapchain.create(
+    self.swapchain = try Swapchain.create(
       inDevice: device,
       createInfo: SwapchainCreateInfo(
         flags: .none,
@@ -210,10 +206,12 @@ public class VulkanApplication {
         presentMode: .fifo,
         clipped: true,
         oldSwapchain: nil
-      )), surfaceFormat.format, capabilities.maxImageExtent)
+      ))
+      self.swapchainImageFormat = surfaceFormat.format
+      self.swapchainExtent = capabilities.maxImageExtent
   }
 
-  static func selectFormat(for gpu: PhysicalDevice, surface: SurfaceKHR) throws -> SurfaceFormat {
+  func selectFormat(for gpu: PhysicalDevice, surface: SurfaceKHR) throws -> SurfaceFormat {
     let formats = try gpu.getSurfaceFormats(for: surface)
 
     for format in formats {
@@ -231,8 +229,8 @@ public class VulkanApplication {
     return formats[0]
   }
 
-  static func createImageViews(swapchainImages: [Image], swapchainImageFormat: Format, device: Device) throws -> [ImageView] {
-    try swapchainImages.map {
+  func createImageViews() throws {
+    self.imageViews = try swapchainImages.map {
       try ImageView.create(device: device, createInfo: ImageViewCreateInfo(
         flags: .none, 
         image: $0, 
@@ -248,7 +246,7 @@ public class VulkanApplication {
     }
   }
 
-  static func createRenderPass(swapchainImageFormat: Format, device: Device) throws -> RenderPass {
+  func createRenderPass() throws {
     let colorAttachment = AttachmentDescription(
       flags: .none,
       format: swapchainImageFormat,
@@ -282,10 +280,10 @@ public class VulkanApplication {
       dependencies: nil
     )
 
-    return try RenderPass.create(createInfo: renderPassInfo, device: device)
+    self.renderPass = try RenderPass.create(createInfo: renderPassInfo, device: device)
   }
 
-  static func createGraphicsPipeline(device: Device, swapchainExtent: Extent2D, renderPass: RenderPass) throws -> (Pipeline, PipelineLayout) {
+  func createGraphicsPipeline() throws {
     let vertexShaderCode: Data = try Data(contentsOf: Bundle.module.url(forResource: "vertex", withExtension: "spv")!)
     let fragmentShaderCode: Data = try Data(contentsOf: Bundle.module.url(forResource: "fragment", withExtension: "spv")!)
 
@@ -399,11 +397,12 @@ public class VulkanApplication {
 
     let graphicsPipeline = try Pipeline(device: device, createInfo: pipelineInfo)
 
-    return (graphicsPipeline, pipelineLayout)
+    self.graphicsPipeline = graphicsPipeline
+    self.pipelineLayout = pipelineLayout
   }
 
-  static func createFramebuffers(device: Device, swapchainImageViews: [ImageView], renderPass: RenderPass, swapchainExtent: Extent2D) throws -> [Framebuffer] {
-    try swapchainImageViews.map { imageView in
+  func createFramebuffers() throws {
+    self.framebuffers = try imageViews.map { imageView in
       let framebufferInfo = FramebufferCreateInfo(
         flags: .none,
         renderPass: renderPass,
@@ -416,8 +415,8 @@ public class VulkanApplication {
     }
   }
 
-  static func createCommandPool(device: Device, queueFamilyIndex: UInt32) throws -> CommandPool {
-    try CommandPool.create(from: device, info: CommandPoolCreateInfo(
+  func createCommandPool() throws {
+    self.commandPool = try CommandPool.create(from: device, info: CommandPoolCreateInfo(
       flags: .none,
       queueFamilyIndex: queueFamilyIndex
     ))
@@ -454,6 +453,10 @@ public class VulkanApplication {
     }
   }
 
+  func mainLoop() {
+    SDL_Delay(100)
+  }
+
   public enum VulkanApplicationError: Error {
     case noSuitableQueueFamily
   }
@@ -461,6 +464,6 @@ public class VulkanApplication {
 
 let vulkanApplication = try VulkanApplication()
 
-SDL_Delay(100)
+vulkanApplication.mainLoop()
 
 print("REACHED HERE")
