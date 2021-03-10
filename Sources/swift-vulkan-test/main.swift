@@ -8,7 +8,7 @@ import Vulkan
 
 @propertyWrapper
 public class Deferred<T> {
-  private var value: T? = nil
+  var value: T? = nil
   public var wrappedValue: T {
     get { value! }
     set { value = newValue }
@@ -58,7 +58,6 @@ public class VulkanApplication {
     self.queue = Queue.create(fromDevice: self.device, presentFamilyIndex: queueFamilyIndex)
 
     try self.createSwapchain()
-    self.swapchainImages = try self.swapchain.getSwapchainImages()
 
     try self.createImageViews()
 
@@ -82,7 +81,7 @@ public class VulkanApplication {
       "swift-vulkan-test",
       Int32(SDL_WINDOWPOS_CENTERED_MASK), Int32(SDL_WINDOWPOS_CENTERED_MASK),
       800, 600,
-      SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_VULKAN.rawValue
+      SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_VULKAN.rawValue | SDL_WINDOW_RESIZABLE.rawValue
     )
   }
 
@@ -212,7 +211,9 @@ public class VulkanApplication {
         oldSwapchain: nil
       ))
       self.swapchainImageFormat = surfaceFormat.format
-      self.swapchainExtent = capabilities.maxImageExtent
+      self.swapchainExtent = capabilities.minImageExtent
+
+    self.swapchainImages = try self.swapchain.getSwapchainImages()
   }
 
   func selectFormat(for gpu: PhysicalDevice, surface: SurfaceKHR) throws -> SurfaceFormat {
@@ -481,6 +482,35 @@ public class VulkanApplication {
     }
   }
 
+  func recreateSwapchain() throws {
+    var windowWidth: Int32 = 0
+    var windowHeight: Int32 = 0
+    SDL_GetWindowSize(window, &windowWidth, &windowHeight)
+    var event = SDL_Event()
+    while windowWidth == 0 || windowHeight == 0 {
+      SDL_WaitEvent(&event)
+      SDL_GetWindowSize(window, &windowWidth, &windowHeight)
+    }
+
+    device.waitIdle()
+
+    try createSwapchain()
+    try createImageViews()
+    try createRenderPass()
+    try createGraphicsPipeline()
+    try createFramebuffers()
+    try createCommandBuffers()
+  }
+
+  func cleanupSwapchain() {
+    framebuffers.forEach { $0.destroy() }
+    CommandBuffer.free(commandBuffers: commandBuffers, device: device, commandPool: commandPool)
+    graphicsPipeline.destroy()
+    renderPass.destroy()
+    imageViews.forEach { $0.destroy() }
+    swapchain.destroy()
+  }
+
   func drawFrame() throws {
     let imageAvailableSemaphore = imageAvailableSemaphores[currentFrameIndex]
     let renderFinishedSemaphore = renderFinishedSemaphores[currentFrameIndex]
@@ -488,7 +518,17 @@ public class VulkanApplication {
 
     inFlightFence.wait(timeout: .max)
 
-    let imageIndex = try swapchain.acquireNextImage(timeout: .max, semaphore: imageAvailableSemaphore, fence: nil)
+    let (imageIndex, acquireImageResult) = try swapchain.acquireNextImage(timeout: .max, semaphore: imageAvailableSemaphore, fence: nil)
+
+    if acquireImageResult == .errorOutOfDateKhr {
+      device.waitIdle()
+      queue.waitIdle()
+      cleanupSwapchain()
+      try recreateSwapchain()
+      return
+    } else if acquireImageResult != .success && acquireImageResult != .suboptimalKhr {
+      throw UnexpectedVulkanResultError(acquireImageResult)
+    }
 
     if let previousFence = imagesInFlightWithFences[imageIndex] {
       previousFence.wait(timeout: .max)
@@ -504,12 +544,22 @@ public class VulkanApplication {
         signalSemaphores: [renderFinishedSemaphore]
       )
     ], fence: inFlightFence)
-    try queue.present(presentInfo: PresentInfoKHR(
+    let presentResult = queue.present(presentInfo: PresentInfoKHR(
       waitSemaphores: [renderFinishedSemaphore],
       swapchains: [swapchain],
       imageIndices: [imageIndex],
       results: ()
     ))
+
+    if presentResult == .errorOutOfDateKhr || presentResult == .suboptimalKhr {
+      device.waitIdle()
+      queue.waitIdle()
+      cleanupSwapchain()
+      try recreateSwapchain()
+      return
+    } else if presentResult != .success {
+      throw UnexpectedVulkanResultError(acquireImageResult)
+    }
 
     currentFrameIndex += 1
     currentFrameIndex %= maxFramesInFlight
@@ -521,13 +571,15 @@ public class VulkanApplication {
     while SDL_PollEvent(&event) != 0 {
       if event.type == SDL_QUIT.rawValue {
         device.waitIdle()
-        return
+        exit(0)
       }
     }
+    
     try drawFrame()
-    SDL_Delay(500)
 
-    try mainLoop()
+    DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) { [unowned self] in
+      try! mainLoop()
+    }
   }
 
   public enum VulkanApplicationError: Error {
@@ -535,8 +587,16 @@ public class VulkanApplication {
   }
 }
 
-let vulkanApplication = try VulkanApplication()
+let vulkanApplication = try! VulkanApplication()
 
-try vulkanApplication.mainLoop()
+try! vulkanApplication.mainLoop()
 
-print("REACHED HERE")
+dispatchMain()
+
+public struct UnexpectedVulkanResultError: Error {
+  public let result: Result 
+
+  public init(_ result: Result) {
+    self.result = result
+  }
+}

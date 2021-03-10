@@ -65,7 +65,7 @@ public struct GraphicsPipelineCreateInfo {
       pColorBlendState: colorBlendState.vulkanPointer,
       pDynamicState: dynamicState?.vulkanPointer,
       layout: layout.vulkanValue,
-      renderPass: renderPass.vulkanValue,
+      renderPass: renderPass.pointer,
       subpass: subpass,
       basePipelineHandle: nil,
       basePipelineIndex: 0

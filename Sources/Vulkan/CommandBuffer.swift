@@ -56,6 +56,10 @@ public class CommandBuffer: WrapperStruct {
         return CommandBuffer(pointer: output!)
     }
 
+    public class func free(commandBuffers: [CommandBuffer], device: Device, commandPool: CommandPool) {
+        vkFreeCommandBuffers(device.pointer, commandPool.pointer, UInt32(commandBuffers.count), commandBuffers.vulkanPointer)
+    }
+
     public var vulkan: Optional<VkCommandBuffer> {
         Optional(pointer)
     }

@@ -4,8 +4,9 @@
 //
 
 import CVulkan
+import Dispatch
 
-public class Swapchain: WrapperStruct {
+public class Swapchain: WrapperClass, WrapperStruct {
     public let pointer: VkSwapchainKHR
     public let device: Device
 
@@ -37,17 +38,13 @@ public class Swapchain: WrapperStruct {
     }
 
     public func acquireNextImage(timeout: UInt64, semaphore: Semaphore?,
-                                 fence: Fence?) throws -> UInt32 {
+                                 fence: Fence?) throws -> (UInt32, Result) {
         var localImageIndex: UInt32 = 0
-        let opResult = vkAcquireNextImageKHR(
+        let vkResult = vkAcquireNextImageKHR(
                 self.device.pointer, self.pointer, timeout,
                 semaphore?.vulkanValue, fence?.pointer, &localImageIndex)
 
-        guard opResult == VK_SUCCESS else {
-            throw opResult.toResult()
-        }
-
-        return localImageIndex
+        return (localImageIndex, vkResult.toResult())
     }
 
     public func getSwapchainImages() throws -> [Image] {
@@ -64,8 +61,7 @@ public class Swapchain: WrapperStruct {
         return images.map { Image(fromVulkan: $0!, device: self.device, swapchain: self) }
     }
 
-    deinit {
-        print("Destroying swapchain")
+    override public func destroyUnderlying() {
         vkDestroySwapchainKHR(device.pointer, self.pointer, nil)
     }
 }

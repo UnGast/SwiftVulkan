@@ -23,12 +23,6 @@ extension String {
     }
 }
 
-extension VkResult {
-    func toResult() -> Result {
-        return Result(rawValue: self.rawValue)!
-    }
-}
-
 extension Bool {
     var vulkan: VkBool32 {
         return self ? 1 : 0

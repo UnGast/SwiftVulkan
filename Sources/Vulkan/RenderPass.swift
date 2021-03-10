@@ -1,12 +1,12 @@
 
 import CVulkan
 
-public class RenderPass {
-    public let vulkanValue: VkRenderPass
+public class RenderPass: WrapperClass {
+    public let pointer: VkRenderPass
     public let device: Device
 
-    init(vulkanValue: VkRenderPass, device: Device) {
-        self.vulkanValue = vulkanValue
+    init(pointer: VkRenderPass, device: Device) {
+        self.pointer = pointer 
         self.device = device
     }
 
@@ -21,10 +21,10 @@ public class RenderPass {
             throw opResult.toResult()
         }
 
-        return RenderPass(vulkanValue: renderPass!, device: device)
+        return RenderPass(pointer: renderPass!, device: device)
     }
 
-    deinit {
-        vkDestroyRenderPass(device.pointer, self.vulkanValue, nil)
+    override public func destroyUnderlying() {
+        vkDestroyRenderPass(device.pointer, pointer, nil)
     }
 }

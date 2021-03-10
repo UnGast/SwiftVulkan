@@ -19,8 +19,8 @@ public class Queue {
         vkQueueSubmit(pointer, UInt32(submits.count), submits.vulkanPointer, fence?.pointer)
     }
 
-    public func present(presentInfo: PresentInfoKHR) throws {
-        vkQueuePresentKHR(pointer, presentInfo.vulkanPointer)
+    public func present(presentInfo: PresentInfoKHR) -> Result {
+        vkQueuePresentKHR(pointer, presentInfo.vulkanPointer).toResult()
     }
 
     public func waitIdle() {

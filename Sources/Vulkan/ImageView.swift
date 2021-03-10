@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class ImageView: WrapperStruct {
+public class ImageView: WrapperClass, WrapperStruct {
     public let pointer: VkImageView
     public let device: Device
 
@@ -34,8 +34,7 @@ public class ImageView: WrapperStruct {
         Optional(pointer)
     }
 
-    deinit {
-        print("Destroying image view")
+    override public func destroyUnderlying() {
         vkDestroyImageView(self.device.pointer, self.pointer, nil)
     }
 }

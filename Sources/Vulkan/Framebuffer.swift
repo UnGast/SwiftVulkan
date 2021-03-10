@@ -1,11 +1,13 @@
 import CVulkan
 
-public class Framebuffer {
+public class Framebuffer: WrapperClass {
 
   public let pointer: VkFramebuffer
+  public let device: Device
 
-  init(rawFramebuffer: VkFramebuffer) {
+  init(rawFramebuffer: VkFramebuffer, device: Device) {
     self.pointer = rawFramebuffer
+    self.device = device
   }
 
   public convenience init(device: Device, createInfo: FramebufferCreateInfo) throws {
@@ -16,10 +18,14 @@ public class Framebuffer {
     }
 
     if opResult == VK_SUCCESS {
-      self.init(rawFramebuffer: rawFramebuffer!)
+      self.init(rawFramebuffer: rawFramebuffer!, device: device)
       return
     }
 
     throw opResult.toResult()
+  }
+
+  override public func destroyUnderlying() {
+    vkDestroyFramebuffer(device.pointer, self.pointer, nil)
   }
 }

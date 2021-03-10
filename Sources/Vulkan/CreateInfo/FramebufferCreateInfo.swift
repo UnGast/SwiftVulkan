@@ -29,7 +29,7 @@ public struct FramebufferCreateInfo: WrapperStruct {
       sType: VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
       pNext: nil,
       flags: flags.rawValue,
-      renderPass: renderPass.vulkanValue,
+      renderPass: renderPass.pointer,
       attachmentCount: UInt32(attachments.count),
       pAttachments: attachments.vulkanPointer,
       width: width,
