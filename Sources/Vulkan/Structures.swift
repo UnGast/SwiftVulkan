@@ -419,7 +419,7 @@ public struct ImageCreateInfo {
                 pNext: nil,
                 flags: self.flags.vulkan,
                 imageType: self.imageType.vulkan,
-                format: self.format.vulkanValue,
+                format: self.format.vulkan,
                 extent: self.extent.vulkanValue,
                 mipLevels: self.mipLevels,
                 arrayLayers: self.arrayLayers,
@@ -478,7 +478,7 @@ public struct ImageViewCreateInfo {
                 flags: self.flags.vulkan,
                 image: self.image.pointer,
                 viewType: self.viewType.vulkan,
-                format: self.format.vulkanValue,
+                format: self.format.vulkan,
                 components: self.components.vulkan,
                 subresourceRange: self.subresourceRange.vulkan)
     }
@@ -1163,7 +1163,7 @@ public struct SwapchainCreateInfo {
                 flags: VkSwapchainCreateFlagsKHR(self.flags.rawValue),
                 surface: self.surface.vulkanPointer,
                 minImageCount: self.minImageCount,
-                imageFormat: self.imageFormat.vulkanValue,
+                imageFormat: self.imageFormat.vulkan,
                 imageColorSpace: self.imageColorSpace.vulkanValue,
                 imageExtent: self.imageExtent.vulkan,
                 imageArrayLayers: self.imageArrayLayers,

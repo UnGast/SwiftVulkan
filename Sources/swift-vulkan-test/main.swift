@@ -319,8 +319,8 @@ public class VulkanApplication {
     let shaderStages = [vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo]
 
     let vertexInputInfo = PipelineVertexInputStateCreateInfo(
-      vertexBindingDescriptions: [],
-      vertexAttributeDescriptions: []
+      vertexBindingDescriptions: nil,
+      vertexAttributeDescriptions: nil 
     )
 
     let inputAssembly = PipelineInputAssemblyStateCreateInfo(topology: .triangleList, primitiveRestartEnable: false)

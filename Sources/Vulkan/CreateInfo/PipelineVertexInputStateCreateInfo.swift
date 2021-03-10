@@ -1,10 +1,10 @@
 import CVulkan
 
 public struct PipelineVertexInputStateCreateInfo: WrapperStruct {
-  public let vertexBindingDescriptions: [VertexBindingDescription]
-  public let vertexAttributeDescriptions: [VertexAttributeDescription]
+  public let vertexBindingDescriptions: [VertexInputBindingDescription]?
+  public let vertexAttributeDescriptions: [VertexInputAttributeDescription]?
 
-  public init(vertexBindingDescriptions: [VertexBindingDescription], vertexAttributeDescriptions: [VertexAttributeDescription]) {
+  public init(vertexBindingDescriptions: [VertexInputBindingDescription]?, vertexAttributeDescriptions: [VertexInputAttributeDescription]?) {
     self.vertexBindingDescriptions = vertexBindingDescriptions
     self.vertexAttributeDescriptions = vertexAttributeDescriptions
   }
@@ -13,10 +13,10 @@ public struct PipelineVertexInputStateCreateInfo: WrapperStruct {
     var info = VkPipelineVertexInputStateCreateInfo()
     info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
     info.pNext = nil
-    info.vertexBindingDescriptionCount = UInt32(vertexBindingDescriptions.count)
-    info.pVertexBindingDescriptions = nil
-    info.vertexAttributeDescriptionCount = UInt32(vertexBindingDescriptions.count)
-    info.pVertexAttributeDescriptions = nil
+    info.vertexBindingDescriptionCount = UInt32(vertexBindingDescriptions?.count ?? 0)
+    info.pVertexBindingDescriptions = vertexBindingDescriptions?.vulkanPointer
+    info.vertexAttributeDescriptionCount = UInt32(vertexAttributeDescriptions?.count ?? 0)
+    info.pVertexAttributeDescriptions = vertexAttributeDescriptions?.vulkanPointer
     return info
   }
 }

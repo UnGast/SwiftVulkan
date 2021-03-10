@@ -34,7 +34,7 @@ public struct AttachmentDescription: WrapperStruct {
     public var vulkan: VkAttachmentDescription {
         return VkAttachmentDescription(
                 flags: self.flags.vulkanValue,
-                format: self.format.vulkanValue,
+                format: self.format.vulkan,
                 samples: self.samples.vulkanValue,
                 loadOp: self.loadOp.vulkanValue,
                 storeOp: self.storeOp.vulkanValue,
