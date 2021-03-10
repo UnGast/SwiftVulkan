@@ -16,10 +16,14 @@ public class Queue {
     }
 
     public func submit(submits: [SubmitInfo], fence: Fence?) throws {
-        vkQueueSubmit(pointer, UInt32(submits.count), submits.vulkanPointer, fence?.vulkanValue)
+        vkQueueSubmit(pointer, UInt32(submits.count), submits.vulkanPointer, fence?.pointer)
     }
 
     public func present(presentInfo: PresentInfoKHR) throws {
         vkQueuePresentKHR(pointer, presentInfo.vulkanPointer)
+    }
+
+    public func waitIdle() {
+        vkQueueWaitIdle(pointer)
     }
 }

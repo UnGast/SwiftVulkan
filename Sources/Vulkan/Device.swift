@@ -51,6 +51,10 @@ public class Device {
             UInt32(descriptorCopies.count), descriptorCopies.count == 0 ? nil : copies)
     }
 
+    public func waitIdle() {
+        vkDeviceWaitIdle(pointer)
+    }
+
     deinit {
         print("Destroying device")
         vkDestroyDevice(pointer, nil)

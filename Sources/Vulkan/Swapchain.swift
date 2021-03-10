@@ -41,7 +41,7 @@ public class Swapchain: WrapperStruct {
         var localImageIndex: UInt32 = 0
         let opResult = vkAcquireNextImageKHR(
                 self.device.pointer, self.pointer, timeout,
-                semaphore?.vulkanValue, fence?.vulkanValue, &localImageIndex)
+                semaphore?.vulkanValue, fence?.pointer, &localImageIndex)
 
         guard opResult == VK_SUCCESS else {
             throw opResult.toResult()

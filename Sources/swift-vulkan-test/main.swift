@@ -36,8 +36,13 @@ public class VulkanApplication {
   @Deferred var framebuffers: [Framebuffer]
   @Deferred var commandPool: CommandPool
   @Deferred var commandBuffers: [CommandBuffer]
-  @Deferred var imageAvailableSemaphore: Semaphore
-  @Deferred var renderFinishedSemaphore: Semaphore
+  @Deferred var imageAvailableSemaphores: [Semaphore]
+  @Deferred var renderFinishedSemaphores: [Semaphore]
+  @Deferred var inFlightFences: [Fence]
+
+  let maxFramesInFlight = 2
+  var currentFrameIndex = 0
+  var imagesInFlightWithFences: [UInt32: Fence] = [:]
 
   public init() throws {
     self.setupSdl()
@@ -67,7 +72,7 @@ public class VulkanApplication {
 
     try self.createCommandBuffers()
 
-    try self.createSemaphores()
+    try self.createSyncObjects()
   }
 
   func setupSdl() {
@@ -456,19 +461,41 @@ public class VulkanApplication {
     }
   }
 
-  func createSemaphores() throws {
-    imageAvailableSemaphore = try Semaphore.create(info: SemaphoreCreateInfo(
-      flags: .none
-    ), device: device)
+  func createSyncObjects() throws {
+    imageAvailableSemaphores = try (0..<maxFramesInFlight).map { _ in 
+      try Semaphore.create(info: SemaphoreCreateInfo(
+        flags: .none
+      ), device: device)
+    }
 
-    renderFinishedSemaphore = try Semaphore.create(info: SemaphoreCreateInfo(
-      flags: .none
-    ), device: device)
+    renderFinishedSemaphores = try (0..<maxFramesInFlight).map { _ in 
+      try Semaphore.create(info: SemaphoreCreateInfo(
+        flags: .none
+      ), device: device)
+    }
+
+    inFlightFences = try (0..<maxFramesInFlight).map { _ in
+      try Fence(device: device, createInfo: FenceCreateInfo(
+        flags: [.signaled]
+      ))
+    }
   }
 
   func drawFrame() throws {
-    print("DRAW FRAME")
+    let imageAvailableSemaphore = imageAvailableSemaphores[currentFrameIndex]
+    let renderFinishedSemaphore = renderFinishedSemaphores[currentFrameIndex]
+    let inFlightFence = inFlightFences[currentFrameIndex]
+
+    inFlightFence.wait(timeout: .max)
+
     let imageIndex = try swapchain.acquireNextImage(timeout: .max, semaphore: imageAvailableSemaphore, fence: nil)
+
+    if let previousFence = imagesInFlightWithFences[imageIndex] {
+      previousFence.wait(timeout: .max)
+    }
+    imagesInFlightWithFences[imageIndex] = inFlightFence
+    inFlightFence.reset()
+
     try queue.submit(submits: [
       SubmitInfo(
         waitSemaphores: [imageAvailableSemaphore],
@@ -476,20 +503,31 @@ public class VulkanApplication {
         commandBuffers: [commandBuffers[Int(imageIndex)]],
         signalSemaphores: [renderFinishedSemaphore]
       )
-    ], fence: nil)
+    ], fence: inFlightFence)
     try queue.present(presentInfo: PresentInfoKHR(
       waitSemaphores: [renderFinishedSemaphore],
       swapchains: [swapchain],
       imageIndices: [imageIndex],
       results: ()
     ))
+
+    currentFrameIndex += 1
+    currentFrameIndex %= maxFramesInFlight
   }
 
   func mainLoop() throws {
-    for i in 0..<20 {
-      try drawFrame()
-      SDL_Delay(100)
+    var event = SDL_Event()
+    event.type = 0
+    while SDL_PollEvent(&event) != 0 {
+      if event.type == SDL_QUIT.rawValue {
+        device.waitIdle()
+        return
+      }
     }
+    try drawFrame()
+    SDL_Delay(500)
+
+    try mainLoop()
   }
 
   public enum VulkanApplicationError: Error {
