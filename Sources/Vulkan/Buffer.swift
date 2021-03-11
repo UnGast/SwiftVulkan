@@ -44,12 +44,12 @@ public class BufferCreateInfo {
                 usage: self.usage.vulkan,
                 sharingMode: self.sharingMode.vulkanValue,
                 queueFamilyIndexCount: UInt32(self.queueFamilyIndices?.count ?? 0),
-                pQueueFamilyIndices: self.queueFamilyIndices
+                pQueueFamilyIndices: self.queueFamilyIndices?.vulkanPointer
         )
     }
 }
 
-public class Buffer {
+public class Buffer: WrapperStruct {
     public let pointer: VkBuffer
     public let device: Device
 
@@ -59,6 +59,10 @@ public class Buffer {
         device: Device) {
         self.pointer = pointer
         self.device = device
+    }
+
+    public var vulkan: Optional<VkBuffer> {
+        Optional(pointer)
     }
 
     public lazy var memoryRequirements: MemoryRequirements = {

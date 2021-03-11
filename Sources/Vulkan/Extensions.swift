@@ -21,6 +21,10 @@ extension String {
         let nsVal = self as NSString
         return nsVal.cString(using: String.Encoding.utf8.rawValue)
     }
+
+    public var vulkan: UnsafePointer<Int8>? {
+        asCString()
+    }
 }
 
 extension Bool {

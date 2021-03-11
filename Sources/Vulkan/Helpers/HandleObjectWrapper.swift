@@ -21,7 +21,7 @@ public class HandleObjectWrapper<UnderlyingHandle>: WrapperStruct {
 
   deinit {
     if !destroyed {
-      fatalError("a wrapper class got deinitialized before the underlying vulkan object was explicitly destroyed")
+      print("a wrapper class got deinitialized before the underlying vulkan object was explicitly destroyed: \(self)")
     }
   }
 }

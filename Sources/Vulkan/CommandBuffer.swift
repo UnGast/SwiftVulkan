@@ -76,6 +76,10 @@ public class CommandBuffer: WrapperStruct {
         vkCmdBindPipeline(pointer, pipelineBindPoint.vulkan, pipeline.pointer)
     }
 
+    public func bindVertexBuffers(firstBinding: UInt32, buffers: [Buffer], offsets: [DeviceSize]) {
+        vkCmdBindVertexBuffers(pointer, firstBinding, UInt32(buffers.count) - firstBinding, buffers.vulkanPointer, offsets.vulkanPointer)
+    }
+
     public func draw(vertexCount: UInt32, instanceCount: UInt32, firstVertex: UInt32, firstInstance: UInt32) {
         vkCmdDraw(pointer, vertexCount, instanceCount, firstVertex, firstInstance)
     }

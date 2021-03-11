@@ -35,6 +35,8 @@ public class VulkanApplication {
   @Deferred var pipelineLayout: PipelineLayout
   @Deferred var framebuffers: [Framebuffer]
   @Deferred var commandPool: CommandPool
+  @Deferred var vertexBuffer: Buffer
+  @Deferred var vertexBufferMemory: DeviceMemory
   @Deferred var commandBuffers: [CommandBuffer]
   @Deferred var imageAvailableSemaphores: [Semaphore]
   @Deferred var renderFinishedSemaphores: [Semaphore]
@@ -68,6 +70,8 @@ public class VulkanApplication {
     try self.createFramebuffers()
 
     try self.createCommandPool()
+
+    try self.createVertexBuffer()
 
     try self.createCommandBuffers()
 
@@ -318,9 +322,30 @@ public class VulkanApplication {
 
     let shaderStages = [vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo]
 
+    let vertexInputBindingDescription = VertexInputBindingDescription(
+      binding: 0,
+      stride: UInt32(MemoryLayout<Float>.size * 5),
+      inputRate: .vertex
+    )
+
+    let vertexInputAttributeDescriptions = [
+      VertexInputAttributeDescription(
+        location: 0,
+        binding: 0,
+        format: .R32G32_SFLOAT,
+        offset: 0
+      ),
+      VertexInputAttributeDescription(
+        location: 1,
+        binding: 0,
+        format: .R32G32B32_SFLOAT,
+        offset: UInt32(MemoryLayout<Float>.size * 2)
+      )
+    ]
+
     let vertexInputInfo = PipelineVertexInputStateCreateInfo(
-      vertexBindingDescriptions: nil,
-      vertexAttributeDescriptions: nil 
+      vertexBindingDescriptions: [vertexInputBindingDescription],
+      vertexAttributeDescriptions: vertexInputAttributeDescriptions
     )
 
     let inputAssembly = PipelineInputAssemblyStateCreateInfo(topology: .triangleList, primitiveRestartEnable: false)
@@ -431,6 +456,57 @@ public class VulkanApplication {
     ))
   }
 
+  func createVertexBuffer() throws {
+    let vertices: [Float] = [
+      0, -0.5, 0, 1, 0,
+      0.5, 0.5, 1, 0, 0,
+      -0.5, 0.5, 0, 0, 1
+    ]
+    /*let vertices = [
+      Vertex(position: (0, -0.5), color: (0, 1, 0)),
+      Vertex(position: (0.5, 0.5), color: (1, 0, 0)),
+      Vertex(position: (-0.5, 0.5), color: (0, 0, 1))
+    ]*/
+
+    let verticesPointer = UnsafeMutableBufferPointer<Float>.allocate(capacity: 15)
+    for i in 0..<15 {
+      verticesPointer[i] = 1.0
+    }
+
+    let bufferInfo = BufferCreateInfo(
+      flags: .none,
+      size: DeviceSize(MemoryLayout<Float>.size * vertices.count),
+      usage: .vertexBuffer,
+      sharingMode: .exclusive,
+      queueFamilyIndices: nil)
+    vertexBuffer = try Buffer.create(device: device, createInfo: bufferInfo)
+
+    let memRequirements = vertexBuffer.memoryRequirements
+
+    vertexBufferMemory = try DeviceMemory.allocateMemory(inDevice: device, allocInfo: MemoryAllocateInfo(
+      allocationSize: memRequirements.size,
+      memoryTypeIndex: try findMemoryType(typeFilter: memRequirements.memoryTypeBits, properties: MemoryPropertyFlags.hostVisible.rawValue | MemoryPropertyFlags.hostCoherent.rawValue)
+    ))
+
+    try vertexBuffer.bindMemory(memory: vertexBufferMemory)
+
+    var cpuVertexBufferMemory: UnsafeMutableRawPointer? = nil
+    try vertexBufferMemory.mapMemory(offset: 0, size: bufferInfo.size, flags: .none, data: &cpuVertexBufferMemory)
+    cpuVertexBufferMemory!.copyMemory(from: vertices, byteCount: MemoryLayout<Float>.size * vertices.count)
+    vertexBufferMemory.unmapMemory()
+  }
+
+  func findMemoryType(typeFilter: UInt32, properties: UInt32) throws -> UInt32 {
+    let memProperties = try physicalDevice.getMemoryProperties()
+    for (index, checkType) in memProperties.memoryTypes.enumerated() {
+      if typeFilter & (1 << index) != 0 && checkType.propertyFlags.rawValue & properties == properties {
+        return UInt32(index)
+      }
+    }
+
+    throw VulkanApplicationError.noSuitableMemoryType 
+  }
+
   func createCommandBuffers() throws {
     self.commandBuffers = try framebuffers.map { framebuffer in
       let commandBuffer = try CommandBuffer.allocate(device: device, info: CommandBufferAllocateInfo(
@@ -452,6 +528,8 @@ public class VulkanApplication {
       ), contents: .inline)
 
       commandBuffer.bindPipeline(pipelineBindPoint: .graphics, pipeline: graphicsPipeline)
+
+      commandBuffer.bindVertexBuffers(firstBinding: 0, buffers: [vertexBuffer], offsets: [0])
 
       commandBuffer.draw(vertexCount: 3, instanceCount: 1, firstVertex: 0, firstInstance: 0)
 
@@ -582,8 +660,13 @@ public class VulkanApplication {
     }
   }
 
+  func destroy() {
+    //vertexBuffer.destroy()
+  }
+
   public enum VulkanApplicationError: Error {
-    case noSuitableQueueFamily
+    case noSuitableQueueFamily,
+      noSuitableMemoryType
   }
 }
 

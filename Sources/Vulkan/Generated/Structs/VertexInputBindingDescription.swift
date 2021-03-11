@@ -21,8 +21,8 @@ self.inputRate = inputRate
   public var vulkan: VkVertexInputBindingDescription {
     VkVertexInputBindingDescription(
       binding: binding.vulkan,
-stride: stride.vulkan,
-inputRate: inputRate.vulkan
+      stride: stride.vulkan,
+      inputRate: inputRate.vulkan
     )
   }
 }

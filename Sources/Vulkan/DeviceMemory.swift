@@ -1,4 +1,3 @@
-
 import CVulkan
 
 public class DeviceMemory {
@@ -20,32 +19,28 @@ public class DeviceMemory {
             return vkAllocateMemory(device.pointer, $0, nil, &deviceMemory)
         }
         
-        guard opResult == VK_SUCCESS else {
-            throw opResult.toResult()
-        }
-
         return DeviceMemory(deviceMemory!, device: device)
     }
 
-    public func mapMemory(offset: DeviceSize, size: DeviceSize, flags: MemoryMapFlags, data: Any) throws {
+    public func mapMemory(offset: DeviceSize, size: DeviceSize, flags: MemoryMapFlags, data: inout UnsafeMutableRawPointer?) throws {
         
-        var rawPointer: UnsafeMutableRawPointer?  = nil
+        //var rawPointer: UnsafeMutableRawPointer?  = nil
 
-        let opResult = withUnsafeMutablePointer(to: &rawPointer) { ptr in
+        let opResult = withUnsafeMutablePointer(to: &data) { ptr in
             return vkMapMemory(device.pointer, self.pointer, offset, size, flags.vulkan, ptr)
         }
 
-        guard opResult == VK_SUCCESS || rawPointer == nil else {
+        /*guard opResult == VK_SUCCESS || rawPointer == nil else {
             throw opResult.toResult()
-        }
+        }*/
 
-        if let rawPointer = rawPointer {
+        /*if let rawPointer = rawPointer {
             let dataSize = MemoryLayout.size(ofValue: data)
         
             withUnsafePointer(to: data) {
                 rawPointer.copyMemory(from: $0, byteCount: dataSize)
             }
-        }
+        }*/
     }
 
     public func unmapMemory() {

@@ -36,7 +36,7 @@ public struct PipelineShaderStageCreateInfo: WrapperStruct {
             flags: flags.rawValue,
             stage: VkShaderStageFlagBits(stage.rawValue),
             module: module.pointer,
-            pName: name,
+            pName: name.vulkan,
             pSpecializationInfo: nil)
     }
 }
