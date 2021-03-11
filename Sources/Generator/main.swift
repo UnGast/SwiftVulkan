@@ -7,11 +7,39 @@ let vulkanDefinitionsFilePath = Path.cwd / "vk.xml"
 
 let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFilePath))
 
+let typeRegistry = TypeRegistry(fromXml: xml.registry.types.type)
+
 for type in xml.registry.types.type {
   if type.attributes["category"] == "struct" {
     if type.attributes["name"] == "VkFramebufferCreateInfo" {
-      print(StructGenerator(fromXml: type).generate())
+      let generator = StructGenerator(fromXml: type, typeRegistry: typeRegistry)
+      let (typeName, definition) = generator.generate()
+      print(definition)
+      /*let path = Path.cwd/"Sources/Vulkan/Generated/Structs"/(typeName + ".swift")
+      try path.touch()
+      try definition.write(to: path)*/
     }
+  }
+}
+
+class TypeRegistry {
+  var handleTypeNames: [String] = []
+
+  public init(fromXml xml: XML.Accessor) {
+    for type in xml {
+      switch type.attributes["category"] {
+      case "handle":
+        if let name = type["name"].text {
+          handleTypeNames.append(name)
+        }
+      default:
+        continue
+      }
+    }
+  }
+
+  public func isHandle(typeName: String) -> Bool {
+    handleTypeNames.contains(typeName)
   }
 }
 
@@ -35,18 +63,22 @@ struct TransformedTypeMember {
 
 class StructGenerator {
   private let xml: XML.Accessor
+  private let typeRegistry: TypeRegistry
 
   var rawTypeName: String = ""
+  var mappedTypeName: String = ""
   var structureTypeEnumValue = ""
   var rawMembers = [TypeMember]()
   var transformedMembers = [TransformedTypeMember]()
 
-  public init(fromXml xml: XML.Accessor) {
+  public init(fromXml xml: XML.Accessor, typeRegistry: TypeRegistry) {
     self.xml = xml
+    self.typeRegistry = typeRegistry
   }
 
-  public func generate() -> String {
+  public func generate() -> (typeName: String, definition: String) {
     rawTypeName = xml.attributes["name"] ?? ""
+    mappedTypeName = mapTypeNameToSwift(rawTypeName)
 
     for member in xml.member {
       if member["name"].text == "sType" {
@@ -74,7 +106,7 @@ class StructGenerator {
           transformedMembers.append(
             TransformedTypeMember(
               name: baseName,
-              type: mapTypeNameToSwift(rawPointerMember.type),
+              type: "[\(mapTypeNameToSwift(rawPointerMember.type))]",
               comment: rawPointerMember.comment,
               mapping: .nested(rawCount: rawCountMember, rawPointer: rawPointerMember)))
 
@@ -96,24 +128,27 @@ class StructGenerator {
       !(resultMemberNameBlacklist.contains($0.name))
     }
 
-    let result = """
-      public struct \(mapTypeNameToSwift(xml.attributes["name"]!)): WrapperStruct {
+    let typeDefinition = """
+      import CVulkan
+
+      public struct \(mappedTypeName): WrapperStruct {
         \(generateMemberDefinitions())
 
-      public init(
-        \(generateInitArguments())
-      ) {
-        \(generateInitializerAssignments())
-      }
+        public init(
+          \(generateInitArguments())
+        ) {
+          \(generateInitializerAssignments())
+        }
 
-      public var vulkan: \(rawTypeName) {
-        \(rawTypeName)(
-          \(generateBindingAssignments())
-        )
+        public var vulkan: \(rawTypeName) {
+          \(rawTypeName)(
+            \(generateBindingAssignments())
+          )
+        }
       }
       """
 
-      return result
+      return (mappedTypeName, typeDefinition)
   }
 
   private func generateMemberDefinitions() -> String {
@@ -140,9 +175,17 @@ class StructGenerator {
   }
 
   private func generateBindingAssignments() -> String {
+    """
+    sType: \(structureTypeEnumValue),
+    pNext: nil,\n
+    """ +
+
     transformedMembers.map { member in
       switch member.mapping {
       case let .simple(rawMember):
+        if typeRegistry.isHandle(typeName: rawMember.type) {
+          return "\(rawMember.name): \(member.name).vulkan"
+        }
         return "\(rawMember.name): \(member.name)"
       case let .nested(rawCountMember, rawPointerMember):
         return """
