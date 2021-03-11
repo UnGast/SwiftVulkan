@@ -32,9 +32,9 @@ flags: flags.vulkan,
 renderPass: renderPass.vulkan,
 attachmentCount: UInt32(attachments.count),
 pAttachments: attachments.vulkanPointer,
-width: width,
-height: height,
-layers: layers
+width: width.vulkan,
+height: height.vulkan,
+layers: layers.vulkan
     )
   }
 }

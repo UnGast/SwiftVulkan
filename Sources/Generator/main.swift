@@ -9,9 +9,11 @@ let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFilePath))
 
 let typeRegistry = TypeRegistry(fromXml: xml.registry.types.type)
 
+let generatedStructWhitelist = ["VkFramebufferCreateInfo", "VkVertexInputAttributeDescription", "VkVertexInputBindingDescription"]
+
 for type in xml.registry.types.type {
   if type.attributes["category"] == "struct" {
-    if type.attributes["name"] == "VkFramebufferCreateInfo" {
+    if let rawName = type.attributes["name"], generatedStructWhitelist.contains(rawName) {
       let generator = StructGenerator(fromXml: type, typeRegistry: typeRegistry)
       let (typeName, definition) = generator.generate()
       print(definition)
@@ -43,33 +45,30 @@ class TypeRegistry {
   }
 }
 
-struct TypeMember {
-  var name: String
-  var type: String
-  var comment: String?
-}
-
-struct TransformedTypeMember {
-  var name: String
-  var type: String
-  var comment: String?
-  var mapping: Mapping
-
-  public enum Mapping {
-    case simple(TypeMember)
-    case nested(rawCount: TypeMember, rawPointer: TypeMember)
-  }
-}
-
 class StructGenerator {
+  struct ExposedMember {
+    var name: String
+    var type: String
+    var comment: String?
+  }
+
+  struct RawMember {
+    var name: String
+    var type: String
+    var comment: String?
+  }
+
   private let xml: XML.Accessor
   private let typeRegistry: TypeRegistry
 
   var rawTypeName: String = ""
   var mappedTypeName: String = ""
   var structureTypeEnumValue = ""
-  var rawMembers = [TypeMember]()
-  var transformedMembers = [TransformedTypeMember]()
+
+  var rawMembers = [RawMember]()
+  var memberMappings = [String: String]()
+  var transformedMembers = [ExposedMember]()
+  var exposedMembers = [ExposedMember]()
 
   public init(fromXml xml: XML.Accessor, typeRegistry: TypeRegistry) {
     self.xml = xml
@@ -85,47 +84,64 @@ class StructGenerator {
         structureTypeEnumValue = member.attributes["values"] ?? ""
       }
       if let name = member["name"].text, let type = member.type.text {
-        rawMembers.append(TypeMember(name: name, type: type, comment: member.comment.text))
+        rawMembers.append(RawMember(name: name, type: type, comment: member.comment.text))
       }
     }
-
-    var resultMemberNameBlacklist = [String]()
 
     for (index, rawMember) in rawMembers.enumerated() {
-      if rawMember.name == "pNext" || rawMember.name == "sType" {
+      switch rawMember.name {
+      case "sType":
+        memberMappings[rawMember.name] = structureTypeEnumValue
         continue
-      }
 
-      if let match = Regex("^p([A-Z].*)").firstMatch(in: rawMember.name) {
-        var baseName = match.captures[0] ?? ""
-        baseName = (baseName.first?.lowercased() ?? "") + (String(baseName.dropFirst() ?? ""))
-        let rawCountNameRegex = try! Regex(string: baseName.dropLast() + "Count")
+      case "pNext":
+        memberMappings[rawMember.name] = "nil"
+        continue
 
-        let rawPointerMember = rawMember
-        if let rawCountMember = rawMembers.first(where: { rawCountNameRegex.matches($0.name) }) {
-          transformedMembers.append(
-            TransformedTypeMember(
-              name: baseName,
-              type: "[\(mapTypeNameToSwift(rawPointerMember.type))]",
-              comment: rawPointerMember.comment,
-              mapping: .nested(rawCount: rawCountMember, rawPointer: rawPointerMember)))
+      /*case "flags":
+        memberMappings[rawMember.name] = "flags.vulkan"
 
-          resultMemberNameBlacklist.append(rawCountMember.name)
+        exposedMembers.append(ExposedMember(
+          name: "flags", type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
+        ))*/
+
+      case Regex("^(.*?)Count"):
+        let baseName = Regex.lastMatch!.captures[0]! + "s"
+
+        let arrayPointerNameRegex = try! Regex(string: "^p\(baseName.first!.uppercased() + baseName.dropFirst())")
+        if rawMembers.contains(where: { arrayPointerNameRegex.matches($0.name) }) {
+          memberMappings[rawMember.name] = "UInt32(\(baseName).count)"
         } else {
-          fatalError("DID NOT FIND COUNT \(rawCountNameRegex)")
-        }
-      } else {
-        transformedMembers.append(
-          TransformedTypeMember(
-            name: rawMember.name,
-            type: mapTypeNameToSwift(rawMember.type),
-            mapping: .simple(rawMember)
-          ))
-      }
-    }
+          memberMappings[rawMember.name] = "\(rawMember.name)"
 
-    transformedMembers = transformedMembers.filter {
-      !(resultMemberNameBlacklist.contains($0.name))
+          exposedMembers.append(ExposedMember(
+            name: rawMember.name, type: mapTypeNameToSwift(rawMember.type)
+          ))
+        }
+      
+      case Regex("^p([A-Z].*)"):
+        var baseName = Regex.lastMatch!.captures[0]!
+        baseName = baseName.first!.lowercased() + baseName.dropFirst()
+        memberMappings[rawMember.name] = "\(baseName).vulkanPointer"
+
+        let arrayCountNameRegex = try! Regex(string: "^\(baseName.dropLast())Count")
+        if rawMembers.contains(where: { arrayCountNameRegex.matches($0.name) }) {
+          exposedMembers.append(ExposedMember(
+            name: baseName, type: "[\(mapTypeNameToSwift(rawMember.type))]"
+          ))
+        } else {
+          exposedMembers.append(ExposedMember(
+            name: baseName, type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
+          ))
+        }
+
+      default:
+        memberMappings[rawMember.name] = "\(rawMember.name).vulkan"
+
+        exposedMembers.append(ExposedMember(
+          name: rawMember.name, type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
+        ))
+      }
     }
 
     let typeDefinition = """
@@ -152,10 +168,10 @@ class StructGenerator {
   }
 
   private func generateMemberDefinitions() -> String {
-    transformedMembers.map { member in
+    exposedMembers.map { member in
       var memberString = ""
       if let comment = member.comment {
-        memberString.append("/** \(comment)\n */")
+        memberString.append("/** \(comment) */\n")
       }
       memberString.append("public var \(member.name): \(member.type)")
       return memberString
@@ -163,26 +179,31 @@ class StructGenerator {
   }
 
   private func generateInitArguments() -> String {
-    transformedMembers.map {
+    exposedMembers.map {
       "\($0.name): \($0.type)"
     }.joined(separator: ",\n")
   }
 
   private func generateInitializerAssignments() -> String {
-    transformedMembers.map {
+    exposedMembers.map {
       "self.\($0.name) = \($0.name)"
     }.joined(separator: "\n")
   }
 
   private func generateBindingAssignments() -> String {
-    """
-    sType: \(structureTypeEnumValue),
-    pNext: nil,\n
-    """ +
-
-    transformedMembers.map { member in
-      if member.name == "flags" {
+    rawMembers.map { rawMember in
+      "\(rawMember.name): \(memberMappings[rawMember.name] ?? "")"
+    }.joined(separator: ",\n")
+    /*transformedMembers.map { member in
+      switch member.name {
+      case "sType":
+        return "sType: \(structureTypeEnumValue)"
+      case "pNext":
+        return "pNext: nil"
+      case "flags":
         return "flags: flags.vulkan"
+      default:
+        break
       }
 
       switch member.mapping {
@@ -197,7 +218,7 @@ class StructGenerator {
         \(rawPointerMember.name): \(member.name).vulkanPointer
         """
       }
-    }.joined(separator: ",\n")
+    }.joined(separator: ",\n")*/
   }
 }
 
