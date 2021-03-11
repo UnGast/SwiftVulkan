@@ -36,6 +36,7 @@ struct TransformedTypeMember {
 class StructGenerator {
   private let xml: XML.Accessor
 
+  var rawTypeName: String = ""
   var structureTypeEnumValue = ""
   var rawMembers = [TypeMember]()
   var transformedMembers = [TransformedTypeMember]()
@@ -45,6 +46,7 @@ class StructGenerator {
   }
 
   public func generate() -> String {
+    rawTypeName = xml.attributes["name"] ?? ""
 
     for member in xml.member {
       if member["name"].text == "sType" {
@@ -95,20 +97,26 @@ class StructGenerator {
     }
 
     let result = """
-      public struct \(mapTypeNameToSwift(xml.attributes["name"]!)) {
-        \(buildMemberDefinitions())
+      public struct \(mapTypeNameToSwift(xml.attributes["name"]!)): WrapperStruct {
+        \(generateMemberDefinitions())
 
       public init(
-        \(buildInitArguments())
+        \(generateInitArguments())
       ) {
         \(generateInitializerAssignments())
+      }
+
+      public var vulkan: \(rawTypeName) {
+        \(rawTypeName)(
+          \(generateBindingAssignments())
+        )
       }
       """
 
       return result
   }
 
-  private func buildMemberDefinitions() -> String {
+  private func generateMemberDefinitions() -> String {
     transformedMembers.map { member in
       var memberString = ""
       if let comment = member.comment {
@@ -119,7 +127,7 @@ class StructGenerator {
     }.joined(separator: "\n")
   }
 
-  private func buildInitArguments() -> String {
+  private func generateInitArguments() -> String {
     transformedMembers.map {
       "\($0.name): \($0.type)"
     }.joined(separator: ",\n")
@@ -131,6 +139,19 @@ class StructGenerator {
     }.joined(separator: "\n")
   }
 
+  private func generateBindingAssignments() -> String {
+    transformedMembers.map { member in
+      switch member.mapping {
+      case let .simple(rawMember):
+        return "\(rawMember.name): \(member.name)"
+      case let .nested(rawCountMember, rawPointerMember):
+        return """
+        \(rawCountMember.name): UInt32(\(member.name).count),
+        \(rawPointerMember.name): \(member.name).vulkanPointer
+        """
+      }
+    }.joined(separator: ",\n")
+  }
 }
 
 func mapTypeNameToSwift(_ rawName: String) -> String {
