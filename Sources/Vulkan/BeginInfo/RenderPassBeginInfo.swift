@@ -22,7 +22,7 @@ public struct RenderPassBeginInfo: WrapperStruct {
     VkRenderPassBeginInfo(
       sType: VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
       pNext: nil,
-      renderPass: renderPass.pointer,
+      renderPass: renderPass.vulkan,
       framebuffer: framebuffer.pointer,
       renderArea: renderArea.vulkan,
       clearValueCount: UInt32(clearValues.count),

@@ -413,7 +413,7 @@ public class VulkanApplication {
   func createFramebuffers() throws {
     self.framebuffers = try imageViews.map { imageView in
       let framebufferInfo = FramebufferCreateInfo(
-        flags: .none,
+        flags: [],
         renderPass: renderPass,
         attachments: [imageView],
         width: swapchainExtent.width,

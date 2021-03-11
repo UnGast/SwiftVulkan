@@ -1,30 +1,29 @@
 
 import CVulkan
 
-public class RenderPass: WrapperClass {
-    public let pointer: VkRenderPass
+public class RenderPass: HandleObjectWrapper<VkRenderPass> {
     public let device: Device
 
-    init(pointer: VkRenderPass, device: Device) {
-        self.pointer = pointer 
+    init(underlyingHandle: VkRenderPass, device: Device) {
         self.device = device
+        super.init(underlyingHandle: underlyingHandle)
     }
 
     public class func create(createInfo: RenderPassCreateInfo, device: Device) throws -> RenderPass {
-        var renderPass = VkRenderPass(bitPattern: 0)
+        var handle = VkRenderPass(bitPattern: 0)
         var vulkanCreateInfo = createInfo
         let opResult = withUnsafePointer(to: vulkanCreateInfo.toVulkan()) {
-            return vkCreateRenderPass(device.pointer, $0, nil, &renderPass)
+            return vkCreateRenderPass(device.pointer, $0, nil, &handle)
         }
         
         guard opResult == VK_SUCCESS else {
             throw opResult.toResult()
         }
 
-        return RenderPass(pointer: renderPass!, device: device)
+        return RenderPass(underlyingHandle: handle!, device: device)
     }
 
     override public func destroyUnderlying() {
-        vkDestroyRenderPass(device.pointer, pointer, nil)
+        vkDestroyRenderPass(device.pointer, underlyingHandle, nil)
     }
 }

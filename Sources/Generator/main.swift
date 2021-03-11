@@ -15,9 +15,9 @@ for type in xml.registry.types.type {
       let generator = StructGenerator(fromXml: type, typeRegistry: typeRegistry)
       let (typeName, definition) = generator.generate()
       print(definition)
-      /*let path = Path.cwd/"Sources/Vulkan/Generated/Structs"/(typeName + ".swift")
+      let path = Path.cwd/"Sources/Vulkan/Generated/Structs"/(typeName + ".swift")
       try path.touch()
-      try definition.write(to: path)*/
+      try definition.write(to: path)
     }
   }
 }
@@ -181,6 +181,10 @@ class StructGenerator {
     """ +
 
     transformedMembers.map { member in
+      if member.name == "flags" {
+        return "flags: flags.vulkan"
+      }
+
       switch member.mapping {
       case let .simple(rawMember):
         if typeRegistry.isHandle(typeName: rawMember.type) {
