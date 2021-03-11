@@ -65,7 +65,7 @@ class StructGenerator {
       if let match = Regex("^p([A-Z].*)").firstMatch(in: rawMember.name) {
         var baseName = match.captures[0] ?? ""
         baseName = (baseName.first?.lowercased() ?? "") + (String(baseName.dropFirst() ?? ""))
-        let rawCountNameRegex = try! Regex(string: baseName + "Count")
+        let rawCountNameRegex = try! Regex(string: baseName.dropLast() + "Count")
 
         let rawPointerMember = rawMember
         if let rawCountMember = rawMembers.first(where: { rawCountNameRegex.matches($0.name) }) {
@@ -77,6 +77,8 @@ class StructGenerator {
               mapping: .nested(rawCount: rawCountMember, rawPointer: rawPointerMember)))
 
           resultMemberNameBlacklist.append(rawCountMember.name)
+        } else {
+          fatalError("DID NOT FIND COUNT \(rawCountNameRegex)")
         }
       } else {
         transformedMembers.append(
@@ -94,14 +96,10 @@ class StructGenerator {
 
     let result = """
       public struct \(mapTypeNameToSwift(xml.attributes["name"]!)) {
-        \(transformedMembers.map {
-          buildTransformedTypeMemberDefinition($0)
-        }.joined(separator: "\n"))
+        \(buildMemberDefinitions())
 
       public init(
-        \(transformedMembers.map {
-          buildStructInitArgument(for: $0)
-        }.joined(separator: ",\n"))
+        \(buildInitArguments())
       ) {
         \(generateInitializerAssignments())
       }
@@ -110,17 +108,21 @@ class StructGenerator {
       return result
   }
 
-  private func buildTransformedTypeMemberDefinition(_ member: TransformedTypeMember) -> String {
-    var memberString = ""
-    if let comment = member.comment {
-      memberString.append("/** \(comment)\n */")
-    }
-    memberString.append("public var \(member.name): \(member.type)")
-    return memberString
+  private func buildMemberDefinitions() -> String {
+    transformedMembers.map { member in
+      var memberString = ""
+      if let comment = member.comment {
+        memberString.append("/** \(comment)\n */")
+      }
+      memberString.append("public var \(member.name): \(member.type)")
+      return memberString
+    }.joined(separator: "\n")
   }
 
-  private func buildStructInitArgument(for transformedMember: TransformedTypeMember) -> String {
-    "\(transformedMember.name): \(transformedMember.type)"
+  private func buildInitArguments() -> String {
+    transformedMembers.map {
+      "\($0.name): \($0.type)"
+    }.joined(separator: ",\n")
   }
 
   private func generateInitializerAssignments() -> String {
@@ -128,6 +130,7 @@ class StructGenerator {
       "self.\($0.name) = \($0.name)"
     }.joined(separator: "\n")
   }
+
 }
 
 func mapTypeNameToSwift(_ rawName: String) -> String {
