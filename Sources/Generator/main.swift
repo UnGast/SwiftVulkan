@@ -9,7 +9,7 @@ let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFilePath))
 
 let typeRegistry = TypeRegistry(fromXml: xml.registry.types.type)
 
-let generatedStructWhitelist = ["VkFramebufferCreateInfo", "VkVertexInputAttributeDescription", "VkVertexInputBindingDescription"]
+let generatedStructWhitelist = ["VkFramebufferCreateInfo", "VkVertexInputAttributeDescription", "VkVertexInputBindingDescription", "VkBufferCopy"]
 
 for type in xml.registry.types.type {
   if type.attributes["category"] == "struct" {

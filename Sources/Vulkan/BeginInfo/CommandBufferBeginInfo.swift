@@ -1,10 +1,10 @@
 import CVulkan
 
 public struct CommandBufferBeginInfo: WrapperStruct {
-  public var flags: [Flag]
+  public var flags: Flags
   public var inheritanceInfo: Void?
 
-  public init(flags: [Flag], inheritanceInfo: Void?) {
+  public init(flags: Flags, inheritanceInfo: Void?) {
     self.flags = flags
     self.inheritanceInfo = inheritanceInfo
   }
@@ -13,14 +13,20 @@ public struct CommandBufferBeginInfo: WrapperStruct {
     VkCommandBufferBeginInfo(
       sType: VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
       pNext: nil,
-      flags: flags.reduce(into: 0) { $0 & $1.rawValue },
+      flags: flags.rawValue,
       pInheritanceInfo: nil
     )
   }
 
-  public enum Flag: UInt32 {
-    case oneTimeSubmit = 0x00000001,
-      renderPassContinue = 0x00000002,
-      simultaneousUse = 0x00000004 
+  public struct Flags: OptionSet {
+    public var rawValue: UInt32
+
+    public init(rawValue: UInt32) {
+      self.rawValue = rawValue
+    }
+
+    public static let oneTimeSubmit = Flags(rawValue: 0x00000001)
+    public static let renderPassContinue = Flags(rawValue: 0x00000002)
+    public static let simultaneousUse = Flags(rawValue: 0x00000004)
   }
 }

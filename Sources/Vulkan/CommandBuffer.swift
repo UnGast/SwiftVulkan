@@ -88,6 +88,10 @@ public class CommandBuffer: WrapperStruct {
         vkCmdEndRenderPass(pointer)
     }
 
+    public func copyBuffer(srcBuffer: Buffer, dstBuffer: Buffer, regions: [BufferCopy]) {
+        vkCmdCopyBuffer(pointer, srcBuffer.pointer, dstBuffer.pointer, UInt32(regions.count), regions.vulkanPointer)
+    }
+
     public func end() {
         vkEndCommandBuffer(pointer)
     }

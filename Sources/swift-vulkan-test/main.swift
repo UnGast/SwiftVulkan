@@ -456,6 +456,52 @@ public class VulkanApplication {
     ))
   }
 
+  func createBuffer(size: DeviceSize, usage: BufferUsageFlags, properties: MemoryPropertyFlags) throws -> (Buffer, DeviceMemory) {
+    let bufferInfo = BufferCreateInfo(
+      flags: .none,
+      size: size,
+      usage: usage,
+      sharingMode: .exclusive,
+      queueFamilyIndices: nil)
+    let buffer = try Buffer.create(device: device, createInfo: bufferInfo)
+
+    let memRequirements = buffer.memoryRequirements
+
+    let bufferMemory = try DeviceMemory.allocateMemory(inDevice: device, allocInfo: MemoryAllocateInfo(
+      allocationSize: memRequirements.size,
+      memoryTypeIndex: try findMemoryType(typeFilter: memRequirements.memoryTypeBits, properties: properties.rawValue)
+    ))
+
+    try buffer.bindMemory(memory: bufferMemory)
+
+    return (buffer, bufferMemory)
+  }
+
+  func copyBuffer(srcBuffer: Buffer, dstBuffer: Buffer, size: DeviceSize) throws {
+    let commandBuffer = try CommandBuffer.allocate(device: device, info: CommandBufferAllocateInfo(
+      commandPool: commandPool,
+      level: .primary,
+      commandBufferCount: 1
+    ))
+    commandBuffer.begin(CommandBufferBeginInfo(
+      flags: .oneTimeSubmit, inheritanceInfo: nil
+    ))
+    commandBuffer.copyBuffer(srcBuffer: srcBuffer, dstBuffer: dstBuffer, regions: [BufferCopy(
+      srcOffset: 0, dstOffset: 0, size: size 
+    )])
+    commandBuffer.end()
+
+    try queue.submit(submits: [SubmitInfo(
+      waitSemaphores: [],
+      waitDstStageMask: nil,
+      commandBuffers: [commandBuffer],
+      signalSemaphores: []
+    )], fence: nil)
+    queue.waitIdle()
+
+    CommandBuffer.free(commandBuffers: [commandBuffer], device: device, commandPool: commandPool)
+  }
+
   func createVertexBuffer() throws {
     let vertices: [Float] = [
       0, -0.5, 0, 1, 0,
@@ -468,32 +514,26 @@ public class VulkanApplication {
       Vertex(position: (-0.5, 0.5), color: (0, 0, 1))
     ]*/
 
-    let verticesPointer = UnsafeMutableBufferPointer<Float>.allocate(capacity: 15)
-    for i in 0..<15 {
-      verticesPointer[i] = 1.0
-    }
-
-    let bufferInfo = BufferCreateInfo(
-      flags: .none,
-      size: DeviceSize(MemoryLayout<Float>.size * vertices.count),
-      usage: .vertexBuffer,
-      sharingMode: .exclusive,
-      queueFamilyIndices: nil)
-    vertexBuffer = try Buffer.create(device: device, createInfo: bufferInfo)
-
-    let memRequirements = vertexBuffer.memoryRequirements
-
-    vertexBufferMemory = try DeviceMemory.allocateMemory(inDevice: device, allocInfo: MemoryAllocateInfo(
-      allocationSize: memRequirements.size,
-      memoryTypeIndex: try findMemoryType(typeFilter: memRequirements.memoryTypeBits, properties: MemoryPropertyFlags.hostVisible.rawValue | MemoryPropertyFlags.hostCoherent.rawValue)
-    ))
-
-    try vertexBuffer.bindMemory(memory: vertexBufferMemory)
+    let bufferSize = DeviceSize(MemoryLayout<Float>.size * vertices.count)
+    let (stagingBuffer, stagingBufferMemory) = try createBuffer(
+      size: bufferSize,
+      usage: .transferSrc,
+      properties: [.hostVisible, .hostCoherent])
 
     var cpuVertexBufferMemory: UnsafeMutableRawPointer? = nil
-    try vertexBufferMemory.mapMemory(offset: 0, size: bufferInfo.size, flags: .none, data: &cpuVertexBufferMemory)
+    try stagingBufferMemory.mapMemory(offset: 0, size: bufferSize, flags: .none, data: &cpuVertexBufferMemory)
     cpuVertexBufferMemory!.copyMemory(from: vertices, byteCount: MemoryLayout<Float>.size * vertices.count)
-    vertexBufferMemory.unmapMemory()
+    stagingBufferMemory.unmapMemory()
+
+    (vertexBuffer, vertexBufferMemory) = try createBuffer(
+      size: bufferSize,
+      usage: [.vertexBuffer, .transferDst],
+      properties: [.hostVisible, .hostCoherent])
+
+    try copyBuffer(srcBuffer: stagingBuffer, dstBuffer: vertexBuffer, size: bufferSize)
+
+    stagingBuffer.destroy()
+    stagingBufferMemory.free()
   }
 
   func findMemoryType(typeFilter: UInt32, properties: UInt32) throws -> UInt32 {

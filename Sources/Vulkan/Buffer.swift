@@ -49,7 +49,7 @@ public class BufferCreateInfo {
     }
 }
 
-public class Buffer: WrapperStruct {
+public class Buffer: WrapperClass, WrapperStruct {
     public let pointer: VkBuffer
     public let device: Device
 
@@ -96,7 +96,7 @@ public class Buffer: WrapperStruct {
         self.boundMemory = memory
     }
 
-    deinit {
+    override public func destroyUnderlying() {
         vkDestroyBuffer(self.device.pointer, self.pointer, nil)
     }
 }

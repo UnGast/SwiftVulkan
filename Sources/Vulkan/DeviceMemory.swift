@@ -1,6 +1,6 @@
 import CVulkan
 
-public class DeviceMemory {
+public class DeviceMemory: WrapperClass {
     private let device: Device
     public let pointer: VkDeviceMemory
 
@@ -20,6 +20,10 @@ public class DeviceMemory {
         }
         
         return DeviceMemory(deviceMemory!, device: device)
+    }
+
+    public func free() {
+        vkFreeMemory(device.pointer, pointer, nil)
     }
 
     public func mapMemory(offset: DeviceSize, size: DeviceSize, flags: MemoryMapFlags, data: inout UnsafeMutableRawPointer?) throws {
@@ -47,7 +51,7 @@ public class DeviceMemory {
         vkUnmapMemory(device.pointer, self.pointer)
     }
 
-    deinit {
+    public override func destroyUnderlying() {
         print("freeing memory: \(self)")
         vkFreeMemory(device.pointer, self.pointer, nil)
     }
