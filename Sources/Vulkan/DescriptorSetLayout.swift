@@ -1,13 +1,13 @@
 
 import CVulkan
 
-public class DescriptorSetLayout {
-    public let vulkanValue: VkDescriptorSetLayout
+public class DescriptorSetLayout: WrapperClass, WrapperStruct {
+    public let pointer: VkDescriptorSetLayout
     public let device: Device
 
-    init(vulkanValue: VkDescriptorSetLayout,
+    init(pointer: VkDescriptorSetLayout,
         device: Device) {
-        self.vulkanValue = vulkanValue
+        self.pointer = pointer
         self.device = device
     }
 
@@ -16,12 +16,12 @@ public class DescriptorSetLayout {
         createInfo: DescriptorSetLayoutCreateInfo) throws -> DescriptorSetLayout {
 
         var layout = VkDescriptorSetLayout(bitPattern: 0)
-        let bindings = createInfo.bindings.map { return VkDescriptorSetLayoutBinding(
+        /*let bindings = createInfo.bindings.map { return VkDescriptorSetLayoutBinding(
                 binding: $0.binding,
-                descriptorType: $0.descriptorType.vulkanValue,
+                descriptorType: $0.descriptorType.vulkan,
                 descriptorCount: $0.descriptorCount,
                 stageFlags: UInt32($0.stageFlags.rawValue),
-                pImmutableSamplers: $0.immutableSamplers?.map { p in p.vulkanValue }
+                pImmutableSamplers: $0.immutableSamplers?.vulkanPointer
         ) }
 
         let ci = VkDescriptorSetLayoutCreateInfo(
@@ -29,10 +29,10 @@ public class DescriptorSetLayout {
                 pNext: nil,
                 flags: createInfo.flags.rawValue,
                 bindingCount: UInt32(createInfo.bindings.count),
-                pBindings: UnsafePointer(bindings)
-        )
+                pBindings: bindings.vulkanPointer
+        )*/
 
-        let opResult: VkResult = withUnsafePointer(to: ci) {
+        let opResult: VkResult = withUnsafePointer(to: createInfo.vulkan) {
             return vkCreateDescriptorSetLayout(device.pointer, $0, nil, &layout)
         }
 
@@ -40,10 +40,14 @@ public class DescriptorSetLayout {
             throw opResult.toResult()
         }
 
-        return DescriptorSetLayout(vulkanValue: layout!, device: device)
+        return DescriptorSetLayout(pointer: layout!, device: device)
     }
 
-    deinit {
-        vkDestroyDescriptorSetLayout(device.pointer, self.vulkanValue, nil)
+    public var vulkan: Optional<VkDescriptorSetLayout> {
+        pointer
+    }
+
+    override public func destroyUnderlying() {
+        vkDestroyDescriptorSetLayout(device.pointer, self.pointer, nil)
     }
 }

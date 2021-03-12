@@ -19,13 +19,12 @@ public class Device {
     public func allocateDescriptorSets(allocateInfo info: DescriptorSetAllocateInfo) throws -> DescriptorSet {
         var descriptor = VkDescriptorSet(bitPattern: 0)
 
-        let layouts: [VkDescriptorSetLayout?] = info.setLayouts.map { $0.vulkanValue }
         let ai = VkDescriptorSetAllocateInfo(
             sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO, 
             pNext: nil, 
-            descriptorPool: info.descriptorPool.vulkanValue, 
+            descriptorPool: info.descriptorPool.pointer, 
             descriptorSetCount: info.descriptorSetCount, 
-            pSetLayouts: UnsafePointer(layouts)
+            pSetLayouts: info.setLayouts.vulkanPointer 
         )
 
         let opResult = withUnsafePointer(to: ai) {
@@ -36,7 +35,7 @@ public class Device {
             throw opResult.toResult()
         }
 
-        return DescriptorSet(vulkanValue: descriptor!, device: self)
+        return DescriptorSet(pointer: descriptor!, device: self)
     }
 
     public func updateDescriptorSets(

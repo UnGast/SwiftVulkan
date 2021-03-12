@@ -1,10 +1,14 @@
 
 import CVulkan
 
-public class Sampler {
-    public let vulkanValue: VkSampler
+public class Sampler: WrapperStruct {
+    public let pointer: VkSampler
 
-    init(vulkanValue: VkSampler) {
-        self.vulkanValue = vulkanValue
+    init(pointer: VkSampler) {
+        self.pointer = pointer
+    }
+
+    public var vulkan: Optional<VkSampler> {
+        Optional(pointer)
     }
 }

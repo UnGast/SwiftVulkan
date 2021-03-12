@@ -9,7 +9,16 @@ let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFilePath))
 
 let typeRegistry = TypeRegistry(fromXml: xml.registry.types.type)
 
-let generatedStructWhitelist = ["VkFramebufferCreateInfo", "VkVertexInputAttributeDescription", "VkVertexInputBindingDescription", "VkBufferCopy"]
+let generatedStructWhitelist = [
+  "VkFramebufferCreateInfo",
+  "VkVertexInputAttributeDescription",
+  "VkVertexInputBindingDescription",
+  "VkBufferCopy",
+  "VkDescriptorPoolCreateInfo",
+  "VkDescriptorPoolSize",
+  "VkDescriptorSetLayoutBinding",
+  "VkDescriptorSetLayoutCreateInfo",
+  "VkDescriptorSetAllocateInfo"]
 
 for type in xml.registry.types.type {
   if type.attributes["category"] == "struct" {
@@ -55,6 +64,7 @@ class StructGenerator {
   struct RawMember {
     var name: String
     var type: String
+    var optional: Bool
     var comment: String?
   }
 
@@ -84,7 +94,7 @@ class StructGenerator {
         structureTypeEnumValue = member.attributes["values"] ?? ""
       }
       if let name = member["name"].text, let type = member.type.text {
-        rawMembers.append(RawMember(name: name, type: type, comment: member.comment.text))
+        rawMembers.append(RawMember(name: name, type: type, optional: member.attributes["optional"] == "true", comment: member.comment.text))
       }
     }
 
@@ -122,18 +132,22 @@ class StructGenerator {
       case Regex("^p([A-Z].*)"):
         var baseName = Regex.lastMatch!.captures[0]!
         baseName = baseName.first!.lowercased() + baseName.dropFirst()
-        memberMappings[rawMember.name] = "\(baseName).vulkanPointer"
-
-        let arrayCountNameRegex = try! Regex(string: "^\(baseName.dropLast())Count")
-        if rawMembers.contains(where: { arrayCountNameRegex.matches($0.name) }) {
-          exposedMembers.append(ExposedMember(
-            name: baseName, type: "[\(mapTypeNameToSwift(rawMember.type))]"
-          ))
+        if rawMember.optional {
+          memberMappings[rawMember.name] = "\(baseName)?.vulkanPointer"
         } else {
+          memberMappings[rawMember.name] = "\(baseName).vulkanPointer"
+        }
+
+        //let arrayCountNameRegex = try! Regex(string: "^\(baseName.dropLast())Count")
+        //if rawMembers.contains(where: { arrayCountNameRegex.matches($0.name) }) {
+          exposedMembers.append(ExposedMember(
+            name: baseName, type: "[\(mapTypeNameToSwift(rawMember.type))]" + (rawMember.optional ? "?" : "")
+          ))
+        /*} else {
           exposedMembers.append(ExposedMember(
             name: baseName, type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
           ))
-        }
+        }*/
 
       default:
         memberMappings[rawMember.name] = "\(rawMember.name).vulkan"

@@ -472,8 +472,8 @@ public enum DescriptorType: UInt32 {
          inlineUniformBlock = 1000138000,
          accelerationStructure = 1000165000
 
-    var vulkanValue: VkDescriptorType {
-        return VkDescriptorType(rawValue: self.rawValue)
+    var vulkan: VkDescriptorType {
+        VkDescriptorType(rawValue: self.rawValue)
     }
 }
 

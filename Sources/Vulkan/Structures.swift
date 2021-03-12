@@ -68,10 +68,10 @@ public struct CopyDescriptorSet {
         return VkCopyDescriptorSet(
                 sType: VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET,
                 pNext: nil,
-                srcSet: srcSet.vulkanValue,
+                srcSet: srcSet.pointer,
                 srcBinding: srcBinding,
                 srcArrayElement: srcArrayElement,
-                dstSet: dstSet.vulkanValue,
+                dstSet: dstSet.pointer,
                 dstBinding: dstBinding,
                 dstArrayElement: dstArrayElement,
                 descriptorCount: descriptorCount
@@ -110,7 +110,7 @@ public struct DescriptorImageInfo {
 
     func toVulkan() -> VkDescriptorImageInfo {
         let value = VkDescriptorImageInfo(
-                sampler: sampler.vulkanValue,
+                sampler: sampler.vulkan,
                 imageView: imageView.pointer,
                 imageLayout: imageLayout.vulkanValue
         )
@@ -119,7 +119,8 @@ public struct DescriptorImageInfo {
     }
 }
 
-public struct DescriptorPoolSize {
+/*
+public struct DescriptorPoolSize: WrapperStruct {
     public var type: DescriptorType
     public var descriptorCount: UInt32
 
@@ -135,9 +136,9 @@ public struct DescriptorPoolSize {
                 descriptorCount: self.descriptorCount
         )
     }
-}
+}*/
 
-public struct DescriptorSetAllocateInfo {
+/*public struct DescriptorSetAllocateInfo {
     public var descriptorPool: DescriptorPool
     public var descriptorSetCount: UInt32
     public var setLayouts: [DescriptorSetLayout]
@@ -149,8 +150,8 @@ public struct DescriptorSetAllocateInfo {
         self.descriptorSetCount = descriptorSetCount
         self.setLayouts = setLayouts
     }
-}
-
+}*/
+/*
 public struct DescriptorSetLayoutCreateInfo {
     public var flags: Flags
     public var bindings: [DescriptorSetLayoutBinding]
@@ -184,8 +185,8 @@ public struct DescriptorSetLayoutCreateInfo {
                 }
         )
     }
-}
-
+}*/
+/*
 public struct DescriptorSetLayoutBinding {
     public var binding = UInt32(0)
     public var descriptorType = DescriptorType.sampler
@@ -208,15 +209,13 @@ public struct DescriptorSetLayoutBinding {
     var vulkanValue: VkDescriptorSetLayoutBinding {
         return VkDescriptorSetLayoutBinding(
                 binding: self.binding,
-                descriptorType: self.descriptorType.vulkanValue,
+                descriptorType: self.descriptorType.vulkan,
                 descriptorCount: self.descriptorCount,
                 stageFlags: UInt32(self.stageFlags.rawValue),
-                pImmutableSamplers: immutableSamplers?.map {
-                    $0.vulkanValue
-                }
+                pImmutableSamplers: immutableSamplers?.vulkanPointer
         )
     }
-}
+}*/
 
 public struct DeviceCreateInfo {
     public let flags: Flags
@@ -627,18 +626,14 @@ public struct PipelineLayoutCreateInfo {
     }
 
     var vulkan: VkPipelineLayoutCreateInfo {
-        return VkPipelineLayoutCreateInfo(
+        VkPipelineLayoutCreateInfo(
                 sType: VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
                 pNext: nil,
                 flags: flags.rawValue,
                 setLayoutCount: UInt32(setLayouts.count),
-                pSetLayouts: setLayouts.map {
-                    $0.vulkanValue
-                },
+                pSetLayouts: setLayouts.vulkanPointer,
                 pushConstantRangeCount: UInt32(pushConstantRanges.count),
-                pPushConstantRanges: pushConstantRanges.map {
-                    $0.vulkanValue
-                }
+                pPushConstantRanges: pushConstantRanges.vulkanPointer
         )
     }
 }
@@ -903,13 +898,13 @@ public struct PhysicalDeviceProperties {
     let sparseProperties: Any? = nil // TODO: add later if needed
 }
 
-public struct PushConstantRange {
+public struct PushConstantRange: WrapperStruct {
     public var stageFlags: ShaderStageFlags = .none
     public var offset = UInt32(0)
     public var size = UInt32(0)
 
-    var vulkanValue: VkPushConstantRange {
-        return VkPushConstantRange(
+    public var vulkan: VkPushConstantRange {
+        VkPushConstantRange(
                 stageFlags: self.stageFlags.rawValue,
                 offset: self.offset,
                 size: self.size
@@ -1234,11 +1229,11 @@ public class WriteDescriptorSet {
         let value = VkWriteDescriptorSet(
                 sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                 pNext: nil,
-                dstSet: self.dstSet.vulkanValue,
+                dstSet: self.dstSet.pointer,
                 dstBinding: self.dstBinding,
                 dstArrayElement: self.dstArrayElement,
                 descriptorCount: self.descriptorCount,
-                descriptorType: self.descriptorType.vulkanValue,
+                descriptorType: self.descriptorType.vulkan,
                 pImageInfo: pDescriptorImageInfo,
                 pBufferInfo: pBufferInfo,
                 pTexelBufferView: pTexelBufferView

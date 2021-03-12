@@ -32,6 +32,7 @@ public class VulkanApplication {
   @Deferred var imageViews: [ImageView]
   @Deferred var renderPass: RenderPass
   @Deferred var graphicsPipeline: Pipeline
+  @Deferred var descriptorSetLayout: DescriptorSetLayout
   @Deferred var pipelineLayout: PipelineLayout
   @Deferred var framebuffers: [Framebuffer]
   @Deferred var commandPool: CommandPool
@@ -39,6 +40,10 @@ public class VulkanApplication {
   @Deferred var vertexBufferMemory: DeviceMemory
   @Deferred var indexBuffer: Buffer
   @Deferred var indexBufferMemory: DeviceMemory
+  @Deferred var uniformBuffers: [Buffer]
+  @Deferred var uniformBuffersMemory: [DeviceMemory]
+  @Deferred var descriptorPool: DescriptorPool
+  @Deferred var descriptorSets: [DescriptorSet]
   @Deferred var commandBuffers: [CommandBuffer]
   @Deferred var imageAvailableSemaphores: [Semaphore]
   @Deferred var renderFinishedSemaphores: [Semaphore]
@@ -78,6 +83,8 @@ public class VulkanApplication {
 
     try self.createRenderPass()
 
+    try self.createDescriptorSetLayout()
+
     try self.createGraphicsPipeline()
 
     try self.createFramebuffers()
@@ -87,6 +94,12 @@ public class VulkanApplication {
     try self.createVertexBuffer()
 
     try self.createIndexBuffer()
+
+    try self.createUniformBuffers()
+
+    try self.createDescriptorPool()
+
+    try self.createDescriptorSets()
 
     try self.createCommandBuffers()
 
@@ -311,6 +324,20 @@ public class VulkanApplication {
     self.renderPass = try RenderPass.create(createInfo: renderPassInfo, device: device)
   }
 
+  func createDescriptorSetLayout() throws {
+    let uboLayoutBinding = DescriptorSetLayoutBinding(
+      binding: 0,
+      descriptorType: .uniformBuffer,
+      descriptorCount: 1,
+      stageFlags: .vertex,
+      immutableSamplers: nil
+    )
+
+    descriptorSetLayout = try DescriptorSetLayout.create(device: device, createInfo: DescriptorSetLayoutCreateInfo(
+      flags: .none, bindings: [uboLayoutBinding]
+    ))
+  }
+
   func createGraphicsPipeline() throws {
     let vertexShaderCode: Data = try Data(contentsOf: Bundle.module.url(forResource: "vertex", withExtension: "spv")!)
     let fragmentShaderCode: Data = try Data(contentsOf: Bundle.module.url(forResource: "fragment", withExtension: "spv")!)
@@ -422,7 +449,7 @@ public class VulkanApplication {
 
     let pipelineLayoutInfo = PipelineLayoutCreateInfo(
       flags: .none,
-      setLayouts: [],
+      setLayouts: [descriptorSetLayout],
       pushConstantRanges: [])
 
     let pipelineLayout = try PipelineLayout.create(device: device, createInfo: pipelineLayoutInfo)
@@ -492,6 +519,17 @@ public class VulkanApplication {
     return (buffer, bufferMemory)
   }
 
+  func findMemoryType(typeFilter: UInt32, properties: UInt32) throws -> UInt32 {
+    let memProperties = try physicalDevice.getMemoryProperties()
+    for (index, checkType) in memProperties.memoryTypes.enumerated() {
+      if typeFilter & (1 << index) != 0 && checkType.propertyFlags.rawValue & properties == properties {
+        return UInt32(index)
+      }
+    }
+
+    throw VulkanApplicationError.noSuitableMemoryType 
+  }
+
   func copyBuffer(srcBuffer: Buffer, dstBuffer: Buffer, size: DeviceSize) throws {
     let commandBuffer = try CommandBuffer.allocate(device: device, info: CommandBufferAllocateInfo(
       commandPool: commandPool,
@@ -558,15 +596,36 @@ public class VulkanApplication {
     stagingBufferMemory.free()
   }
 
-  func findMemoryType(typeFilter: UInt32, properties: UInt32) throws -> UInt32 {
-    let memProperties = try physicalDevice.getMemoryProperties()
-    for (index, checkType) in memProperties.memoryTypes.enumerated() {
-      if typeFilter & (1 << index) != 0 && checkType.propertyFlags.rawValue & properties == properties {
-        return UInt32(index)
-      }
-    }
+  func createUniformBuffers() throws {
+    let bufferSize = DeviceSize(UniformBufferObject.dataSize)
 
-    throw VulkanApplicationError.noSuitableMemoryType 
+    uniformBuffers = []
+    uniformBuffersMemory = []
+    
+    for _ in 0..<swapchainImages.count {
+      let (buffer, bufferMemory) = try createBuffer(size: bufferSize, usage: .uniformBuffer, properties: [.hostVisible, .hostCoherent])
+      uniformBuffers.append(buffer)
+      uniformBuffersMemory.append(bufferMemory)
+    }
+  }
+
+  func createDescriptorPool() throws {
+    descriptorPool = try DescriptorPool.create(device: device, createInfo: DescriptorPoolCreateInfo(
+      flags: .none,
+      maxSets: UInt32(swapchainImages.count),
+      poolSizes: [DescriptorPoolSize(
+        type: .uniformBuffer, descriptorCount: UInt32(swapchainImages.count) 
+      )]
+    ))
+  }
+
+  func createDescriptorSets() throws {
+    descriptorSets = try DescriptorSet.allocate(device: device, allocateInfo: DescriptorSetAllocateInfo(
+        descriptorPool: descriptorPool,
+        descriptorSetCount: UInt32(swapchainImages.count),
+        setLayouts: Array(repeating: descriptorSetLayout, count: swapchainImages.count)))
+    
+    // CONTINUE HERE: Descriptor set; https://vulkan-tutorial.com/en/Uniform_buffers/Descriptor_pool_and_sets
   }
 
   func createCommandBuffers() throws {
@@ -640,6 +699,9 @@ public class VulkanApplication {
     try createRenderPass()
     try createGraphicsPipeline()
     try createFramebuffers()
+    try createUniformBuffers()
+    try createDescriptorPool()
+    try createDescriptorSets()
     try createCommandBuffers()
   }
 
@@ -650,6 +712,13 @@ public class VulkanApplication {
     renderPass.destroy()
     imageViews.forEach { $0.destroy() }
     swapchain.destroy()
+
+    for i in 0..<uniformBuffers.count {
+      uniformBuffers[i].destroy()
+      uniformBuffersMemory[i].free()
+    }
+
+    descriptorPool.destroy()
   }
 
   func drawFrame() throws {
@@ -677,6 +746,8 @@ public class VulkanApplication {
     imagesInFlightWithFences[imageIndex] = inFlightFence
     inFlightFence.reset()
 
+    try updateUniformBuffer(currentImage: imageIndex)
+
     try queue.submit(submits: [
       SubmitInfo(
         waitSemaphores: [imageAvailableSemaphore],
@@ -685,6 +756,7 @@ public class VulkanApplication {
         signalSemaphores: [renderFinishedSemaphore]
       )
     ], fence: inFlightFence)
+
     let presentResult = queue.present(presentInfo: PresentInfoKHR(
       waitSemaphores: [renderFinishedSemaphore],
       swapchains: [swapchain],
@@ -704,6 +776,18 @@ public class VulkanApplication {
 
     currentFrameIndex += 1
     currentFrameIndex %= maxFramesInFlight
+  }
+
+  func updateUniformBuffer(currentImage: UInt32) throws {
+    let uniformBufferObject = UniformBufferObject(model: .zero, view: .zero, projection: .zero)
+    var dataPointer: UnsafeMutableRawPointer? = nil
+    try uniformBuffersMemory[Int(currentImage)].mapMemory(
+      offset: 0,
+      size: DeviceSize(UniformBufferObject.dataSize),
+      flags: .none,
+      data: &dataPointer)
+    dataPointer?.copyMemory(from: uniformBufferObject.data, byteCount: UniformBufferObject.dataSize)
+    uniformBuffersMemory[Int(currentImage)].unmapMemory()
   }
 
   func mainLoop() throws {

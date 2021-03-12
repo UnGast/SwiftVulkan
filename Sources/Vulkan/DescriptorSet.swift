@@ -3,12 +3,25 @@ import CVulkan
 
 public class DescriptorSet {
 
-    public let vulkanValue: VkDescriptorSet
+    public let pointer: VkDescriptorSet
     public let device: Device
 
-    init(vulkanValue: VkDescriptorSet,
+    init(pointer: VkDescriptorSet,
         device: Device) {
-        self.vulkanValue = vulkanValue
+        self.pointer = pointer
         self.device = device
+    }
+
+    public class func allocate(device: Device, allocateInfo: DescriptorSetAllocateInfo) -> [DescriptorSet] {
+        var pointers: [VkDescriptorSet?] = []
+        
+        vkAllocateDescriptorSets(
+            device.pointer,
+            allocateInfo.vulkanPointer,
+            &pointers)
+        
+        return pointers.map {
+            DescriptorSet(pointer: $0!, device: device)
+        }
     }
 }
