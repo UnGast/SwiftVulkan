@@ -37,10 +37,23 @@ public class VulkanApplication {
   @Deferred var commandPool: CommandPool
   @Deferred var vertexBuffer: Buffer
   @Deferred var vertexBufferMemory: DeviceMemory
+  @Deferred var indexBuffer: Buffer
+  @Deferred var indexBufferMemory: DeviceMemory
   @Deferred var commandBuffers: [CommandBuffer]
   @Deferred var imageAvailableSemaphores: [Semaphore]
   @Deferred var renderFinishedSemaphores: [Semaphore]
   @Deferred var inFlightFences: [Fence]
+
+  let vertices = [
+    Vertex(position: Position2(x: -0.5, y: 0.5), color: Color(r: 1, g: 0, b: 0)),
+    Vertex(position: Position2(x: 0.5, y: 0.5), color: Color(r: 0, g: 1, b: 0)),
+    Vertex(position: Position2(x: 0.5, y: -0.5), color: Color(r: 0, g: 0, b: 1)),
+    Vertex(position: Position2(x: -0.5, y: -0.5), color: Color(r: 0, g: 0, b: 1))
+  ]
+
+  let indices: [UInt16] = [
+    0, 1, 2, 0, 2, 3
+  ]
 
   let maxFramesInFlight = 2
   var currentFrameIndex = 0
@@ -72,6 +85,8 @@ public class VulkanApplication {
     try self.createCommandPool()
 
     try self.createVertexBuffer()
+
+    try self.createIndexBuffer()
 
     try self.createCommandBuffers()
 
@@ -324,7 +339,7 @@ public class VulkanApplication {
 
     let vertexInputBindingDescription = VertexInputBindingDescription(
       binding: 0,
-      stride: UInt32(MemoryLayout<Float>.size * 5),
+      stride: UInt32(MemoryLayout<Vertex>.stride),
       inputRate: .vertex
     )
 
@@ -339,7 +354,7 @@ public class VulkanApplication {
         location: 1,
         binding: 0,
         format: .R32G32B32_SFLOAT,
-        offset: UInt32(MemoryLayout<Float>.size * 2)
+        offset: UInt32(MemoryLayout<Position2>.size)
       )
     ]
 
@@ -503,18 +518,7 @@ public class VulkanApplication {
   }
 
   func createVertexBuffer() throws {
-    let vertices: [Float] = [
-      0, -0.5, 0, 1, 0,
-      0.5, 0.5, 1, 0, 0,
-      -0.5, 0.5, 0, 0, 1
-    ]
-    /*let vertices = [
-      Vertex(position: (0, -0.5), color: (0, 1, 0)),
-      Vertex(position: (0.5, 0.5), color: (1, 0, 0)),
-      Vertex(position: (-0.5, 0.5), color: (0, 0, 1))
-    ]*/
-
-    let bufferSize = DeviceSize(MemoryLayout<Float>.size * vertices.count)
+    let bufferSize = DeviceSize(MemoryLayout<Vertex>.stride * vertices.count)
     let (stagingBuffer, stagingBufferMemory) = try createBuffer(
       size: bufferSize,
       usage: .transferSrc,
@@ -522,7 +526,7 @@ public class VulkanApplication {
 
     var cpuVertexBufferMemory: UnsafeMutableRawPointer? = nil
     try stagingBufferMemory.mapMemory(offset: 0, size: bufferSize, flags: .none, data: &cpuVertexBufferMemory)
-    cpuVertexBufferMemory!.copyMemory(from: vertices, byteCount: MemoryLayout<Float>.size * vertices.count)
+    cpuVertexBufferMemory!.copyMemory(from: vertices, byteCount: MemoryLayout<Vertex>.stride * vertices.count)
     stagingBufferMemory.unmapMemory()
 
     (vertexBuffer, vertexBufferMemory) = try createBuffer(
@@ -531,6 +535,24 @@ public class VulkanApplication {
       properties: [.hostVisible, .hostCoherent])
 
     try copyBuffer(srcBuffer: stagingBuffer, dstBuffer: vertexBuffer, size: bufferSize)
+
+    stagingBuffer.destroy()
+    stagingBufferMemory.free()
+  }
+
+  func createIndexBuffer() throws {
+    let bufferSize = DeviceSize(MemoryLayout<UInt16>.size * indices.count)
+
+    let (stagingBuffer, stagingBufferMemory) = try createBuffer(size: bufferSize, usage: .transferSrc, properties: [.hostVisible, .hostCoherent])
+
+    var dataPointer: UnsafeMutableRawPointer? = nil
+    try stagingBufferMemory.mapMemory(offset: 0, size: bufferSize, flags: .none, data: &dataPointer)
+    dataPointer?.copyMemory(from: indices, byteCount: Int(bufferSize))
+    stagingBufferMemory.unmapMemory()
+
+    (indexBuffer, indexBufferMemory) = try createBuffer(size: bufferSize, usage: [.transferDst, .indexBuffer], properties: [.deviceLocal])
+
+    try copyBuffer(srcBuffer: stagingBuffer, dstBuffer: indexBuffer, size: bufferSize)
 
     stagingBuffer.destroy()
     stagingBufferMemory.free()
@@ -570,8 +592,9 @@ public class VulkanApplication {
       commandBuffer.bindPipeline(pipelineBindPoint: .graphics, pipeline: graphicsPipeline)
 
       commandBuffer.bindVertexBuffers(firstBinding: 0, buffers: [vertexBuffer], offsets: [0])
+      commandBuffer.bindIndexBuffer(buffer: indexBuffer, offset: 0, indexType: VK_INDEX_TYPE_UINT16)
 
-      commandBuffer.draw(vertexCount: 3, instanceCount: 1, firstVertex: 0, firstInstance: 0)
+      commandBuffer.drawIndexed(indexCount: UInt32(indices.count), instanceCount: 1, firstIndex: 0, vertexOffset: 0, firstInstance: 0)
 
       commandBuffer.endRenderPass()
       commandBuffer.end()

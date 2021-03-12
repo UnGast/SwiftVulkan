@@ -80,8 +80,16 @@ public class CommandBuffer: WrapperStruct {
         vkCmdBindVertexBuffers(pointer, firstBinding, UInt32(buffers.count) - firstBinding, buffers.vulkanPointer, offsets.vulkanPointer)
     }
 
+    public func bindIndexBuffer(buffer: Buffer, offset: DeviceSize, indexType: VkIndexType) {
+        vkCmdBindIndexBuffer(pointer, buffer.pointer, offset, indexType)
+    }
+
     public func draw(vertexCount: UInt32, instanceCount: UInt32, firstVertex: UInt32, firstInstance: UInt32) {
         vkCmdDraw(pointer, vertexCount, instanceCount, firstVertex, firstInstance)
+    }
+
+    public func drawIndexed(indexCount: UInt32, instanceCount: UInt32, firstIndex: UInt32, vertexOffset: Int32, firstInstance: UInt32) {
+        vkCmdDrawIndexed(pointer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance)
     }
 
     public func endRenderPass() {
