@@ -10,7 +10,10 @@ let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFilePath))
 let typeRegistry = TypeRegistry(fromXml: xml.registry.types.type)
 
 let generatedStructWhitelist = [
-  "VkFramebufferCreateInfo",
+  "VkPipelineColorBlendStateCreateInfo",
+  "VkPipelineColorBlendAttachmentState"
+
+  /*"VkFramebufferCreateInfo",
   "VkVertexInputAttributeDescription",
   "VkVertexInputBindingDescription",
   "VkBufferCopy",
@@ -21,7 +24,7 @@ let generatedStructWhitelist = [
   "VkDescriptorSetAllocateInfo",
   "VkDescriptorImageInfo",
   "VkDescriptorBufferInfo",
-  "VkWriteDescriptorSet"]
+  "VkWriteDescriptorSet"*/]
 
 for type in xml.registry.types.type {
   if type.attributes["category"] == "struct" {
@@ -29,9 +32,9 @@ for type in xml.registry.types.type {
       let generator = StructGenerator(fromXml: type, typeRegistry: typeRegistry)
       let (typeName, definition) = generator.generate()
       print(definition)
-      let path = Path.cwd/"Sources/Vulkan/Generated/Structs"/(typeName + ".swift")
+      /*let path = Path.cwd/"Sources/Vulkan/Generated/Structs"/(typeName + ".swift")
       try path.touch()
-      try definition.write(to: path)
+      try definition.write(to: path)*/
     }
   }
 }
@@ -80,9 +83,10 @@ class StructGenerator {
   var structureTypeEnumValue = ""
 
   var rawMembers = [RawMember]()
-  var memberMappings = [String: String]()
-  var transformedMembers = [ExposedMember]()
   var exposedMembers = [ExposedMember]()
+  var pointerBackingProperties = [String]()
+  var pointerBackingAssignments = [String]()
+  var memberMappings = [String: String]()
 
   public init(fromXml xml: XML.Accessor, typeRegistry: TypeRegistry) {
     self.xml = xml
@@ -93,6 +97,16 @@ class StructGenerator {
     rawTypeName = xml.attributes["name"] ?? ""
     mappedTypeName = mapTypeNameToSwift(rawTypeName)
 
+    extractRawMembers()
+
+    processRawMembers()
+
+    let typeDefinition = generateTypeDefinition()
+
+    return (mappedTypeName, typeDefinition)
+  }
+
+  private func extractRawMembers() {
     for member in xml.member {
       if member["name"].text == "sType" {
         structureTypeEnumValue = member.attributes["values"] ?? ""
@@ -106,7 +120,9 @@ class StructGenerator {
           comment: member.comment.text))
       }
     }
+  }
 
+  private func processRawMembers() {
     for (index, rawMember) in rawMembers.enumerated() {
       switch rawMember.name {
       case "sType":
@@ -128,8 +144,12 @@ class StructGenerator {
         let baseName = Regex.lastMatch!.captures[0]! + "s"
 
         let arrayPointerNameRegex = try! Regex(string: "^p\(baseName.first!.uppercased() + baseName.dropFirst())")
-        if rawMembers.contains(where: { arrayPointerNameRegex.matches($0.name) }) {
-          memberMappings[rawMember.name] = "UInt32(\(baseName).count)"
+        if let rawPointerMember = rawMembers.first(where: { arrayPointerNameRegex.matches($0.name) }) {
+          if rawPointerMember.optional {
+            memberMappings[rawMember.name] = "UInt32(\(baseName).count)"
+          } else {
+            memberMappings[rawMember.name] = "UInt32(\(baseName)?.count ?? 0)"
+          }
         } else {
           memberMappings[rawMember.name] = "\(rawMember.name)"
 
@@ -142,23 +162,43 @@ class StructGenerator {
         var baseName = Regex.lastMatch!.captures[0]!
         baseName = baseName.first!.lowercased() + baseName.dropFirst()
 
-        let arrayCountNameRegex = try! Regex(string: "^\(baseName.dropLast())Count")
-        if rawMember.lengthMemberName != nil || rawMembers.contains(where: { arrayCountNameRegex.matches($0.name) }) {
+        if typeRegistry.isHandle(typeName: rawMember.type) {
           if rawMember.optional {
+            memberMappings[rawMember.name] = "\(baseName)?.vulkan"
+          } else {
+            memberMappings[rawMember.name] = "\(baseName).vulkan"
+          }
+        } else {
+          let backingPropertyName = "v" + baseName.first!.uppercased() + baseName.dropFirst()
+
+          pointerBackingProperties.append("var \(backingPropertyName): [\(rawMember.type)]? = nil")
+
+          if rawMember.optional {
+            pointerBackingAssignments.append("\(backingPropertyName) = \(baseName)?.vulkanArray")
+          } else {
+            pointerBackingAssignments.append("\(backingPropertyName) = \(baseName).vulkanArray")
+          }
+
+          memberMappings[rawMember.name] = backingPropertyName
+        }
+
+        //let arrayCountNameRegex = try! Regex(string: "^\(baseName.dropLast())Count")
+        if rawMember.lengthMemberName != nil/* || rawMembers.contains(where: { arrayCountNameRegex.matches($0.name) })*/ {
+          /*if rawMember.optional {
             memberMappings[rawMember.name] = "\(baseName)?.vulkanPointer"
           } else {
             memberMappings[rawMember.name] = "\(baseName).vulkanPointer"
-          }
+          }*/
 
           exposedMembers.append(ExposedMember(
             name: baseName, type: "[\(mapTypeNameToSwift(rawMember.type))]" + (rawMember.optional ? "?" : "")
           ))
         } else {
-          if typeRegistry.isHandle(typeName: rawMember.type) {
+          /*if typeRegistry.isHandle(typeName: rawMember.type) {
             memberMappings[rawMember.name] = "\(baseName).pointer"
           } else {
             memberMappings[rawMember.name] = "\(baseName).vulkan"
-          }
+          }*/
 
           exposedMembers.append(ExposedMember(
             name: baseName, type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
@@ -166,35 +206,56 @@ class StructGenerator {
         }
 
       default:
-        memberMappings[rawMember.name] = "\(rawMember.name).vulkan"
-
-        exposedMembers.append(ExposedMember(
-          name: rawMember.name, type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
-        ))
+        processSimpleRawMember(rawMember)
       }
     }
+  }
 
-    let typeDefinition = """
-      import CVulkan
+  private func processSimpleRawMember(_ rawMember: RawMember) {
+    if rawMember.optional {
+      memberMappings[rawMember.name] = "\(rawMember.name)?.vulkan"
 
-      public struct \(mappedTypeName): WrapperStruct {
-        \(generateMemberDefinitions())
+      exposedMembers.append(ExposedMember(
+        name: rawMember.name, type: mapTypeNameToSwift(rawMember.type) + "?", comment: rawMember.comment
+      ))
+    } else {
+      memberMappings[rawMember.name] = "\(rawMember.name).vulkan"
 
-        public init(
-          \(generateInitArguments())
-        ) {
-          \(generateInitializerAssignments())
-        }
+      exposedMembers.append(ExposedMember(
+        name: rawMember.name, type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
+      ))
+    }
+  }
 
-        public var vulkan: \(rawTypeName) {
-          \(rawTypeName)(
+  private func generateTypeDefinition() -> String {
+    """
+    import CVulkan
+
+    public struct \(mappedTypeName): WrapperStruct {
+      \(generateMemberDefinitions())
+
+      \(generatePointerBackingProperties())
+
+      public init(
+        \(generateInitArguments())
+      ) {
+        \(generateInitializerAssignments())
+      }
+
+      public var vulkan: \(rawTypeName) {
+        fatalError("use expVuklan on this type")
+      }
+
+      public var expVulkan: \(rawTypeName) {
+        mutating get {
+          \(generatePointerBackingAssignments())
+          return \(rawTypeName)(
             \(generateBindingAssignments())
           )
         }
       }
-      """
-
-      return (mappedTypeName, typeDefinition)
+    }
+    """
   }
 
   private func generateMemberDefinitions() -> String {
@@ -208,6 +269,10 @@ class StructGenerator {
     }.joined(separator: "\n")
   }
 
+  private func generatePointerBackingProperties() -> String {
+    pointerBackingProperties.joined(separator: "\n")
+  }
+
   private func generateInitArguments() -> String {
     exposedMembers.map {
       "\($0.name): \($0.type)"
@@ -218,6 +283,10 @@ class StructGenerator {
     exposedMembers.map {
       "self.\($0.name) = \($0.name)"
     }.joined(separator: "\n")
+  }
+
+  private func generatePointerBackingAssignments() -> String {
+    pointerBackingAssignments.joined(separator: "\n")
   }
 
   private func generateBindingAssignments() -> String {
