@@ -39,15 +39,18 @@ public class Device {
     }
 
     public func updateDescriptorSets(
-        descriptorWrites: [WriteDescriptorSet], 
-        descriptorCopies: [CopyDescriptorSet]
+        descriptorWrites: [WriteDescriptorSet]?, 
+        descriptorCopies: [CopyDescriptorSet]?
     ) {
-        let writes = descriptorWrites.map { $0.toVulkan() }
-        let copies = descriptorCopies.map { $0.toVulkan() }
+        if descriptorCopies != nil {
+            fatalError("IMPLEMENT descriptorCopies")
+        }
 
-        vkUpdateDescriptorSets(self.pointer, 
-            UInt32(descriptorWrites.count), descriptorWrites.count == 0 ? nil : writes,
-            UInt32(descriptorCopies.count), descriptorCopies.count == 0 ? nil : copies)
+        vkUpdateDescriptorSets(
+            self.pointer,
+            UInt32(descriptorWrites?.count ?? 0), descriptorWrites?.vulkanPointer,
+            0, nil)
+            /*UInt32(descriptorCopies?.count ?? 0), descriptorCopies?.vulkanPointer)*/
     }
 
     public func waitIdle() {

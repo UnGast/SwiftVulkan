@@ -40,8 +40,8 @@ public struct AttachmentDescription: WrapperStruct {
                 storeOp: self.storeOp.vulkanValue,
                 stencilLoadOp: self.stencilLoadOp.vulkanValue,
                 stencilStoreOp: self.stencilStoreOp.vulkanValue,
-                initialLayout: self.initialLayout.vulkanValue,
-                finalLayout: self.finalLayout.vulkanValue
+                initialLayout: self.initialLayout.vulkan,
+                finalLayout: self.finalLayout.vulkan
         )
     }
 }

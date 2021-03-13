@@ -78,7 +78,7 @@ public struct CopyDescriptorSet {
         )
     }
 }
-
+/*
 public struct DescriptorBufferInfo {
     public let buffer: Buffer
     public let offset: DeviceSize
@@ -101,8 +101,8 @@ public struct DescriptorBufferInfo {
 
         return value
     }
-}
-
+}*/
+/*
 public struct DescriptorImageInfo {
     public let sampler: Sampler
     public let imageView: ImageView
@@ -117,7 +117,7 @@ public struct DescriptorImageInfo {
 
         return value
     }
-}
+}*/
 
 /*
 public struct DescriptorPoolSize: WrapperStruct {
@@ -428,7 +428,7 @@ public struct ImageCreateInfo {
                 sharingMode: self.sharingMode.vulkanValue,
                 queueFamilyIndexCount: self.queueFamilyIndices == nil ? 0 : UInt32(self.queueFamilyIndices!.count),
                 pQueueFamilyIndices: self.queueFamilyIndices,
-                initialLayout: self.initialLayout.vulkanValue)
+                initialLayout: self.initialLayout.vulkan)
     }
 }
 
@@ -1175,7 +1175,7 @@ public struct SwapchainCreateInfo {
     }
 }
 
-public class WriteDescriptorSet {
+/*public class WriteDescriptorSet {
     public let dstSet: DescriptorSet
     public let dstBinding: UInt32
     public let dstArrayElement: UInt32
@@ -1241,7 +1241,7 @@ public class WriteDescriptorSet {
 
         return value;
     }
-}
+}*/
 
 // This is not a Vulkan struct, but we're adding it to improve semantics
 public struct Version {

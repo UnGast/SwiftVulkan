@@ -92,6 +92,23 @@ public class CommandBuffer: WrapperStruct {
         vkCmdDrawIndexed(pointer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance)
     }
 
+    public func bindDescriptorSets(
+        pipelineBindPoint: PipelineBindPoint,
+        layout: PipelineLayout,
+        firstSet: UInt32,
+        descriptorSets: [DescriptorSet],
+        dynamicOffsets: [UInt32]) {
+            vkCmdBindDescriptorSets(
+                pointer,
+                pipelineBindPoint.vulkan,
+                layout.vulkanValue,
+                firstSet,
+                UInt32(descriptorSets.count),
+                descriptorSets.vulkan,
+                UInt32(dynamicOffsets.count),
+                Optional(dynamicOffsets.vulkan))
+    }
+
     public func endRenderPass() {
         vkCmdEndRenderPass(pointer)
     }

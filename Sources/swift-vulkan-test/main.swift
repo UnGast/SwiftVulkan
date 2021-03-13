@@ -620,16 +620,33 @@ public class VulkanApplication {
   }
 
   func createDescriptorSets() throws {
-    descriptorSets = try DescriptorSet.allocate(device: device, allocateInfo: DescriptorSetAllocateInfo(
+    descriptorSets = DescriptorSet.allocate(device: device, allocateInfo: DescriptorSetAllocateInfo(
         descriptorPool: descriptorPool,
         descriptorSetCount: UInt32(swapchainImages.count),
         setLayouts: Array(repeating: descriptorSetLayout, count: swapchainImages.count)))
     
-    // CONTINUE HERE: Descriptor set; https://vulkan-tutorial.com/en/Uniform_buffers/Descriptor_pool_and_sets
+    for i in 0..<swapchainImages.count {
+      let bufferInfo = DescriptorBufferInfo(
+        buffer: uniformBuffers[i], offset: 0, range: DeviceSize(UniformBufferObject.dataSize)
+      )
+
+      let descriptorWrite = WriteDescriptorSet(
+        dstSet: descriptorSets[i],
+        dstBinding: 0,
+        dstArrayElement: 0,
+        descriptorCount: 1,
+        descriptorType: .uniformBuffer,
+        imageInfo: [],
+        bufferInfo: [bufferInfo],
+        texelBufferView: []
+      )
+
+      device.updateDescriptorSets(descriptorWrites: [descriptorWrite], descriptorCopies: nil)
+    }
   }
 
   func createCommandBuffers() throws {
-    self.commandBuffers = try framebuffers.map { framebuffer in
+    self.commandBuffers = try framebuffers.enumerated().map { (index, framebuffer) in
       let commandBuffer = try CommandBuffer.allocate(device: device, info: CommandBufferAllocateInfo(
         commandPool: commandPool,
         level: .primary,
@@ -653,6 +670,12 @@ public class VulkanApplication {
       commandBuffer.bindVertexBuffers(firstBinding: 0, buffers: [vertexBuffer], offsets: [0])
       commandBuffer.bindIndexBuffer(buffer: indexBuffer, offset: 0, indexType: VK_INDEX_TYPE_UINT16)
 
+      commandBuffer.bindDescriptorSets(
+        pipelineBindPoint: .graphics,
+        layout: pipelineLayout,
+        firstSet: 0,
+        descriptorSets: [descriptorSets[index]],
+        dynamicOffsets: [])
       commandBuffer.drawIndexed(indexCount: UInt32(indices.count), instanceCount: 1, firstIndex: 0, vertexOffset: 0, firstInstance: 0)
 
       commandBuffer.endRenderPass()
@@ -779,7 +802,12 @@ public class VulkanApplication {
   }
 
   func updateUniformBuffer(currentImage: UInt32) throws {
-    let uniformBufferObject = UniformBufferObject(model: .zero, view: .zero, projection: .zero)
+    let uniformBufferObject = UniformBufferObject(model: Mat4([
+      2, 0, 0, 0,
+      0, 2, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1
+    ]), view: .zero, projection: .zero)
     var dataPointer: UnsafeMutableRawPointer? = nil
     try uniformBuffersMemory[Int(currentImage)].mapMemory(
       offset: 0,

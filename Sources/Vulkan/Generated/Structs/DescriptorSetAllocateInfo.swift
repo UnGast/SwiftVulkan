@@ -19,7 +19,7 @@ self.setLayouts = setLayouts
     VkDescriptorSetAllocateInfo(
       sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 pNext: nil,
-descriptorPool: descriptorPool.pointer,
+descriptorPool: descriptorPool.vulkan,
 descriptorSetCount: descriptorSetCount,
 pSetLayouts: setLayouts.vulkanPointer
     )

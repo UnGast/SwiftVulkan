@@ -1,10 +1,14 @@
 
 import CVulkan
 
-public class BufferView {
-    let vulkanValue: VkBufferView
+public class BufferView: WrapperStruct {
+    let pointer: VkBufferView
 
-    init(vulkanValue: VkBufferView) {
-        self.vulkanValue = vulkanValue
+    init(pointer: VkBufferView) {
+        self.pointer = pointer
+    }
+
+    public var vulkan: VkBufferView? {
+        pointer
     }
 }

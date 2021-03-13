@@ -54,7 +54,7 @@ public struct DescriptorPoolCreateFlags: OptionSet, WrapperStruct {
     public static let updateAfterBind = Self(rawValue: 0x00000002)
 }
 
-public class DescriptorPool: WrapperClass {
+public class DescriptorPool: WrapperClass, WrapperStruct {
 
     public let pointer: VkDescriptorPool
     public let device: Device
@@ -62,6 +62,10 @@ public class DescriptorPool: WrapperClass {
     init(pointer: VkDescriptorPool, device: Device) {
         self.pointer = pointer
         self.device = device
+    }
+
+    public var vulkan: VkDescriptorPool {
+        pointer
     }
 
     public class func create(device: Device, createInfo: DescriptorPoolCreateInfo) throws -> DescriptorPool {

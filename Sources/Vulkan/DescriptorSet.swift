@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class DescriptorSet {
+public class DescriptorSet: WrapperStruct {
 
     public let pointer: VkDescriptorSet
     public let device: Device
@@ -12,8 +12,12 @@ public class DescriptorSet {
         self.device = device
     }
 
+    public var vulkan: VkDescriptorSet? {
+        pointer
+    }
+
     public class func allocate(device: Device, allocateInfo: DescriptorSetAllocateInfo) -> [DescriptorSet] {
-        var pointers: [VkDescriptorSet?] = []
+        var pointers: [VkDescriptorSet?] = Array(repeating: nil, count: Int(allocateInfo.descriptorSetCount))
         
         vkAllocateDescriptorSets(
             device.pointer,

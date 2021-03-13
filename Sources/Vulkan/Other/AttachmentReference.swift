@@ -10,7 +10,7 @@ public struct AttachmentReference: WrapperStruct {
     }
 
     public var vulkan: VkAttachmentReference {
-        VkAttachmentReference(attachment: self.attachment, layout: self.layout.vulkanValue)
+        VkAttachmentReference(attachment: self.attachment, layout: self.layout.vulkan)
     }
 }
 
