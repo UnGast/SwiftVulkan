@@ -18,7 +18,10 @@ let generatedStructWhitelist = [
   "VkDescriptorPoolSize",
   "VkDescriptorSetLayoutBinding",
   "VkDescriptorSetLayoutCreateInfo",
-  "VkDescriptorSetAllocateInfo"]
+  "VkDescriptorSetAllocateInfo",
+  "VkDescriptorImageInfo",
+  "VkDescriptorBufferInfo",
+  "VkWriteDescriptorSet"]
 
 for type in xml.registry.types.type {
   if type.attributes["category"] == "struct" {
@@ -65,6 +68,7 @@ class StructGenerator {
     var name: String
     var type: String
     var optional: Bool
+    var lengthMemberName: String?
     var comment: String?
   }
 
@@ -94,7 +98,12 @@ class StructGenerator {
         structureTypeEnumValue = member.attributes["values"] ?? ""
       }
       if let name = member["name"].text, let type = member.type.text {
-        rawMembers.append(RawMember(name: name, type: type, optional: member.attributes["optional"] == "true", comment: member.comment.text))
+        rawMembers.append(RawMember(
+          name: name,
+          type: type,
+          optional: member.attributes["optional"] == "true",
+          lengthMemberName: member.attributes["len"],
+          comment: member.comment.text))
       }
     }
 
@@ -132,22 +141,29 @@ class StructGenerator {
       case Regex("^p([A-Z].*)"):
         var baseName = Regex.lastMatch!.captures[0]!
         baseName = baseName.first!.lowercased() + baseName.dropFirst()
-        if rawMember.optional {
-          memberMappings[rawMember.name] = "\(baseName)?.vulkanPointer"
-        } else {
-          memberMappings[rawMember.name] = "\(baseName).vulkanPointer"
-        }
 
-        //let arrayCountNameRegex = try! Regex(string: "^\(baseName.dropLast())Count")
-        //if rawMembers.contains(where: { arrayCountNameRegex.matches($0.name) }) {
+        let arrayCountNameRegex = try! Regex(string: "^\(baseName.dropLast())Count")
+        if rawMember.lengthMemberName != nil || rawMembers.contains(where: { arrayCountNameRegex.matches($0.name) }) {
+          if rawMember.optional {
+            memberMappings[rawMember.name] = "\(baseName)?.vulkanPointer"
+          } else {
+            memberMappings[rawMember.name] = "\(baseName).vulkanPointer"
+          }
+
           exposedMembers.append(ExposedMember(
             name: baseName, type: "[\(mapTypeNameToSwift(rawMember.type))]" + (rawMember.optional ? "?" : "")
           ))
-        /*} else {
+        } else {
+          if typeRegistry.isHandle(typeName: rawMember.type) {
+            memberMappings[rawMember.name] = "\(baseName).pointer"
+          } else {
+            memberMappings[rawMember.name] = "\(baseName).vulkan"
+          }
+
           exposedMembers.append(ExposedMember(
             name: baseName, type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
           ))
-        }*/
+        }
 
       default:
         memberMappings[rawMember.name] = "\(rawMember.name).vulkan"
