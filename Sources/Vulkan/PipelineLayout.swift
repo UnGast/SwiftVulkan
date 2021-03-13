@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class PipelineLayout {
+public class PipelineLayout: WrapperStruct {
     public var vulkanValue: VkPipelineLayout
     public var device: Device
 
@@ -23,6 +23,10 @@ public class PipelineLayout {
         }
 
         return PipelineLayout(vulkanValue: pipelineLayout!, device: device)
+    }
+
+    public var vulkan: VkPipelineLayout? {
+        vulkanValue
     }
 
     deinit {

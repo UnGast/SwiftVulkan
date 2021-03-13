@@ -15,7 +15,7 @@ public class HandleObjectWrapper<UnderlyingHandle>: WrapperStruct {
     fatalError("destroyUnderlying() not implemented")
   }
 
-  public var vulkan: UnderlyingHandle {
+  public var vulkan: UnderlyingHandle? {
     underlyingHandle
   }
 

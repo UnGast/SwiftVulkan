@@ -1,8 +1,11 @@
 import CVulkan
 
 public struct PipelineVertexInputStateCreateInfo: WrapperStruct {
-  public let vertexBindingDescriptions: [VertexInputBindingDescription]?
-  public let vertexAttributeDescriptions: [VertexInputAttributeDescription]?
+  public var vertexBindingDescriptions: [VertexInputBindingDescription]?
+  public var vertexAttributeDescriptions: [VertexInputAttributeDescription]?
+
+  var vVertexBindingDescriptions: [VkVertexInputBindingDescription]? = nil
+  var vVertexAttributeDescriptions: [VkVertexInputAttributeDescription]? = nil
 
   public init(vertexBindingDescriptions: [VertexInputBindingDescription]?, vertexAttributeDescriptions: [VertexInputAttributeDescription]?) {
     self.vertexBindingDescriptions = vertexBindingDescriptions
@@ -10,13 +13,31 @@ public struct PipelineVertexInputStateCreateInfo: WrapperStruct {
   }
 
   public var vulkan: VkPipelineVertexInputStateCreateInfo {
-    var info = VkPipelineVertexInputStateCreateInfo()
-    info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
-    info.pNext = nil
-    info.vertexBindingDescriptionCount = UInt32(vertexBindingDescriptions?.count ?? 0)
-    info.pVertexBindingDescriptions = vertexBindingDescriptions?.vulkanPointer
-    info.vertexAttributeDescriptionCount = UInt32(vertexAttributeDescriptions?.count ?? 0)
-    info.pVertexAttributeDescriptions = vertexAttributeDescriptions?.vulkanPointer
-    return info
+    return VkPipelineVertexInputStateCreateInfo(
+        sType: VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+        pNext: nil,
+        flags: 0,
+        vertexBindingDescriptionCount: UInt32(vertexBindingDescriptions?.count ?? 0),
+        pVertexBindingDescriptions: vertexBindingDescriptions?.vulkanPointer,
+        vertexAttributeDescriptionCount: UInt32(vertexAttributeDescriptions?.count ?? 0),
+        pVertexAttributeDescriptions: vertexAttributeDescriptions?.vulkanPointer
+      )
+  }
+
+  public var expVulkan: VkPipelineVertexInputStateCreateInfo {
+     mutating get {
+      vVertexBindingDescriptions = vertexBindingDescriptions?.vulkanArray
+      vVertexAttributeDescriptions = vertexAttributeDescriptions?.vulkanArray
+
+      return VkPipelineVertexInputStateCreateInfo(
+        sType: VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+        pNext: nil,
+        flags: 0,
+        vertexBindingDescriptionCount: UInt32(vertexBindingDescriptions?.count ?? 0),
+        pVertexBindingDescriptions: vVertexBindingDescriptions,
+        vertexAttributeDescriptionCount: UInt32(vertexAttributeDescriptions?.count ?? 0),
+        pVertexAttributeDescriptions: vVertexAttributeDescriptions
+      )
+    }
   }
 }

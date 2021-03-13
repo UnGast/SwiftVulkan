@@ -13,8 +13,9 @@ public class Pipeline: WrapperClass {
     var pipelinePointer = VkPipeline(bitPattern: 0)
 
     var opResult = VK_ERROR_INITIALIZATION_FAILED
-    withUnsafePointer(to: createInfo.vulkan) {
-      opResult = vkCreateGraphicsPipelines(device.pointer, nil, 1, $0, nil, &pipelinePointer)
+    var mutCreateInfo = createInfo
+    withUnsafePointer(to: mutCreateInfo.expVulkan) {
+     opResult = vkCreateGraphicsPipelines(device.pointer, nil, 1, $0, nil, &pipelinePointer)
     } 
 
     if opResult == VK_SUCCESS {

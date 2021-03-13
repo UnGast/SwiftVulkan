@@ -457,7 +457,7 @@ public class VulkanApplication {
     let pipelineInfo = GraphicsPipelineCreateInfo(
       flags: 0,
       stages: shaderStages,
-      vertexInputSate: vertexInputInfo,
+      vertexInputState: vertexInputInfo,
       inputAssemblyState: inputAssembly,
       tessellationState: Void(),
       viewportState: viewportState,
