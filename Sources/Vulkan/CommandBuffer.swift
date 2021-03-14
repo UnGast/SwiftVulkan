@@ -109,6 +109,17 @@ public class CommandBuffer: WrapperStruct {
                 Optional(dynamicOffsets.vulkan))
     }
 
+    public func pipelineBarrier(
+        srcStageMask: PipelineStageFlags, dstStageMask: PipelineStageFlags, dependencyFlags: DependencyFlags,
+        memoryBarriers: [MemoryBarrier], bufferMemoryBarriers: [BufferMemoryBarrier], imageMemoryBarriers: [ImageMemoryBarrier]) {
+            var memoryBarriers = memoryBarriers
+            var bufferMemoryBarriers = bufferMemoryBarriers
+            var imageMemoryBarriers = imageMemoryBarriers
+            vkCmdPipelineBarrier(pointer, srcStageMask.vulkan, dstStageMask.vulkan, dependencyFlags.rawValue,
+                UInt32(memoryBarriers.count), memoryBarriers.vulkan, UInt32(bufferMemoryBarriers.count), bufferMemoryBarriers.vulkan,
+                UInt32(imageMemoryBarriers.count), imageMemoryBarriers.vulkan) 
+    }
+
     public func endRenderPass() {
         vkCmdEndRenderPass(pointer)
     }

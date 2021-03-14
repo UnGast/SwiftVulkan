@@ -16,6 +16,10 @@ public class Image {
         self.swapchain = swapchain
     }
 
+    public var vulkan: VkImage {
+        pointer
+    }
+
     public class func create(withInfo createInfo: ImageCreateInfo,
                             device: Device) throws -> Image {
 

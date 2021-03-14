@@ -28,7 +28,7 @@ public struct ApplicationInfo {
         self.apiVersion = apiVersion.rawVersion
     }
 }
-
+/*
 public struct ComponentMapping {
     public let r: ComponentSwizzle
     public let g: ComponentSwizzle
@@ -53,7 +53,7 @@ public struct ComponentMapping {
     }
 
     public static let identity = ComponentMapping.init(r: .r, g: .g, b: .b, a: .a)
-}
+}*/
 
 public struct CopyDescriptorSet {
     public let srcSet: DescriptorSet
@@ -326,6 +326,12 @@ public struct Extent3D {
     public var height: UInt32
     public var depth: UInt32
 
+    public init(width: UInt32, height: UInt32, depth: UInt32) {
+        self.width = width
+        self.height = height
+        self.depth = depth
+    }
+
     var vulkanValue: VkExtent3D {
         return VkExtent3D(width: self.width, height: self.height, depth: self.depth)
     }
@@ -431,7 +437,7 @@ public struct ImageCreateInfo {
                 initialLayout: self.initialLayout.vulkan)
     }
 }
-
+/*
 public struct ImageViewCreateInfo {
 
     public let flags: Flags
@@ -481,8 +487,8 @@ public struct ImageViewCreateInfo {
                 components: self.components.vulkan,
                 subresourceRange: self.subresourceRange.vulkan)
     }
-}
-
+}*/
+/*
 public struct ImageSubresourceRange {
     public let aspectMask: ImageAspectFlags
     public let baseMipLevel: UInt32
@@ -510,7 +516,7 @@ public struct ImageSubresourceRange {
                 baseArrayLayer: self.baseArrayLayer,
                 layerCount: self.layerCount)
     }
-}
+}*/
 
 public struct InstanceCreateInfo {
     public let next: Any? = nil

@@ -6,7 +6,7 @@
 import CVulkan
 
 // FLAGS ========
-
+/*
 public struct AccessFlags: OptionSet {
     public let rawValue: UInt32
 
@@ -47,7 +47,7 @@ public struct AccessFlags: OptionSet {
     var vulkanValue: VkAccessFlagBits {
         return VkAccessFlagBits(self.rawValue)
     }
-}
+}*/
 
 public struct AttachmentDescriptionFlags: OptionSet {
     public let rawValue: UInt32
@@ -126,7 +126,7 @@ public struct DependencyFlags: OptionSet {
         return VkDependencyFlagBits(self.rawValue)
     }
 }
-
+/*
 public struct ImageAspectFlags: OptionSet {
     public let rawValue: UInt32
 
@@ -149,7 +149,7 @@ public struct ImageAspectFlags: OptionSet {
     var vulkan: VkImageAspectFlags {
         return VkImageAspectFlags(self.rawValue)
     }
-}
+}*/
 
 public struct ImageUsageFlags: OptionSet {
     public let rawValue: UInt32

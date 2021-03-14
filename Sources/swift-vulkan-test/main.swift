@@ -36,6 +36,8 @@ public class VulkanApplication {
   @Deferred var pipelineLayout: PipelineLayout
   @Deferred var framebuffers: [Framebuffer]
   @Deferred var commandPool: CommandPool
+  @Deferred var textureImage: Image
+  @Deferred var textureImageMemory: DeviceMemory
   @Deferred var vertexBuffer: Buffer
   @Deferred var vertexBufferMemory: DeviceMemory
   @Deferred var indexBuffer: Buffer
@@ -90,6 +92,8 @@ public class VulkanApplication {
     try self.createFramebuffers()
 
     try self.createCommandPool()
+
+    try self.createTextureImage()
 
     try self.createVertexBuffer()
 
@@ -267,7 +271,7 @@ public class VulkanApplication {
         image: $0, 
         viewType: .type2D, 
         format: swapchainImageFormat, 
-        components: .identity, 
+        components: ComponentMapping(r: .r, g: .g, b: .b, a: .a), 
         subresourceRange: ImageSubresourceRange(
           aspectMask: .color, 
           baseMipLevel: 0, 
@@ -309,7 +313,7 @@ public class VulkanApplication {
       dstSubpass: 0,
       srcStageMask: .colorAttachmentOutput,
       dstStageMask: .colorAttachmentOutput,
-      srcAccessMask: .none,
+      srcAccessMask: [],
       dstAccessMask: .colorAttachmentWrite,
       dependencyFlags: .none
     )
@@ -530,7 +534,7 @@ public class VulkanApplication {
     throw VulkanApplicationError.noSuitableMemoryType 
   }
 
-  func copyBuffer(srcBuffer: Buffer, dstBuffer: Buffer, size: DeviceSize) throws {
+  func beginSingleTimeCommands() throws -> CommandBuffer {
     let commandBuffer = try CommandBuffer.allocate(device: device, info: CommandBufferAllocateInfo(
       commandPool: commandPool,
       level: .primary,
@@ -539,9 +543,11 @@ public class VulkanApplication {
     commandBuffer.begin(CommandBufferBeginInfo(
       flags: .oneTimeSubmit, inheritanceInfo: nil
     ))
-    commandBuffer.copyBuffer(srcBuffer: srcBuffer, dstBuffer: dstBuffer, regions: [BufferCopy(
-      srcOffset: 0, dstOffset: 0, size: size 
-    )])
+
+    return commandBuffer
+  }
+
+  func endSingleTimeCommands(commandBuffer: CommandBuffer) throws {
     commandBuffer.end()
 
     try queue.submit(submits: [SubmitInfo(
@@ -553,6 +559,103 @@ public class VulkanApplication {
     queue.waitIdle()
 
     CommandBuffer.free(commandBuffers: [commandBuffer], device: device, commandPool: commandPool)
+  }
+
+  func copyBuffer(srcBuffer: Buffer, dstBuffer: Buffer, size: DeviceSize) throws {
+    let commandBuffer = try beginSingleTimeCommands()
+    commandBuffer.copyBuffer(srcBuffer: srcBuffer, dstBuffer: dstBuffer, regions: [BufferCopy(
+      srcOffset: 0, dstOffset: 0, size: size 
+    )])
+    try endSingleTimeCommands(commandBuffer: commandBuffer)
+ }
+
+  func createImage(
+    width: UInt32,
+    height: UInt32,
+    format: Format,
+    tiling: ImageTiling,
+    usage: ImageUsageFlags,
+    properties: MemoryPropertyFlags) throws -> (Image, DeviceMemory) {
+      let image = try Image.create(withInfo: ImageCreateInfo(
+        flags: .none,
+        imageType: .type2D,
+        format: format,
+        extent: Extent3D(width: width, height: height, depth: 1),
+        mipLevels: 1,
+        arrayLayers: 1,
+        samples: ._1bit,
+        tiling: tiling,
+        usage: usage,
+        sharingMode: .exclusive,
+        queueFamilyIndices: nil,
+        initialLayout: .undefined
+      ), device: device)
+
+      let memRequirements = image.memoryRequirements
+
+      let memory = try DeviceMemory.allocateMemory(inDevice: device, allocInfo: MemoryAllocateInfo(
+        allocationSize: memRequirements.size,
+        memoryTypeIndex: try findMemoryType(typeFilter: memRequirements.memoryTypeBits, properties: MemoryPropertyFlags.deviceLocal.rawValue)
+      ))
+
+      try image.bindMemory(memory: memory)
+
+      return (image, memory)
+  }
+
+  func createTextureImage() throws {
+    let imageWidth = 200
+    let imageHeight = 200
+    let channelCount = 4 
+    let imageDataSize = imageWidth * imageHeight * channelCount
+    let image = CpuImage(width: 200, height: 200, rgba: Array(repeating: 255, count: imageDataSize))
+
+    let (stagingBuffer, stagingBufferMemory) = try createBuffer(
+      size: DeviceSize(imageDataSize), usage: [.transferSrc], properties: [.hostVisible, .hostCoherent])
+    
+    var dataPointer: UnsafeMutableRawPointer? = nil
+    try stagingBufferMemory.mapMemory(offset: 0, size: DeviceSize(imageDataSize), flags: .none, data: &dataPointer)
+    dataPointer?.copyMemory(from: image.getData(), byteCount: imageDataSize)
+    stagingBufferMemory.unmapMemory()
+
+    (textureImage, textureImageMemory) = try createImage(
+      width: UInt32(imageWidth),
+      height: UInt32(imageHeight),
+      format: .R8G8B8A8_UINT,
+      tiling: .optimal,
+      usage: [.transferDst, .sampled],
+      properties: [.hostVisible, .hostCoherent])
+  }
+
+  func transitionImageLayout(image: Image, format: Format, oldLayout: ImageLayout, newLayout: ImageLayout) throws {
+    let commandBuffer = try beginSingleTimeCommands()
+
+    let barrier = ImageMemoryBarrier(
+      srcAccessMask: [],
+      dstAccessMask: [],
+      oldLayout: oldLayout,
+      newLayout: newLayout,
+      srcQueueFamilyIndex: VK_QUEUE_FAMILY_IGNORED,
+      dstQueueFamilyIndex: VK_QUEUE_FAMILY_IGNORED,
+      image: image,
+      subresourceRange: ImageSubresourceRange(
+        aspectMask: .color,
+        baseMipLevel: 0,
+        levelCount: 1,
+        baseArrayLayer: 0,
+        layerCount: 1
+      ))
+
+    commandBuffer.pipelineBarrier(
+      srcStageMask: [],
+      dstStageMask: [],
+      dependencyFlags: [],
+      memoryBarriers: [],
+      bufferMemoryBarriers: [],
+      imageMemoryBarriers: [barrier]
+    )
+
+    try endSingleTimeCommands(commandBuffer: commandBuffer)
   }
 
   func createVertexBuffer() throws {

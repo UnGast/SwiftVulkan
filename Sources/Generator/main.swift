@@ -16,7 +16,12 @@ struct GeneratorCommand: ParsableCommand {
     let generatedStructWhitelist = [
       "VkPipelineColorBlendStateCreateInfo",
       "VkPipelineColorBlendAttachmentState",
-
+      "VkMemoryBarrier",
+      "VkBufferMemoryBarrier",
+      "VkImageMemoryBarrier",
+      "VkImageSubresourceRange",
+      "VkImageViewCreateInfo",
+      "VkComponentMapping"
       /*"VkFramebufferCreateInfo",
       "VkVertexInputAttributeDescription",
       "VkVertexInputBindingDescription",
@@ -33,7 +38,10 @@ struct GeneratorCommand: ParsableCommand {
     let generatedFlagsWhitelist = [
       "VkPipelineColorBlendStateCreateFlags",
       "VkColorComponentFlags",
-      "VkPipelineCreateFlags"
+      "VkPipelineCreateFlags",
+      "VkAccessFlags",
+      "VkImageAspectFlags",
+      "VkImageViewCreateFlags"
     ]
 
     let generatedEnumsWhitelist = [

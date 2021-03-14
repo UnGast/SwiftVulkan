@@ -19,7 +19,8 @@ public class ImageView: WrapperClass, WrapperStruct {
                             createInfo: ImageViewCreateInfo) throws -> ImageView {
         var imageView = VkImageView(bitPattern: 0)
 
-        let opResult = withUnsafePointer(to: createInfo.vulkan) {
+        var mutCreateInfo = createInfo
+        let opResult = withUnsafePointer(to: mutCreateInfo.vulkan) {
             return vkCreateImageView(dev.pointer, $0, nil, &imageView)
         }
 
