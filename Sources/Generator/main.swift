@@ -2,72 +2,24 @@ import Foundation
 import Path
 import Regex
 import SwiftyXMLParser
+import ArgumentParser
 
-let vulkanDefinitionsFilePath = Path.cwd / "vk.xml"
-
-let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFilePath))
-
-let typeRegistry = TypeRegistry(fromXml: xml.registry.types.type)
-
-let generatedStructWhitelist = [
-  "VkPipelineColorBlendStateCreateInfo",
-  "VkPipelineColorBlendAttachmentState"
-
-  /*"VkFramebufferCreateInfo",
-  "VkVertexInputAttributeDescription",
-  "VkVertexInputBindingDescription",
-  "VkBufferCopy",
-  "VkDescriptorPoolCreateInfo",
-  "VkDescriptorPoolSize",
-  "VkDescriptorSetLayoutBinding",
-  "VkDescriptorSetLayoutCreateInfo",
-  "VkDescriptorSetAllocateInfo",
-  "VkDescriptorImageInfo",
-  "VkDescriptorBufferInfo",
-  "VkWriteDescriptorSet"*/]
-
-let generatedFlagsWhitelist = [
-  "VkPipelineColorBlendStateCreateFlags"
-]
-
-for type in xml.registry.types.type {
-  if type.attributes["category"] == "struct" {
-    if let rawName = type.attributes["name"] {
-
-      if generatedStructWhitelist.contains(rawName) {
-        let generator = StructGenerator(fromXml: type, typeRegistry: typeRegistry)
-        let (typeName, definition) = generator.generate()
-        print(definition)
-        let path = Path.cwd/"Sources/Vulkan/Generated/Structs"/(typeName + ".swift")
-        try path.touch()
-        try definition.write(to: path)
-        
-      } else if generatedFlagsWhitelist.contains(rawName) {
-        let generator = FlagsGenerator(fromXml: type)
-        print(generator.generate())
-      }
-    }
-  }
-}
-
-class TypeRegistry {
-  var handleTypeNames: [String] = []
+public class TypeRegistry {
+  public var types: [String: XML.Accessor] = [:]
 
   public init(fromXml xml: XML.Accessor) {
     for type in xml {
-      switch type.attributes["category"] {
-      case "handle":
-        if let name = type["name"].text {
-          handleTypeNames.append(name)
-        }
-      default:
-        continue
+      if let name = type.attributes["name"] ?? type["name"].text {
+        types[name] = xml
       }
     }
   }
 
   public func isHandle(typeName: String) -> Bool {
-    handleTypeNames.contains(typeName)
+    if let xml = types[typeName] {
+      return xml.attributes["category"] == "handle"
+    }
+    return false
   }
 }
 
@@ -350,6 +302,9 @@ func mapTypeNameToSwift(_ rawName: String) -> String {
   case "char":
     return "Char"
 
+  case "float":
+    return "Float"
+
   case Regex("^Vk(.*)"):
     return Regex.lastMatch!.captures[0]!
 
@@ -357,3 +312,61 @@ func mapTypeNameToSwift(_ rawName: String) -> String {
     return rawName
   }
 }
+
+struct GeneratorCommand: ParsableCommand {
+  @Flag var dryRun: Bool = false
+
+  func run() throws {
+    let vulkanDefinitionsFilePath = Path.cwd / "vk.xml"
+
+    let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFilePath))
+
+    let typeRegistry = TypeRegistry(fromXml: xml.registry.types.type)
+
+    let generatedStructWhitelist = [
+      "VkPipelineColorBlendStateCreateInfo",
+      "VkPipelineColorBlendAttachmentState"
+
+      /*"VkFramebufferCreateInfo",
+      "VkVertexInputAttributeDescription",
+      "VkVertexInputBindingDescription",
+      "VkBufferCopy",
+      "VkDescriptorPoolCreateInfo",
+      "VkDescriptorPoolSize",
+      "VkDescriptorSetLayoutBinding",
+      "VkDescriptorSetLayoutCreateInfo",
+      "VkDescriptorSetAllocateInfo",
+      "VkDescriptorImageInfo",
+      "VkDescriptorBufferInfo",
+      "VkWriteDescriptorSet"*/]
+
+    let generatedFlagsWhitelist = [
+      "VkPipelineColorBlendStateCreateFlags"
+    ]
+
+    for type in xml.registry.types.type {
+      if let rawName = type.attributes["name"] ?? type["name"].text {
+        var generatorOutput: (String, String)? = nil
+
+        if generatedStructWhitelist.contains(rawName) {
+          let generator = StructGenerator(fromXml: type, typeRegistry: typeRegistry)
+          generatorOutput = generator.generate()
+        } else if generatedFlagsWhitelist.contains(rawName) {
+          let generator = FlagsGenerator(typeName: rawName, typeRegistry: typeRegistry)
+          generatorOutput = generator.generate()
+        }
+
+        if let (typeName, typeDefinition) = generatorOutput {
+          print(typeDefinition)
+          if !dryRun {
+            let path = Path.cwd/"Sources/Vulkan/Generated/Structs"/(typeName + ".swift")
+            try path.touch()
+            try typeDefinition.write(to: path)
+          }
+        }
+      }
+    }
+  }
+}
+
+GeneratorCommand.main()

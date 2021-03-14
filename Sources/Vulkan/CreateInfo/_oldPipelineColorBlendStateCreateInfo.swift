@@ -1,4 +1,4 @@
-import CVulkan
+/*import CVulkan
 
 public struct PipelineColorBlendStateCreateInfo: WrapperStruct {
   public let logicOpEnable: Bool
@@ -30,4 +30,4 @@ public struct PipelineColorBlendStateCreateInfo: WrapperStruct {
       blendConstants: blendConstants
     )
   }
-}
+}*/

@@ -1,4 +1,4 @@
-import CVulkan
+/*import CVulkan
 
 public struct PipelineColorBlendAttachmentState: WrapperStruct {
   public let blendEnable: Bool
@@ -42,4 +42,4 @@ public struct PipelineColorBlendAttachmentState: WrapperStruct {
       colorWriteMask: colorWriteMask.vulkan
     )
   }
-}
+}*/
