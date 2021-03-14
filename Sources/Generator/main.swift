@@ -26,15 +26,26 @@ let generatedStructWhitelist = [
   "VkDescriptorBufferInfo",
   "VkWriteDescriptorSet"*/]
 
+let generatedFlagsWhitelist = [
+  "VkPipelineColorBlendStateCreateFlags"
+]
+
 for type in xml.registry.types.type {
   if type.attributes["category"] == "struct" {
-    if let rawName = type.attributes["name"], generatedStructWhitelist.contains(rawName) {
-      let generator = StructGenerator(fromXml: type, typeRegistry: typeRegistry)
-      let (typeName, definition) = generator.generate()
-      print(definition)
-      /*let path = Path.cwd/"Sources/Vulkan/Generated/Structs"/(typeName + ".swift")
-      try path.touch()
-      try definition.write(to: path)*/
+    if let rawName = type.attributes["name"] {
+
+      if generatedStructWhitelist.contains(rawName) {
+        let generator = StructGenerator(fromXml: type, typeRegistry: typeRegistry)
+        let (typeName, definition) = generator.generate()
+        print(definition)
+        let path = Path.cwd/"Sources/Vulkan/Generated/Structs"/(typeName + ".swift")
+        try path.touch()
+        try definition.write(to: path)
+        
+      } else if generatedFlagsWhitelist.contains(rawName) {
+        let generator = FlagsGenerator(fromXml: type)
+        print(generator.generate())
+      }
     }
   }
 }
@@ -133,12 +144,17 @@ class StructGenerator {
         memberMappings[rawMember.name] = "nil"
         continue
 
-      /*case "flags":
-        memberMappings[rawMember.name] = "flags.vulkan"
+      case "flags":
+        // when it's optional, flags is probably reserved for later use, but not used right now 
+        if rawMember.optional {
+          memberMappings[rawMember.name] = "flags?.vulkan ?? 0"
 
-        exposedMembers.append(ExposedMember(
-          name: "flags", type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
-        ))*/
+          exposedMembers.append(ExposedMember(
+            name: "flags", type: mapTypeNameToSwift(rawMember.type) + "?", comment: rawMember.comment
+          ))
+        } else {
+          processSimpleRawMember(rawMember)
+        }
 
       case Regex("^(.*?)Count"):
         let baseName = Regex.lastMatch!.captures[0]! + "s"
@@ -146,9 +162,9 @@ class StructGenerator {
         let arrayPointerNameRegex = try! Regex(string: "^p\(baseName.first!.uppercased() + baseName.dropFirst())")
         if let rawPointerMember = rawMembers.first(where: { arrayPointerNameRegex.matches($0.name) }) {
           if rawPointerMember.optional {
-            memberMappings[rawMember.name] = "UInt32(\(baseName).count)"
-          } else {
             memberMappings[rawMember.name] = "UInt32(\(baseName)?.count ?? 0)"
+          } else {
+            memberMappings[rawMember.name] = "UInt32(\(baseName).count)"
           }
         } else {
           memberMappings[rawMember.name] = "\(rawMember.name)"
@@ -189,7 +205,6 @@ class StructGenerator {
           } else {
             memberMappings[rawMember.name] = "\(baseName).vulkanPointer"
           }*/
-
           exposedMembers.append(ExposedMember(
             name: baseName, type: "[\(mapTypeNameToSwift(rawMember.type))]" + (rawMember.optional ? "?" : "")
           ))
