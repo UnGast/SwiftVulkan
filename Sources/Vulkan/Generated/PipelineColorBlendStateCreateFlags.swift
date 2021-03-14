@@ -11,6 +11,5 @@ public struct PipelineColorBlendStateCreateFlags: OptionSet {
     self.rawValue = rawValue
   }
 
-  public static let none = Self(rawValue: 0)
   
 }

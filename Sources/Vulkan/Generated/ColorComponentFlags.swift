@@ -11,9 +11,8 @@ public struct ColorComponentFlags: OptionSet {
     self.rawValue = rawValue
   }
 
-  public static let none = Self(rawValue: 0)
-  public static let r = Self(rawValue: 0)
-public static let g = Self(rawValue: 1)
-public static let b = Self(rawValue: 2)
-public static let a = Self(rawValue: 3)
+  public static let r = Self(rawValue: 1 << 0)
+public static let g = Self(rawValue: 1 << 1)
+public static let b = Self(rawValue: 1 << 2)
+public static let a = Self(rawValue: 1 << 3)
 }

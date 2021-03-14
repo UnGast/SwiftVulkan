@@ -11,8 +11,7 @@ public struct PipelineCreateFlags: OptionSet {
     self.rawValue = rawValue
   }
 
-  public static let none = Self(rawValue: 0)
-  public static let disableOptimization = Self(rawValue: 0)
-public static let allowDerivatives = Self(rawValue: 1)
-public static let derivative = Self(rawValue: 2)
+  public static let disableOptimization = Self(rawValue: 1 << 0)
+public static let allowDerivatives = Self(rawValue: 1 << 1)
+public static let derivative = Self(rawValue: 1 << 2)
 }

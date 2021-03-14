@@ -36,7 +36,7 @@ public class FlagsGenerator {
           .replacingOccurrences(of: bitBaseName, with: "")
           .replacingOccurrences(of: "_BIT", with: "")
           .snakeCaseToCamelCase()
-        bits.append("public static let \(mappedName) = Self(rawValue: \(value))")
+        bits.append("public static let \(mappedName) = Self(rawValue: 1 << \(value))")
       }
     } 
   }
@@ -56,7 +56,6 @@ public class FlagsGenerator {
         self.rawValue = rawValue
       }
 
-      public static let none = Self(rawValue: 0)
       \(bits.joined(separator: "\n"))
     }
     """

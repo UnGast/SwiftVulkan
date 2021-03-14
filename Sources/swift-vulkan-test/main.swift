@@ -53,7 +53,7 @@ public class VulkanApplication {
     Vertex(position: Position2(x: -0.5, y: 0.5), color: Color(r: 1, g: 0, b: 0)),
     Vertex(position: Position2(x: 0.5, y: 0.5), color: Color(r: 0, g: 1, b: 0)),
     Vertex(position: Position2(x: 0.5, y: -0.5), color: Color(r: 0, g: 0, b: 1)),
-    Vertex(position: Position2(x: -0.5, y: -0.5), color: Color(r: 0, g: 0, b: 1))
+    Vertex(position: Position2(x: -0.5, y: -0.5), color: Color(r: 1, g: 0, b: 1))
   ]
 
   let indices: [UInt16] = [
@@ -803,8 +803,8 @@ public class VulkanApplication {
 
   func updateUniformBuffer(currentImage: UInt32) throws {
     let uniformBufferObject = UniformBufferObject(model: Mat4([
-      2, 0, 0, 0,
-      0, 2, 0, 0,
+      1.2, 0, 0, 0,
+      0, 1.2, 0, 0,
       0, 0, 1, 0,
       0, 0, 0, 1
     ]), view: .zero, projection: .zero)
