@@ -1,34 +1,55 @@
 import SwiftyXMLParser
 
 public class FlagsGenerator {
-  let typeName: String
-  var mappedTypeName: String = ""
-  let typeRegistry: TypeRegistry
+  private let typeRegistry: TypeRegistry
+  private let rawTypeName: String
+  private var mappedTypeName: String = ""
+  private var bitsXml: XML.Accessor?
+  private var bits: [String] = []
 
-  public init(typeName: String, typeRegistry: TypeRegistry) {
-    self.typeName = typeName
+  public init(rawTypeName: String, typeRegistry: TypeRegistry) {
+    self.rawTypeName = rawTypeName
     self.typeRegistry = typeRegistry
   }
 
-  public func generate() -> (typeName: String, typeDefinition: String) {
-    let flagsXml = typeRegistry.types[typeName]!
-    mappedTypeName = mapTypeNameToSwift(self.typeName)
+  public func generate() -> (rawTypeName: String, typeDefinition: String) {
+    let flagsXml = typeRegistry.types[rawTypeName]!
+    mappedTypeName = mapTypeNameToSwift(self.rawTypeName)
 
-    let flagBitsName = typeName.replacingOccurrences(of: "Flags", with: "FlagBits")
+    let flagBitsName = rawTypeName.replacingOccurrences(of: "Flags", with: "FlagBits")
     if let flagBitsXml = typeRegistry.types[flagBitsName] {
-    } else {
+      bitsXml = flagBitsXml
+      extractBits()
+      print("COLOR COMPONENT FLAGS BITS", flagBitsXml)
     }
 
     return (mappedTypeName, generateDefinition())
   }
 
+  private func extractBits() {
+    let bitBaseName = rawTypeName
+      .replacingOccurrences(of: "Flags", with: "").camelCaseToSnakeCase()
+
+    for bit in bitsXml!.enum {
+      if let rawBitName = bit.attributes["name"], let value = bit.attributes["bitpos"] {
+        let mappedName = rawBitName
+          .replacingOccurrences(of: bitBaseName, with: "")
+          .replacingOccurrences(of: "_BIT", with: "")
+          .snakeCaseToCamelCase()
+        bits.append("public static let \(mappedName) = Self(rawValue: \(value))")
+      }
+    } 
+  }
+
   private func generateDefinition() -> String {
     """
+    import CVulkan
+
     public struct \(mappedTypeName): OptionSet {
       public var rawValue: UInt32
 
-      public var vulkan: \(typeName) {
-        \(typeName)(rawValue)
+      public var vulkan: \(rawTypeName) {
+        \(rawTypeName)(rawValue)
       }
 
       public init(rawValue: UInt32) {
@@ -36,6 +57,7 @@ public class FlagsGenerator {
       }
 
       public static let none = Self(rawValue: 0)
+      \(bits.joined(separator: "\n"))
     }
     """
   }
