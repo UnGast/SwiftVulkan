@@ -1,3 +1,5 @@
+import CVulkan
+
 public struct PipelineColorBlendStateCreateFlags: OptionSet {
   public var rawValue: UInt32
 
@@ -10,4 +12,5 @@ public struct PipelineColorBlendStateCreateFlags: OptionSet {
   }
 
   public static let none = Self(rawValue: 0)
+  
 }

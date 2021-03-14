@@ -9,6 +9,10 @@ public class Pipeline: WrapperClass {
     self.device = device
   }
 
+  public var vulkan: VkPipeline {
+    pointer 
+  }
+
   public convenience init(device: Device, createInfo: GraphicsPipelineCreateInfo) throws {
     var pipelinePointer = VkPipeline(bitPattern: 0)
 

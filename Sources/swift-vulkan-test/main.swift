@@ -427,10 +427,10 @@ public class VulkanApplication {
       blendEnable: false,
       srcColorBlendFactor: .one,
       dstColorBlendFactor: .zero,
-      colorBlendOp: VK_BLEND_OP_ADD,
+      colorBlendOp: .add,
       srcAlphaBlendFactor: .one,
       dstAlphaBlendFactor: .zero,
-      alphaBlendOp: VK_BLEND_OP_ADD,
+      alphaBlendOp: .add,
       colorWriteMask: [.r, .g, .b, .a]
     )
 

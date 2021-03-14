@@ -1,6 +1,6 @@
 import CVulkan
 
-public struct PipelineColorBlendAttachmentState: WrapperStruct {
+public struct PipelineColorBlendAttachmentState: VulkanTypeWrapper {
   public var blendEnable: Bool
 public var srcColorBlendFactor: BlendFactor
 public var dstColorBlendFactor: BlendFactor
@@ -20,7 +20,7 @@ colorBlendOp: BlendOp,
 srcAlphaBlendFactor: BlendFactor,
 dstAlphaBlendFactor: BlendFactor,
 alphaBlendOp: BlendOp,
-colorWriteMask: ColorComponentFlags?
+colorWriteMask: ColorComponentFlags? = nil
   ) {
     self.blendEnable = blendEnable
 self.srcColorBlendFactor = srcColorBlendFactor
@@ -33,10 +33,6 @@ self.colorWriteMask = colorWriteMask
   }
 
   public var vulkan: VkPipelineColorBlendAttachmentState {
-    fatalError("use expVuklan on this type")
-  }
-
-  public var expVulkan: VkPipelineColorBlendAttachmentState {
     mutating get {
       
       return VkPipelineColorBlendAttachmentState(
@@ -47,7 +43,7 @@ colorBlendOp: colorBlendOp.vulkan,
 srcAlphaBlendFactor: srcAlphaBlendFactor.vulkan,
 dstAlphaBlendFactor: dstAlphaBlendFactor.vulkan,
 alphaBlendOp: alphaBlendOp.vulkan,
-colorWriteMask: colorWriteMask?.vulkan
+colorWriteMask: colorWriteMask?.vulkan ?? 0
       )
     }
   }

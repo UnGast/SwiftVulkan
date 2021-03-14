@@ -1,20 +1,20 @@
 import CVulkan
 
-public struct PipelineColorBlendStateCreateInfo: WrapperStruct {
+public struct PipelineColorBlendStateCreateInfo: VulkanTypeWrapper {
   public var flags: PipelineColorBlendStateCreateFlags?
 public var logicOpEnable: Bool
 public var logicOp: LogicOp
 public var attachments: [PipelineColorBlendAttachmentState]
-public var blendConstants: Float
+public var blendConstants: (Float, Float, Float, Float)
 
   var vAttachments: [VkPipelineColorBlendAttachmentState]? = nil
 
   public init(
-    flags: PipelineColorBlendStateCreateFlags?,
+    flags: PipelineColorBlendStateCreateFlags? = nil,
 logicOpEnable: Bool,
 logicOp: LogicOp,
 attachments: [PipelineColorBlendAttachmentState],
-blendConstants: Float
+blendConstants: (Float, Float, Float, Float)
   ) {
     self.flags = flags
 self.logicOpEnable = logicOpEnable
@@ -24,10 +24,6 @@ self.blendConstants = blendConstants
   }
 
   public var vulkan: VkPipelineColorBlendStateCreateInfo {
-    fatalError("use expVuklan on this type")
-  }
-
-  public var expVulkan: VkPipelineColorBlendStateCreateInfo {
     mutating get {
       vAttachments = attachments.vulkanArray
       return VkPipelineColorBlendStateCreateInfo(
@@ -38,7 +34,7 @@ logicOpEnable: logicOpEnable.vulkan,
 logicOp: logicOp.vulkan,
 attachmentCount: UInt32(attachments.count),
 pAttachments: vAttachments,
-blendConstants: blendConstants.vulkan
+blendConstants: blendConstants
       )
     }
   }

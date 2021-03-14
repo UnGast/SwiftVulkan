@@ -11,11 +11,11 @@ struct GeneratorCommand: ParsableCommand {
 
     let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFilePath))
 
-    let typeRegistry = TypeRegistry(fromXml: xml.registry.types.type)
+    let typeRegistry = TypeRegistry(fromXml: xml.registry)
 
     let generatedStructWhitelist = [
       "VkPipelineColorBlendStateCreateInfo",
-      "VkPipelineColorBlendAttachmentState"
+      "VkPipelineColorBlendAttachmentState",
 
       /*"VkFramebufferCreateInfo",
       "VkVertexInputAttributeDescription",
@@ -31,7 +31,13 @@ struct GeneratorCommand: ParsableCommand {
       "VkWriteDescriptorSet"*/]
 
     let generatedFlagsWhitelist = [
-      "VkPipelineColorBlendStateCreateFlags"
+      "VkPipelineColorBlendStateCreateFlags",
+      "VkColorComponentFlags",
+      "VkPipelineCreateFlags"
+    ]
+
+    let generatedEnumsWhitelist = [
+      "VkBlendOp"
     ]
 
     for type in xml.registry.types.type {
@@ -42,19 +48,33 @@ struct GeneratorCommand: ParsableCommand {
           let generator = StructGenerator(fromXml: type, typeRegistry: typeRegistry)
           generatorOutput = generator.generate()
         } else if generatedFlagsWhitelist.contains(rawName) {
-          let generator = FlagsGenerator(typeName: rawName, typeRegistry: typeRegistry)
+          let generator = FlagsGenerator(rawTypeName: rawName, typeRegistry: typeRegistry)
           generatorOutput = generator.generate()
         }
 
         if let (typeName, typeDefinition) = generatorOutput {
-          print(typeDefinition)
-          if !dryRun {
-            let path = Path.cwd/"Sources/Vulkan/Generated/Structs"/(typeName + ".swift")
-            try path.touch()
-            try typeDefinition.write(to: path)
-          }
+          try processGeneratorOutput(typeName, typeDefinition)
         }
       }
+    }
+
+    for enumType in xml.registry.enums {
+      if let rawName = enumType.attributes["name"] {
+        if generatedEnumsWhitelist.contains(rawName) {
+          let generator = EnumGenerator(fromXml: enumType)
+          let (typeName, typeDefinition) = generator.generate()
+          try processGeneratorOutput(typeName, typeDefinition)
+        }
+      }
+    }
+  }
+
+  func processGeneratorOutput(_ typeName: String, _ typeDefinition: String) throws {
+    print(typeDefinition)
+    if !dryRun {
+      let path = Path.cwd/"Sources/Vulkan/Generated"/(typeName + ".swift")
+      try path.touch()
+      try typeDefinition.write(to: path)
     }
   }
 }

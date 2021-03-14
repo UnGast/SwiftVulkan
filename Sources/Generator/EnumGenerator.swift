@@ -23,15 +23,7 @@ public class EnumGenerator {
   }
 
   private func extractCases() {
-    var caseNameBase = ""
-    for character in rawTypeName {
-      if character.isLetter && character.isUppercase {
-        caseNameBase += "_" + String(character)
-      } else {
-        caseNameBase += character.uppercased()
-      }
-    }
-    caseNameBase.removeFirst()
+    var caseNameBase = rawTypeName.camelCaseToSnakeCase()
 
     for enumCase in xml.enum {
       guard let rawName = enumCase.attributes["name"] else {
@@ -40,15 +32,7 @@ public class EnumGenerator {
       guard let value = enumCase.attributes["value"] else {
         continue
       }
-      let nameParts = rawName.replacingOccurrences(of: caseNameBase, with: "").split(separator: "_")
-      var mappedName = ""
-      for (index, part) in nameParts.enumerated() {
-        if index == 0 {
-          mappedName += part.lowercased()
-        } else {
-          mappedName += String(part.first!) + String(part.dropFirst()).lowercased()
-        }
-      }
+      let mappedName = rawName.replacingOccurrences(of: caseNameBase, with: "").snakeCaseToCamelCase()
       cases.append("\(mappedName) = \(value)")
     }
   }

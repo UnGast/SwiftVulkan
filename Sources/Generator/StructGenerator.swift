@@ -6,6 +6,7 @@ class StructGenerator {
     var name: String
     var type: String
     var comment: String?
+    var optional: Bool = false
   }
 
   struct RawMember {
@@ -14,6 +15,7 @@ class StructGenerator {
     var optional: Bool
     var lengthMemberName: String?
     var comment: String?
+    var xml: XML.Accessor
   }
 
   private let xml: XML.Accessor
@@ -58,7 +60,8 @@ class StructGenerator {
           type: type,
           optional: member.attributes["optional"] == "true",
           lengthMemberName: member.attributes["len"],
-          comment: member.comment.text))
+          comment: member.comment.text,
+          xml: member))
       }
     }
   }
@@ -80,7 +83,7 @@ class StructGenerator {
           memberMappings[rawMember.name] = "flags?.vulkan ?? 0"
 
           exposedMembers.append(ExposedMember(
-            name: "flags", type: mapTypeNameToSwift(rawMember.type) + "?", comment: rawMember.comment
+            name: "flags", type: mapTypeNameToSwift(rawMember.type) + "?", comment: rawMember.comment, optional: true
           ))
         } else {
           processSimpleRawMember(rawMember)
@@ -130,23 +133,17 @@ class StructGenerator {
 
         //let arrayCountNameRegex = try! Regex(string: "^\(baseName.dropLast())Count")
         if rawMember.lengthMemberName != nil/* || rawMembers.contains(where: { arrayCountNameRegex.matches($0.name) })*/ {
-          /*if rawMember.optional {
-            memberMappings[rawMember.name] = "\(baseName)?.vulkanPointer"
-          } else {
-            memberMappings[rawMember.name] = "\(baseName).vulkanPointer"
-          }*/
           exposedMembers.append(ExposedMember(
-            name: baseName, type: "[\(mapTypeNameToSwift(rawMember.type))]" + (rawMember.optional ? "?" : "")
+            name: baseName,
+            type: "[\(mapTypeNameToSwift(rawMember.type))]" + (rawMember.optional ? "?" : ""),
+            optional: rawMember.optional
           ))
         } else {
-          /*if typeRegistry.isHandle(typeName: rawMember.type) {
-            memberMappings[rawMember.name] = "\(baseName).pointer"
-          } else {
-            memberMappings[rawMember.name] = "\(baseName).vulkan"
-          }*/
-
           exposedMembers.append(ExposedMember(
-            name: baseName, type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
+            name: baseName,
+            type: mapTypeNameToSwift(rawMember.type) + (rawMember.optional ? "?" : ""),
+            comment: rawMember.comment,
+            optional: rawMember.optional
           ))
         }
 
@@ -157,26 +154,20 @@ class StructGenerator {
   }
 
   private func processSimpleRawMember(_ rawMember: RawMember) {
-    if rawMember.optional {
-      memberMappings[rawMember.name] = "\(rawMember.name)?.vulkan"
+    let (swiftType, cConversion) = mapMemberTypeToSwift(rawMember.xml, typeRegistry: typeRegistry)
 
-      exposedMembers.append(ExposedMember(
-        name: rawMember.name, type: mapTypeNameToSwift(rawMember.type) + "?", comment: rawMember.comment
-      ))
-    } else {
-      memberMappings[rawMember.name] = "\(rawMember.name).vulkan"
+    memberMappings[rawMember.name] = "\(rawMember.name)\(cConversion)"
 
-      exposedMembers.append(ExposedMember(
-        name: rawMember.name, type: mapTypeNameToSwift(rawMember.type), comment: rawMember.comment
-      ))
-    }
+    exposedMembers.append(ExposedMember(
+      name: rawMember.name, type: swiftType, comment: rawMember.comment, optional: rawMember.optional
+    ))
   }
 
   private func generateTypeDefinition() -> String {
     """
     import CVulkan
 
-    public struct \(mappedTypeName): WrapperStruct {
+    public struct \(mappedTypeName): VulkanTypeWrapper {
       \(generateMemberDefinitions())
 
       \(generatePointerBackingProperties())
@@ -188,10 +179,6 @@ class StructGenerator {
       }
 
       public var vulkan: \(rawTypeName) {
-        fatalError("use expVuklan on this type")
-      }
-
-      public var expVulkan: \(rawTypeName) {
         mutating get {
           \(generatePointerBackingAssignments())
           return \(rawTypeName)(
@@ -220,7 +207,11 @@ class StructGenerator {
 
   private func generateInitArguments() -> String {
     exposedMembers.map {
-      "\($0.name): \($0.type)"
+      let base = "\($0.name): \($0.type)"
+      if $0.optional {
+        return base + " = nil"
+      }
+      return base
     }.joined(separator: ",\n")
   }
 

@@ -18,6 +18,7 @@ public struct GraphicsPipelineCreateInfo: WrapperStruct {
 
   var vStages: [VkPipelineShaderStageCreateInfo]? = nil
   var vInputState: [VkPipelineVertexInputStateCreateInfo]? = nil
+  var vColorBlendState: [VkPipelineColorBlendStateCreateInfo]? = nil
 
   public init(
     flags: UInt32,
@@ -57,6 +58,7 @@ public struct GraphicsPipelineCreateInfo: WrapperStruct {
     mutating get {
       vStages = stages.vulkanArray
       vInputState = vertexInputState?.vulkanArray
+      vColorBlendState = colorBlendState?.vulkanArray
 
       return VkGraphicsPipelineCreateInfo(
         sType: VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -71,7 +73,7 @@ public struct GraphicsPipelineCreateInfo: WrapperStruct {
         pRasterizationState: rasterizationState.vulkanPointer,
         pMultisampleState: multisampleState.vulkanPointer,
         pDepthStencilState: nil,
-        pColorBlendState: colorBlendState?.vulkanPointer,//colorBlendState != nil ? Optional([colorBlendState!.vulkan]) : nil,
+        pColorBlendState: vColorBlendState,//colorBlendState != nil ? Optional([colorBlendState!.vulkan]) : nil,
         pDynamicState: dynamicState?.vulkanPointer,//dynamicState != nil ? Optional([dynamicState!.vulkan]) : nil,
         layout: layout.vulkan,
         renderPass: renderPass.vulkan,
