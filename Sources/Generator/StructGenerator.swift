@@ -19,8 +19,9 @@ class StructGenerator {
   }
 
   private let xml: XML.Accessor
-  private let typeRegistry: TypeRegistry
+  private let registry: Registry
 
+  var returnedOnly: Bool = false
   var rawTypeName: String = ""
   var mappedTypeName: String = ""
   var structureTypeEnumValue = ""
@@ -29,14 +30,17 @@ class StructGenerator {
   var exposedMembers = [ExposedMember]()
   var pointerBackingProperties = [String]()
   var pointerBackingAssignments = [String]()
-  var memberMappings = [String: String]()
+  var toCMemberMappings = [String: String]()
+  var toSwiftMemberMappings = [String: String]()
 
-  public init(fromXml xml: XML.Accessor, typeRegistry: TypeRegistry) {
+  public init(fromXml xml: XML.Accessor, registry: Registry) {
     self.xml = xml
-    self.typeRegistry = typeRegistry
+    self.registry = registry
   }
 
   public func generate() -> (typeName: String, definition: String) {
+    returnedOnly = xml.attributes["returnedonly"] == "true"
+
     rawTypeName = xml.attributes["name"] ?? ""
     mappedTypeName = mapTypeNameToSwift(rawTypeName)
 
@@ -70,17 +74,17 @@ class StructGenerator {
     for (index, rawMember) in rawMembers.enumerated() {
       switch rawMember.name {
       case "sType":
-        memberMappings[rawMember.name] = structureTypeEnumValue
+        toCMemberMappings[rawMember.name] = structureTypeEnumValue
         continue
 
       case "pNext":
-        memberMappings[rawMember.name] = "nil"
+        toCMemberMappings[rawMember.name] = "nil"
         continue
 
       case "flags":
         // when it's optional, flags is probably reserved for later use, but not used right now 
         if rawMember.optional {
-          memberMappings[rawMember.name] = "flags?.vulkan ?? 0"
+          toCMemberMappings[rawMember.name] = "flags?.vulkan ?? 0"
 
           exposedMembers.append(ExposedMember(
             name: "flags", type: mapTypeNameToSwift(rawMember.type) + "?", comment: rawMember.comment, optional: true
@@ -95,27 +99,23 @@ class StructGenerator {
         let arrayPointerNameRegex = try! Regex(string: "^p\(baseName.first!.uppercased() + baseName.dropFirst())")
         if let rawPointerMember = rawMembers.first(where: { arrayPointerNameRegex.matches($0.name) }) {
           if rawPointerMember.optional {
-            memberMappings[rawMember.name] = "UInt32(\(baseName)?.count ?? 0)"
+            toCMemberMappings[rawMember.name] = "UInt32(\(baseName)?.count ?? 0)"
           } else {
-            memberMappings[rawMember.name] = "UInt32(\(baseName).count)"
+            toCMemberMappings[rawMember.name] = "UInt32(\(baseName).count)"
           }
         } else {
-          memberMappings[rawMember.name] = "\(rawMember.name)"
-
-          exposedMembers.append(ExposedMember(
-            name: rawMember.name, type: mapTypeNameToSwift(rawMember.type)
-          ))
+          processSimpleRawMember(rawMember)
         }
       
       case Regex("^p([A-Z].*)"):
         var baseName = Regex.lastMatch!.captures[0]!
         baseName = baseName.first!.lowercased() + baseName.dropFirst()
 
-        if typeRegistry.isHandle(typeName: rawMember.type) {
+        if registry.isHandle(typeName: rawMember.type) {
           if rawMember.optional {
-            memberMappings[rawMember.name] = "\(baseName)?.vulkan"
+            toCMemberMappings[rawMember.name] = "\(baseName)?.vulkan"
           } else {
-            memberMappings[rawMember.name] = "\(baseName).vulkan"
+            toCMemberMappings[rawMember.name] = "\(baseName).vulkan"
           }
         } else {
           let backingPropertyName = "v" + baseName.first!.uppercased() + baseName.dropFirst()
@@ -128,7 +128,7 @@ class StructGenerator {
             pointerBackingAssignments.append("\(backingPropertyName) = \(baseName).vulkanArray")
           }
 
-          memberMappings[rawMember.name] = backingPropertyName
+          toCMemberMappings[rawMember.name] = backingPropertyName
         }
 
         //let arrayCountNameRegex = try! Regex(string: "^\(baseName.dropLast())Count")
@@ -154,9 +154,10 @@ class StructGenerator {
   }
 
   private func processSimpleRawMember(_ rawMember: RawMember) {
-    let (swiftType, cConversion) = mapMemberTypeToSwift(rawMember.xml, typeRegistry: typeRegistry)
+    let (swiftType, swiftConversion, cConversion) = mapMember(rawMember.xml, registry: registry)
 
-    memberMappings[rawMember.name] = "\(rawMember.name)\(cConversion)"
+    toCMemberMappings[rawMember.name] = "\(rawMember.name)\(cConversion)"
+    toSwiftMemberMappings[rawMember.name] = "\(swiftConversion)"
 
     exposedMembers.append(ExposedMember(
       name: rawMember.name, type: swiftType, comment: rawMember.comment, optional: rawMember.optional
@@ -164,7 +165,7 @@ class StructGenerator {
   }
 
   private func generateTypeDefinition() -> String {
-    """
+    var definition = """
     import CVulkan
 
     public struct \(mappedTypeName): VulkanTypeWrapper {
@@ -178,16 +179,39 @@ class StructGenerator {
         \(generateInitializerAssignments())
       }
 
-      public var vulkan: \(rawTypeName) {
-        mutating get {
-          \(generatePointerBackingAssignments())
-          return \(rawTypeName)(
-            \(generateBindingAssignments())
+
+    """
+
+    if returnedOnly {
+      definition += """
+        public init(fromVulkan vulkan: \(rawTypeName)) {
+          self.init(
+            \(generateSwiftConversionAssignments())
           )
         }
-      }
+
+        public var vulkan: \(rawTypeName) {
+          mutating get {
+            fatalError("\(mappedTypeName) is a return-only type")
+          }
+        }
+      """
+    } else {
+      definition += """
+        public var vulkan: \(rawTypeName) {
+          mutating get {
+            \(generatePointerBackingAssignments())
+            return \(rawTypeName)(
+              \(generateCConversionAssignments())
+            )
+          }
+        }
+      """
     }
-    """
+
+    definition += "\n}"
+
+    return definition
   }
 
   private func generateMemberDefinitions() -> String {
@@ -225,35 +249,16 @@ class StructGenerator {
     pointerBackingAssignments.joined(separator: "\n")
   }
 
-  private func generateBindingAssignments() -> String {
+  private func generateCConversionAssignments() -> String {
     rawMembers.map { rawMember in
-      "\(rawMember.name): \(memberMappings[rawMember.name] ?? "")"
+      "\(rawMember.name): \(toCMemberMappings[rawMember.name] ?? "")"
     }.joined(separator: ",\n")
-    /*transformedMembers.map { member in
-      switch member.name {
-      case "sType":
-        return "sType: \(structureTypeEnumValue)"
-      case "pNext":
-        return "pNext: nil"
-      case "flags":
-        return "flags: flags.vulkan"
-      default:
-        break
-      }
+  }
 
-      switch member.mapping {
-      case let .simple(rawMember):
-        if typeRegistry.isHandle(typeName: rawMember.type) {
-          return "\(rawMember.name): \(member.name).vulkan"
-        }
-        return "\(rawMember.name): \(member.name)"
-      case let .nested(rawCountMember, rawPointerMember):
-        return """
-        \(rawCountMember.name): UInt32(\(member.name).count),
-        \(rawPointerMember.name): \(member.name).vulkanPointer
-        """
-      }
-    }.joined(separator: ",\n")*/
+  private func generateSwiftConversionAssignments() -> String {
+    exposedMembers.map {
+      "\($0.name): \(toSwiftMemberMappings[$0.name] ?? "")"
+    }.joined(separator: ",\n")
   }
 }
 

@@ -1,6 +1,8 @@
 import SwiftyXMLParser
 
-public class TypeRegistry {
+public class Registry {
+  public var constants: [String: String] = [:]
+
   public var types: [String: XML.Accessor] = [:]
 
   public init(fromXml xml: XML.Accessor) {
@@ -11,9 +13,26 @@ public class TypeRegistry {
     }
     for enumType in xml.enums {
       if let name = enumType.attributes["name"] {
-        types[name] = enumType
+        if name == "API Constants" {
+          print("GOT API CONSTANTS")
+          for constant in enumType.enum {
+            if let constantName = constant.attributes["name"], let constantValue = constant.attributes["value"] {
+              print("CONSTANT", constantName, constantValue)
+              constants[constantName] = constantValue
+            }
+          }
+        } else {
+          types[name] = enumType
+        }
       }
     }
+  }
+
+  public func isStruct(typeName: String) -> Bool {
+    if let xml = types[typeName] {
+      return xml.attributes["category"] == "struct"
+    }
+    return false
   }
 
   public func isHandle(typeName: String) -> Bool {

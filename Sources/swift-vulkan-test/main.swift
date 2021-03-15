@@ -38,6 +38,8 @@ public class VulkanApplication {
   @Deferred var commandPool: CommandPool
   @Deferred var textureImage: Image
   @Deferred var textureImageMemory: DeviceMemory
+  @Deferred var textureImageView: ImageView
+  @Deferred var textureSampler: Sampler
   @Deferred var vertexBuffer: Buffer
   @Deferred var vertexBufferMemory: DeviceMemory
   @Deferred var indexBuffer: Buffer
@@ -94,6 +96,10 @@ public class VulkanApplication {
     try self.createCommandPool()
 
     try self.createTextureImage()
+
+    try self.createTextureImageView()
+
+    try self.createTextureSampler()
 
     try self.createVertexBuffer()
 
@@ -702,6 +708,39 @@ public class VulkanApplication {
     try copyBufferToImage(buffer: stagingBuffer, image: textureImage, width: UInt32(imageWidth), height: UInt32(imageHeight))
 
     try transitionImageLayout(image: textureImage, format: .R8G8B8A8_UINT, oldLayout: .transferDstOptimal, newLayout: .shaderReadOnlyOptimal)
+  }
+
+  func createTextureImageView() throws {
+    textureImageView = try ImageView.create(device: device, createInfo: ImageViewCreateInfo(
+      flags: [],
+      image: textureImage,
+      viewType: .type2D,
+      format: .R8G8B8A8_UINT,
+      components: .identity,
+      subresourceRange: ImageSubresourceRange(
+        aspectMask: .color,
+        baseMipLevel: 0,
+        levelCount: 1,
+        baseArrayLayer: 0,
+        layerCount: 1
+      ) 
+    ))
+  }
+
+  func createTextureSampler() throws {
+    //let properties = physicalDevice.properties.
+
+    /*textureSampler = try Sampler(device: device, createInfo: SamplerCreateInfo(
+      magFilter: .linear,
+      minFilter: .linear,
+      mipmapMode: .linear,
+      addressModeU: .repeat,
+      addressModeV: .repeat,
+      addressModeW: .repeat,
+      mipLodBias: 0,
+      anisotropyEnable: true,
+      maxAnisotropy: Float, compareEnable: Bool, compareOp: CompareOp, minLod: Float, maxLod: Float, borderColor: BorderColor, unnormalizedCoordinates: Bool
+    ))*/
   }
 
   func createVertexBuffer() throws {

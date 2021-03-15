@@ -12,7 +12,7 @@ struct GeneratorCommand: ParsableCommand {
 
     let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFilePath))
 
-    let typeRegistry = TypeRegistry(fromXml: xml.registry)
+    let registry = Registry(fromXml: xml.registry)
 
     let generatedStructWhitelist = [
       "VkPipelineColorBlendStateCreateInfo",
@@ -69,10 +69,10 @@ struct GeneratorCommand: ParsableCommand {
         var generatorOutput: (String, String)? = nil
 
         if generatedStructWhitelist.contains(rawName) {
-          let generator = StructGenerator(fromXml: type, typeRegistry: typeRegistry)
+          let generator = StructGenerator(fromXml: type, registry: registry)
           generatorOutput = generator.generate()
         } else if generatedFlagsWhitelist.contains(rawName) {
-          let generator = FlagsGenerator(rawTypeName: rawName, typeRegistry: typeRegistry)
+          let generator = FlagsGenerator(rawTypeName: rawName, registry: registry)
           generatorOutput = generator.generate()
         }
 

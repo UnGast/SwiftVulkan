@@ -44,6 +44,10 @@ public class EnumGenerator {
     public enum \(mappedTypeName): UInt32 {
       case \(cases.joined(separator: ",\n"))
 
+      public init(fromVulkan: \(rawTypeName)) {
+        self.init(rawValue: fromVulkan.rawValue)!
+      }
+
       public var vulkan: \(rawTypeName) {
         \(rawTypeName)(rawValue)
       }

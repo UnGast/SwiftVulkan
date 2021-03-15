@@ -1,23 +1,23 @@
 import SwiftyXMLParser
 
 public class FlagsGenerator {
-  private let typeRegistry: TypeRegistry
+  private let registry: Registry
   private let rawTypeName: String
   private var mappedTypeName: String = ""
   private var bitsXml: XML.Accessor?
   private var bits: [String] = []
 
-  public init(rawTypeName: String, typeRegistry: TypeRegistry) {
+  public init(rawTypeName: String, registry: Registry) {
     self.rawTypeName = rawTypeName
-    self.typeRegistry = typeRegistry
+    self.registry = registry
   }
 
   public func generate() -> (rawTypeName: String, typeDefinition: String) {
-    let flagsXml = typeRegistry.types[rawTypeName]!
+    let flagsXml = registry.types[rawTypeName]!
     mappedTypeName = mapTypeNameToSwift(self.rawTypeName)
 
     let flagBitsName = rawTypeName.replacingOccurrences(of: "Flags", with: "FlagBits")
-    if let flagBitsXml = typeRegistry.types[flagBitsName] {
+    if let flagBitsXml = registry.types[flagBitsName] {
       bitsXml = flagBitsXml
       extractBits()
       print("COLOR COMPONENT FLAGS BITS", flagBitsXml)
@@ -54,6 +54,18 @@ public class FlagsGenerator {
 
       public init(rawValue: UInt32) {
         self.rawValue = rawValue
+      }
+
+      public init(fromVulkan: \(rawTypeName)) {
+        self.rawValue = fromVulkan
+      }
+
+      public init?(fromVulkan: \(rawTypeName)?) {
+        if let fromVulkan = fromVulkan {
+            self.rawValue = fromVulkan
+        } else {
+            return nil
+        }
       }
 
       \(bits.joined(separator: "\n"))

@@ -891,7 +891,7 @@ public struct PhysicalDeviceMemoryProperties {
         }
     }
 }
-
+/*
 public struct PhysicalDeviceProperties {
     public let apiVersion: UInt32
     public let driverVersion: UInt32
@@ -902,7 +902,7 @@ public struct PhysicalDeviceProperties {
     public let pipelineCacheUUID: [UInt8]
     let limits: Any? = nil // TODO: add later if needed
     let sparseProperties: Any? = nil // TODO: add later if needed
-}
+}*/
 
 public struct PushConstantRange: WrapperStruct {
     public var stageFlags: ShaderStageFlags = .none

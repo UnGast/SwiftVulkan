@@ -309,6 +309,18 @@ public struct SampleCountFlags: OptionSet {
         self.rawValue = rawValue
     }
 
+    public init(fromVulkan: VkSampleCountFlags) {
+        self.rawValue = fromVulkan
+    }
+
+    public init?(fromVulkan: VkSampleCountFlags?) {
+        if let fromVulkan = fromVulkan {
+            self.rawValue = fromVulkan
+        } else {
+            return nil
+        }
+    }
+
     public static let none = SampleCountFlags(rawValue: 0)
     public static let _1bit = SampleCountFlags(rawValue: 0x00000001)
     public static let _2bit = SampleCountFlags(rawValue: 0x00000002)
@@ -532,14 +544,14 @@ public enum ImageViewType: UInt32 {
         return VkImageViewType(self.rawValue)
     }
 }
-
+/*
 public enum PhysicalDeviceType: UInt32 {
     case other = 0,
          integratedGpu,
          discreteGpu,
          virtualGpu,
          cpu
-}
+}*/
 
 public enum PresentMode: UInt32 {
     case immediate = 0,
