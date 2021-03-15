@@ -603,6 +603,77 @@ public class VulkanApplication {
       return (image, memory)
   }
 
+  func transitionImageLayout(image: Image, format: Format, oldLayout: ImageLayout, newLayout: ImageLayout) throws {
+    let commandBuffer = try beginSingleTimeCommands()
+
+    var barrier = ImageMemoryBarrier(
+      srcAccessMask: [],
+      dstAccessMask: [],
+      oldLayout: oldLayout,
+      newLayout: newLayout,
+      srcQueueFamilyIndex: VK_QUEUE_FAMILY_IGNORED,
+      dstQueueFamilyIndex: VK_QUEUE_FAMILY_IGNORED,
+      image: image,
+      subresourceRange: ImageSubresourceRange(
+        aspectMask: .color,
+        baseMipLevel: 0,
+        levelCount: 1,
+        baseArrayLayer: 0,
+        layerCount: 1
+      ))
+    
+    let sourceStage: PipelineStageFlags
+    let destinationStage: PipelineStageFlags
+
+    if oldLayout == .undefined && newLayout == .transferDstOptimal {
+      barrier.srcAccessMask = []
+      barrier.dstAccessMask = .transferWrite
+
+      sourceStage = .topOfPipe
+      destinationStage = .transfer
+    } else if oldLayout == .transferDstOptimal && newLayout == .shaderReadOnlyOptimal {
+      barrier.srcAccessMask = .transferWrite
+      barrier.dstAccessMask = .shaderRead
+
+      sourceStage = .transfer
+      destinationStage = .fragmentShader
+    } else {
+      throw VulkanApplicationError.unsupportedImageLayoutTransition(old: oldLayout, new: newLayout)
+    }
+
+    commandBuffer.pipelineBarrier(
+      srcStageMask: sourceStage, 
+      dstStageMask: destinationStage, 
+      dependencyFlags: [],
+      memoryBarriers: [],
+      bufferMemoryBarriers: [],
+      imageMemoryBarriers: [barrier]
+    )
+
+    try endSingleTimeCommands(commandBuffer: commandBuffer)
+  }
+
+  func copyBufferToImage(buffer: Buffer, image: Image, width: UInt32, height: UInt32) throws {
+    let commandBuffer = try beginSingleTimeCommands()
+
+    let region = BufferImageCopy(
+      bufferOffset: 0,
+      bufferRowLength: 0,
+      bufferImageHeight: 0,
+      imageSubresource: ImageSubresourceLayers(
+        aspectMask: .color,
+        mipLevel: 0,
+        baseArrayLayer: 0,
+        layerCount: 1
+      ),
+      imageOffset: Offset3D(x: 0, y: 0, z: 0),
+      imageExtent: Extent3D(width: width, height: height, depth: 1)
+    )
+    commandBuffer.copyBufferToImage(srcBuffer: buffer, dstImage: image, dstImageLayout: .transferDstOptimal, regions: [region])
+
+    try endSingleTimeCommands(commandBuffer: commandBuffer)
+  }
+
   func createTextureImage() throws {
     let imageWidth = 200
     let imageHeight = 200
@@ -625,37 +696,12 @@ public class VulkanApplication {
       tiling: .optimal,
       usage: [.transferDst, .sampled],
       properties: [.hostVisible, .hostCoherent])
-  }
 
-  func transitionImageLayout(image: Image, format: Format, oldLayout: ImageLayout, newLayout: ImageLayout) throws {
-    let commandBuffer = try beginSingleTimeCommands()
+    try transitionImageLayout(image: textureImage, format: .R8G8B8A8_UINT, oldLayout: .undefined, newLayout: .transferDstOptimal)
 
-    let barrier = ImageMemoryBarrier(
-      srcAccessMask: [],
-      dstAccessMask: [],
-      oldLayout: oldLayout,
-      newLayout: newLayout,
-      srcQueueFamilyIndex: VK_QUEUE_FAMILY_IGNORED,
-      dstQueueFamilyIndex: VK_QUEUE_FAMILY_IGNORED,
-      image: image,
-      subresourceRange: ImageSubresourceRange(
-        aspectMask: .color,
-        baseMipLevel: 0,
-        levelCount: 1,
-        baseArrayLayer: 0,
-        layerCount: 1
-      ))
+    try copyBufferToImage(buffer: stagingBuffer, image: textureImage, width: UInt32(imageWidth), height: UInt32(imageHeight))
 
-    commandBuffer.pipelineBarrier(
-      srcStageMask: [],
-      dstStageMask: [],
-      dependencyFlags: [],
-      memoryBarriers: [],
-      bufferMemoryBarriers: [],
-      imageMemoryBarriers: [barrier]
-    )
-
-    try endSingleTimeCommands(commandBuffer: commandBuffer)
+    try transitionImageLayout(image: textureImage, format: .R8G8B8A8_UINT, oldLayout: .transferDstOptimal, newLayout: .shaderReadOnlyOptimal)
   }
 
   func createVertexBuffer() throws {
@@ -944,7 +990,8 @@ public class VulkanApplication {
 
   public enum VulkanApplicationError: Error {
     case noSuitableQueueFamily,
-      noSuitableMemoryType
+      noSuitableMemoryType,
+      unsupportedImageLayoutTransition(old: ImageLayout, new: ImageLayout)
   }
 }
 

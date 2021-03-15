@@ -332,8 +332,8 @@ public struct Extent3D {
         self.depth = depth
     }
 
-    var vulkanValue: VkExtent3D {
-        return VkExtent3D(width: self.width, height: self.height, depth: self.depth)
+    var vulkan: VkExtent3D {
+        VkExtent3D(width: self.width, height: self.height, depth: self.depth)
     }
 }
 
@@ -425,7 +425,7 @@ public struct ImageCreateInfo {
                 flags: self.flags.vulkan,
                 imageType: self.imageType.vulkan,
                 format: self.format.vulkan,
-                extent: self.extent.vulkanValue,
+                extent: self.extent.vulkan,
                 mipLevels: self.mipLevels,
                 arrayLayers: self.arrayLayers,
                 samples: self.samples.vulkanValue,

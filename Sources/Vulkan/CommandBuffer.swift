@@ -128,6 +128,11 @@ public class CommandBuffer: WrapperStruct {
         vkCmdCopyBuffer(pointer, srcBuffer.pointer, dstBuffer.pointer, UInt32(regions.count), regions.vulkanPointer)
     }
 
+    public func copyBufferToImage(srcBuffer: Buffer, dstImage: Image, dstImageLayout: ImageLayout, regions: [BufferImageCopy]) {
+        var regions = regions
+        vkCmdCopyBufferToImage(pointer, srcBuffer.vulkan, dstImage.vulkan, dstImageLayout.vulkan, UInt32(regions.count), regions.vulkanArray)
+    }
+
     public func end() {
         vkEndCommandBuffer(pointer)
     }

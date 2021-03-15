@@ -21,7 +21,10 @@ struct GeneratorCommand: ParsableCommand {
       "VkImageMemoryBarrier",
       "VkImageSubresourceRange",
       "VkImageViewCreateInfo",
-      "VkComponentMapping"
+      "VkComponentMapping",
+      "VkBufferImageCopy",
+      "VkImageSubresourceLayers",
+      "VkOffset3D"
       /*"VkFramebufferCreateInfo",
       "VkVertexInputAttributeDescription",
       "VkVertexInputBindingDescription",

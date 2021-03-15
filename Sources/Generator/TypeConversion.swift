@@ -8,6 +8,9 @@ func mapTypeNameToSwift(_ rawName: String) -> String {
 
   case "uint32_t":
     return "UInt32"
+  
+  case "int32_t":
+    return "Int32"
 
   case "uint8_t":
     return "UInt8"
