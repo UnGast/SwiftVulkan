@@ -1,7 +1,7 @@
 import Foundation
 
 public struct Vertex {
-  public var position: Position2
+  public var position: Position3
   public var color: Color
   public var texCoord: Position2
 }
@@ -9,6 +9,12 @@ public struct Vertex {
 public struct Position2 {
   public var x: Float
   public var y: Float
+}
+
+public struct Position3 {
+  public var x: Float
+  public var y: Float
+  public var z: Float
 }
 
 public struct Color {

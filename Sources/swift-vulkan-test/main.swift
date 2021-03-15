@@ -54,10 +54,10 @@ public class VulkanApplication {
   @Deferred var inFlightFences: [Fence]
 
   let vertices = [
-    Vertex(position: Position2(x: -0.5, y: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 1, y: 0)),
-    Vertex(position: Position2(x: 0.5, y: 0.5), color: Color(r: 0, g: 1, b: 0), texCoord: Position2(x: 0, y: 0)),
-    Vertex(position: Position2(x: 0.5, y: -0.5), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 0, y: 1)),
-    Vertex(position: Position2(x: -0.5, y: -0.5), color: Color(r: 1, g: 0, b: 1), texCoord: Position2(x: 1, y: 1))
+    Vertex(position: Position3(x: -0.5, y: 0.5, z: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 1, y: 0)),
+    Vertex(position: Position3(x: 0.5, y: 0.5, z: 0.1), color: Color(r: 0, g: 1, b: 0), texCoord: Position2(x: 0, y: 0)),
+    Vertex(position: Position3(x: 0.5, y: -0.5, z: 0.5), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 0, y: 1)),
+    Vertex(position: Position3(x: -0.5, y: -0.5, z: 0.9), color: Color(r: 1, g: 0, b: 1), texCoord: Position2(x: 1, y: 1))
   ]
 
   let indices: [UInt16] = [
@@ -395,20 +395,20 @@ public class VulkanApplication {
       VertexInputAttributeDescription(
         location: 0,
         binding: 0,
-        format: .R32G32_SFLOAT,
+        format: .R32G32B32_SFLOAT,
         offset: 0
       ),
       VertexInputAttributeDescription(
         location: 1,
         binding: 0,
         format: .R32G32B32_SFLOAT,
-        offset: UInt32(MemoryLayout<Position2>.size)
+        offset: UInt32(MemoryLayout<Position3>.size)
       ),
       VertexInputAttributeDescription(
         location: 2,
         binding: 0,
         format: .R32G32_SFLOAT,
-        offset: UInt32(MemoryLayout<Position2>.size + MemoryLayout<Color>.size)
+        offset: UInt32(MemoryLayout<Position3>.size + MemoryLayout<Color>.size)
       )
     ]
 
@@ -1033,11 +1033,12 @@ public class VulkanApplication {
 
   func updateUniformBuffer(currentImage: UInt32) throws {
     let uniformBufferObject = UniformBufferObject(model: Mat4([
-      1.2, 0, 0, 0,
-      0, 1.2, 0, 0,
+      1, 0, 0, 0,
+      0, 1, 0, 0,
       0, 0, 1, 0,
       0, 0, 0, 1
-    ]), view: .zero, projection: .zero)
+    ]), view: .zero, projection: Mat4.projection().transposed)
+    print("PROJ\n", Mat4.projection().transposed)
     var dataPointer: UnsafeMutableRawPointer? = nil
     try uniformBuffersMemory[Int(currentImage)].mapMemory(
       offset: 0,

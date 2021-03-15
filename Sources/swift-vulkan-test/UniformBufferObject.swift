@@ -12,8 +12,19 @@ public struct UniformBufferObject {
   }
 }
 
-public struct Mat4 {
+public struct Mat4: CustomDebugStringConvertible {
   public var elements: [Float]
+
+  public var debugDescription: String {
+    var result = ""
+    for i in 0..<16 {
+      result += String(elements[i]) + ", "
+      if i % 4 == 3 {
+        result += "\n"
+      }
+    }
+    return result
+  }
 
   public init(_ elements: [Float]) {
     if elements.count != 16 {
@@ -23,4 +34,21 @@ public struct Mat4 {
   }
 
   public static let zero = Self([Float](repeating: 0, count: 16))
+
+  public static func projection() -> Mat4 {
+    Mat4([
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 1, 0
+    ])
+  }
+
+  public var transposed: Self {
+    var result = [Float](repeating: 0, count: 16)
+    for i in 0..<16 {
+      result[i] = self.elements[(i % 4) * 4 + (i / 4)]
+    }
+    return Self(result)
+  }
 }
