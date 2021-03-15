@@ -54,10 +54,10 @@ public class VulkanApplication {
   @Deferred var inFlightFences: [Fence]
 
   let vertices = [
-    Vertex(position: Position2(x: -0.5, y: 0.5), color: Color(r: 1, g: 0, b: 0)),
-    Vertex(position: Position2(x: 0.5, y: 0.5), color: Color(r: 0, g: 1, b: 0)),
-    Vertex(position: Position2(x: 0.5, y: -0.5), color: Color(r: 0, g: 0, b: 1)),
-    Vertex(position: Position2(x: -0.5, y: -0.5), color: Color(r: 1, g: 0, b: 1))
+    Vertex(position: Position2(x: -0.5, y: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 1, y: 0)),
+    Vertex(position: Position2(x: 0.5, y: 0.5), color: Color(r: 0, g: 1, b: 0), texCoord: Position2(x: 0, y: 0)),
+    Vertex(position: Position2(x: 0.5, y: -0.5), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 0, y: 1)),
+    Vertex(position: Position2(x: -0.5, y: -0.5), color: Color(r: 1, g: 0, b: 1), texCoord: Position2(x: 1, y: 1))
   ]
 
   let indices: [UInt16] = [
@@ -208,13 +208,16 @@ public class VulkanApplication {
     let queueCreateInfo = DeviceQueueCreateInfo(
       flags: .none, queueFamilyIndex: queueFamilyIndex, queuePriorities: [1.0])
 
+    var physicalDeviceFeatures = PhysicalDeviceFeatures()
+    physicalDeviceFeatures.samplerAnisotropy = true
+
     self.device = try physicalDevice.createDevice(
       createInfo: DeviceCreateInfo(
         flags: .none,
         queueCreateInfos: [queueCreateInfo],
         enabledLayers: [],
         enabledExtensions: ["VK_KHR_swapchain"],
-        enabledFeatures: PhysicalDeviceFeatures()))
+        enabledFeatures: physicalDeviceFeatures))
   }
 
   func createSwapchain() throws {
@@ -343,8 +346,16 @@ public class VulkanApplication {
       immutableSamplers: nil
     )
 
+    let samplerLayoutBinding = DescriptorSetLayoutBinding(
+      binding: 1,
+      descriptorType: .combinedImageSampler,
+      descriptorCount: 1,
+      stageFlags: .fragment,
+      immutableSamplers: nil
+    )
+
     descriptorSetLayout = try DescriptorSetLayout.create(device: device, createInfo: DescriptorSetLayoutCreateInfo(
-      flags: .none, bindings: [uboLayoutBinding]
+      flags: .none, bindings: [uboLayoutBinding, samplerLayoutBinding]
     ))
   }
 
@@ -392,6 +403,12 @@ public class VulkanApplication {
         binding: 0,
         format: .R32G32B32_SFLOAT,
         offset: UInt32(MemoryLayout<Position2>.size)
+      ),
+      VertexInputAttributeDescription(
+        location: 2,
+        binding: 0,
+        format: .R32G32_SFLOAT,
+        offset: UInt32(MemoryLayout<Position2>.size + MemoryLayout<Color>.size)
       )
     ]
 
@@ -681,11 +698,13 @@ public class VulkanApplication {
   }
 
   func createTextureImage() throws {
-    let imageWidth = 200
-    let imageHeight = 200
+    let image = try CpuImage(contentsOf: Bundle.module.url(forResource: "test-texture", withExtension: "jpg")!)
+    let imageWidth = image.width
+    let imageHeight = image.height
     let channelCount = 4 
     let imageDataSize = imageWidth * imageHeight * channelCount
-    let image = CpuImage(width: 200, height: 200, rgba: Array(repeating: 255, count: imageDataSize))
+    //let image = CpuImage(width: 200, height: 200, rgba: Array(repeating: 255, count: imageDataSize))
+
 
     let (stagingBuffer, stagingBufferMemory) = try createBuffer(
       size: DeviceSize(imageDataSize), usage: [.transferSrc], properties: [.hostVisible, .hostCoherent])
@@ -698,16 +717,16 @@ public class VulkanApplication {
     (textureImage, textureImageMemory) = try createImage(
       width: UInt32(imageWidth),
       height: UInt32(imageHeight),
-      format: .R8G8B8A8_UINT,
+      format: .R8G8B8A8_SRGB /* note */,
       tiling: .optimal,
       usage: [.transferDst, .sampled],
       properties: [.hostVisible, .hostCoherent])
 
-    try transitionImageLayout(image: textureImage, format: .R8G8B8A8_UINT, oldLayout: .undefined, newLayout: .transferDstOptimal)
+    try transitionImageLayout(image: textureImage, format: .R8G8B8A8_SRGB /* note */, oldLayout: .undefined, newLayout: .transferDstOptimal)
 
     try copyBufferToImage(buffer: stagingBuffer, image: textureImage, width: UInt32(imageWidth), height: UInt32(imageHeight))
 
-    try transitionImageLayout(image: textureImage, format: .R8G8B8A8_UINT, oldLayout: .transferDstOptimal, newLayout: .shaderReadOnlyOptimal)
+    try transitionImageLayout(image: textureImage, format: .R8G8B8A8_SRGB /* note */, oldLayout: .transferDstOptimal, newLayout: .shaderReadOnlyOptimal)
   }
 
   func createTextureImageView() throws {
@@ -715,7 +734,7 @@ public class VulkanApplication {
       flags: [],
       image: textureImage,
       viewType: .type2D,
-      format: .R8G8B8A8_UINT,
+      format: .R8G8B8A8_SRGB /* note */,
       components: .identity,
       subresourceRange: ImageSubresourceRange(
         aspectMask: .color,
@@ -728,9 +747,7 @@ public class VulkanApplication {
   }
 
   func createTextureSampler() throws {
-    //let properties = physicalDevice.properties.
-
-    /*textureSampler = try Sampler(device: device, createInfo: SamplerCreateInfo(
+    textureSampler = try Sampler(device: device, createInfo: SamplerCreateInfo(
       magFilter: .linear,
       minFilter: .linear,
       mipmapMode: .linear,
@@ -739,8 +756,14 @@ public class VulkanApplication {
       addressModeW: .repeat,
       mipLodBias: 0,
       anisotropyEnable: true,
-      maxAnisotropy: Float, compareEnable: Bool, compareOp: CompareOp, minLod: Float, maxLod: Float, borderColor: BorderColor, unnormalizedCoordinates: Bool
-    ))*/
+      maxAnisotropy: physicalDevice.properties.limits.maxSamplerAnisotropy,
+      compareEnable: false,
+      compareOp: .always,
+      minLod: 0,
+      maxLod: 0,
+      borderColor: .intOpaqueBlack,
+      unnormalizedCoordinates: false
+    ))
   }
 
   func createVertexBuffer() throws {
@@ -801,9 +824,14 @@ public class VulkanApplication {
     descriptorPool = try DescriptorPool.create(device: device, createInfo: DescriptorPoolCreateInfo(
       flags: .none,
       maxSets: UInt32(swapchainImages.count),
-      poolSizes: [DescriptorPoolSize(
-        type: .uniformBuffer, descriptorCount: UInt32(swapchainImages.count) 
-      )]
+      poolSizes: [
+        DescriptorPoolSize(
+          type: .uniformBuffer, descriptorCount: UInt32(swapchainImages.count)
+        ),
+        DescriptorPoolSize(
+          type: .combinedImageSampler, descriptorCount: UInt32(swapchainImages.count)
+        )
+      ]
     ))
   }
 
@@ -818,18 +846,32 @@ public class VulkanApplication {
         buffer: uniformBuffers[i], offset: 0, range: DeviceSize(UniformBufferObject.dataSize)
       )
 
-      let descriptorWrite = WriteDescriptorSet(
-        dstSet: descriptorSets[i],
-        dstBinding: 0,
-        dstArrayElement: 0,
-        descriptorCount: 1,
-        descriptorType: .uniformBuffer,
-        imageInfo: [],
-        bufferInfo: [bufferInfo],
-        texelBufferView: []
+      let imageInfo = DescriptorImageInfo(
+        sampler: textureSampler, imageView: textureImageView, imageLayout: .shaderReadOnlyOptimal 
       )
 
-      device.updateDescriptorSets(descriptorWrites: [descriptorWrite], descriptorCopies: nil)
+      let descriptorWrites = [
+        WriteDescriptorSet(
+          dstSet: descriptorSets[i],
+          dstBinding: 0,
+          dstArrayElement: 0,
+          descriptorCount: 1,
+          descriptorType: .uniformBuffer,
+          imageInfo: [],
+          bufferInfo: [bufferInfo],
+          texelBufferView: []),
+        WriteDescriptorSet(
+          dstSet: descriptorSets[i],
+          dstBinding: 1,
+          dstArrayElement: 0,
+          descriptorCount: 1,
+          descriptorType: .combinedImageSampler,
+          imageInfo: [imageInfo],
+          bufferInfo: [],
+          texelBufferView: [])
+      ]
+
+      device.updateDescriptorSets(descriptorWrites: descriptorWrites, descriptorCopies: nil)
     }
   }
 

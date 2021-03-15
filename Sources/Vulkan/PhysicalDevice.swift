@@ -24,14 +24,6 @@ public class PhysicalDevice {
         let prop = cProps.pointee
 
         return PhysicalDeviceProperties(fromVulkan: prop)
-            /*apiVersion: prop.apiVersion,
-            driverVersion: prop.driverVersion,
-            vendorID: Int(prop.vendorID),
-            deviceID: Int(prop.deviceID),
-            deviceType: PhysicalDeviceType(rawValue: prop.deviceType.rawValue)!,
-            deviceName: convertTupleToString(prop.deviceName),
-            pipelineCacheUUID: convertTupleToArray(prop.pipelineCacheUUID)*/
-        //)
     }()
 
     public lazy var queueFamilyProperties: [QueueFamilyProperties] = {

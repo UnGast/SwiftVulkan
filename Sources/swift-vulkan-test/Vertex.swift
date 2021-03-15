@@ -3,6 +3,7 @@ import Foundation
 public struct Vertex {
   public var position: Position2
   public var color: Color
+  public var texCoord: Position2
 }
 
 public struct Position2 {
