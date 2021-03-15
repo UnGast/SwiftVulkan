@@ -5,6 +5,7 @@ import ArgumentParser
 
 struct GeneratorCommand: ParsableCommand {
   @Flag var dryRun: Bool = false
+  @Argument var filter: [String] = []
 
   func run() throws {
     let vulkanDefinitionsFilePath = Path.cwd / "vk.xml"
@@ -24,7 +25,12 @@ struct GeneratorCommand: ParsableCommand {
       "VkComponentMapping",
       "VkBufferImageCopy",
       "VkImageSubresourceLayers",
-      "VkOffset3D"
+      "VkOffset3D",
+      "VkSamplerCreateInfo",
+      "VkPhysicalDeviceProperties",
+      "VkPhysicalDeviceLimits",
+      "VkPhysicalDeviceSparseProperties"
+
       /*"VkFramebufferCreateInfo",
       "VkVertexInputAttributeDescription",
       "VkVertexInputBindingDescription",
@@ -44,15 +50,22 @@ struct GeneratorCommand: ParsableCommand {
       "VkPipelineCreateFlags",
       "VkAccessFlags",
       "VkImageAspectFlags",
-      "VkImageViewCreateFlags"
+      "VkImageViewCreateFlags",
+      "VkSamplerCreateFlags"
     ]
 
     let generatedEnumsWhitelist = [
-      "VkBlendOp"
+      "VkBlendOp",
+      "VkFilter",
+      "VkSamplerMipmapMode",
+      "VkSamplerAddressMode",
+      "VkBorderColor",
+      "VkCompareOp",
+      "VkPhysicalDeviceType"
     ]
 
     for type in xml.registry.types.type {
-      if let rawName = type.attributes["name"] ?? type["name"].text {
+      if let rawName = type.attributes["name"] ?? type["name"].text, isTypeToGenerate(name: rawName) {
         var generatorOutput: (String, String)? = nil
 
         if generatedStructWhitelist.contains(rawName) {
@@ -70,7 +83,7 @@ struct GeneratorCommand: ParsableCommand {
     }
 
     for enumType in xml.registry.enums {
-      if let rawName = enumType.attributes["name"] {
+      if let rawName = enumType.attributes["name"], isTypeToGenerate(name: rawName) {
         if generatedEnumsWhitelist.contains(rawName) {
           let generator = EnumGenerator(fromXml: enumType)
           let (typeName, typeDefinition) = generator.generate()
@@ -78,6 +91,10 @@ struct GeneratorCommand: ParsableCommand {
         }
       }
     }
+  }
+
+  func isTypeToGenerate(name: String) -> Bool {
+    filter.count == 0 || filter.contains(name)
   }
 
   func processGeneratorOutput(_ typeName: String, _ typeDefinition: String) throws {
