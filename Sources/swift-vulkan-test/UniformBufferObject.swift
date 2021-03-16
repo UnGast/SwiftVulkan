@@ -1,3 +1,5 @@
+import Foundation
+
 public struct UniformBufferObject {
   public var model: Mat4
   public var view: Mat4
@@ -35,10 +37,14 @@ public struct Mat4: CustomDebugStringConvertible {
 
   public static let zero = Self([Float](repeating: 0, count: 16))
 
-  public static func projection() -> Mat4 {
-    Mat4([
-      1, 0, 0, 0,
-      0, 1, 0, 0,
+  public static func projection(aspectRatio: Float, fov: Float) -> Mat4 {
+    let near = Float(1.0)
+    let screenWidth = 2 * near * tan(fov / 2)
+    let screenHeight = screenWidth / aspectRatio 
+
+    return Mat4([
+      1/screenWidth, 0, 0, 0,
+      0, 1/screenHeight, 0, 0,
       0, 0, 1, 0,
       0, 0, 1, 0
     ])

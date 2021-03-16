@@ -53,11 +53,13 @@ public class VulkanApplication {
   @Deferred var renderFinishedSemaphores: [Semaphore]
   @Deferred var inFlightFences: [Fence]
 
+  var cameraPosition = Position3(x: 0, y: 0, z: 0)
+
   let vertices = [
     Vertex(position: Position3(x: -0.5, y: 0.5, z: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 1, y: 0)),
-    Vertex(position: Position3(x: 0.5, y: 0.5, z: 0.1), color: Color(r: 0, g: 1, b: 0), texCoord: Position2(x: 0, y: 0)),
+    Vertex(position: Position3(x: 0.5, y: 0.5, z: 0.5), color: Color(r: 0, g: 1, b: 0), texCoord: Position2(x: 0, y: 0)),
     Vertex(position: Position3(x: 0.5, y: -0.5, z: 0.5), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 0, y: 1)),
-    Vertex(position: Position3(x: -0.5, y: -0.5, z: 0.9), color: Color(r: 1, g: 0, b: 1), texCoord: Position2(x: 1, y: 1))
+    Vertex(position: Position3(x: -0.5, y: -0.5, z: 0.5), color: Color(r: 1, g: 0, b: 1), texCoord: Position2(x: 1, y: 1))
   ]
 
   let indices: [UInt16] = [
@@ -1032,13 +1034,23 @@ public class VulkanApplication {
   }
 
   func updateUniformBuffer(currentImage: UInt32) throws {
+    var windowWidth: Int32 = 0
+    var windowHeight: Int32 = 0
+    SDL_GetWindowSize(window, &windowWidth, &windowHeight)
+    let aspectRatio = Float(windowWidth) / Float(windowHeight)
+
     let uniformBufferObject = UniformBufferObject(model: Mat4([
       1, 0, 0, 0,
       0, 1, 0, 0,
       0, 0, 1, 0,
       0, 0, 0, 1
-    ]), view: .zero, projection: Mat4.projection().transposed)
-    print("PROJ\n", Mat4.projection().transposed)
+    ]), view: Mat4([
+      1, 0, 0, -cameraPosition.x,
+      0, 1, 0, -cameraPosition.y,
+      0, 0, 1, -cameraPosition.z,
+      0, 0, 0, 1
+    ]).transposed, projection: Mat4.projection(aspectRatio: aspectRatio, fov: 90).transposed)
+
     var dataPointer: UnsafeMutableRawPointer? = nil
     try uniformBuffersMemory[Int(currentImage)].mapMemory(
       offset: 0,
@@ -1056,6 +1068,16 @@ public class VulkanApplication {
       if event.type == SDL_QUIT.rawValue {
         device.waitIdle()
         exit(0)
+      } else if event.type == SDL_KEYDOWN.rawValue {
+        if event.key.keysym.sym == SDLK_UP {
+          cameraPosition.z += 0.5
+        } else if event.key.keysym.sym == SDLK_DOWN {
+          cameraPosition.z -= 0.5
+        } else if event.key.keysym.sym == SDLK_RIGHT {
+          cameraPosition.x += 0.5
+        } else if event.key.keysym.sym == SDLK_LEFT {
+          cameraPosition.x -= 0.5
+        }
       }
     }
     
