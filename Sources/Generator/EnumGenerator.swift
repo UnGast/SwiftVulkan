@@ -32,7 +32,8 @@ public class EnumGenerator {
       guard let value = enumCase.attributes["value"] else {
         continue
       }
-      let mappedName = rawName.replacingOccurrences(of: caseNameBase, with: "").snakeCaseToCamelCase()
+      var mappedName = rawName.replacingOccurrences(of: caseNameBase, with: "").snakeCaseToCamelCase()
+      mappedName = escapeIfSwiftKeyword(mappedName)
       cases.append("\(mappedName) = \(value)")
     }
   }
