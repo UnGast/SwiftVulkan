@@ -49,7 +49,7 @@ public class BufferCreateInfo {
     }
 }
 
-public class Buffer: WrapperClass, WrapperStruct {
+public class Buffer: VulkanHandleTypeWrapper, WrapperStruct {
     public let pointer: VkBuffer
     public let device: Device
 

@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public struct RenderPassBeginInfo: WrapperStruct {
@@ -29,4 +30,4 @@ public struct RenderPassBeginInfo: WrapperStruct {
       pClearValues: clearValues.vulkanPointer
     )
   }
-}
+}*/

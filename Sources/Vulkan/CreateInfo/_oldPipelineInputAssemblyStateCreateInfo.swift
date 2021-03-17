@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public struct PipelineInputAssemblyStateCreateInfo: WrapperStruct {
@@ -28,4 +29,4 @@ public struct PipelineInputAssemblyStateCreateInfo: WrapperStruct {
       }
     }
   }
-}
+}*/

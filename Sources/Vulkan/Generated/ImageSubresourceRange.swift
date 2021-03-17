@@ -29,9 +29,9 @@ self.layerCount = layerCount
       return VkImageSubresourceRange(
         aspectMask: aspectMask.vulkan,
 baseMipLevel: baseMipLevel.vulkan,
-levelCount: levelCount,
+levelCount: levelCount.vulkan,
 baseArrayLayer: baseArrayLayer.vulkan,
-layerCount: layerCount
+layerCount: layerCount.vulkan
       )
     }
   }

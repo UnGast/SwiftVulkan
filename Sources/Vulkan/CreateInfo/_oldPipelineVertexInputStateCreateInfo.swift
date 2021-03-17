@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public struct PipelineVertexInputStateCreateInfo: WrapperStruct {
@@ -40,4 +41,4 @@ public struct PipelineVertexInputStateCreateInfo: WrapperStruct {
       )
     }
   }
-}
+}*/

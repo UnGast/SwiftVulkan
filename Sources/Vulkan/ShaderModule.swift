@@ -1,7 +1,7 @@
 import Foundation
 import CVulkan
 
-public class ShaderModule {
+public class ShaderModule: VulkanHandleTypeWrapper {
   public let pointer: VkShaderModule 
 
   let device: Device
@@ -33,6 +33,10 @@ public class ShaderModule {
     }
     
     throw opResult.toResult()
+  }
+
+  public var vulkan: Optional<VkShaderModule> {
+    pointer
   }
 
   deinit {

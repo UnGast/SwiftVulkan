@@ -3,7 +3,7 @@ import CVulkan
 public struct AttachmentDescription: WrapperStruct {
     public var flags: AttachmentDescriptionFlags
     public var format: Format
-    public var samples: SampleCountFlags
+    public var samples: OldSampleCountFlags
     public var loadOp: AttachmentLoadOp
     public var storeOp: AttachmentStoreOp
     public var stencilLoadOp: AttachmentLoadOp
@@ -13,7 +13,7 @@ public struct AttachmentDescription: WrapperStruct {
 
     public init(flags: AttachmentDescriptionFlags,
                 format: Format,
-                samples: SampleCountFlags,
+                samples: OldSampleCountFlags,
                 loadOp: AttachmentLoadOp,
                 storeOp: AttachmentStoreOp,
                 stencilLoadOp: AttachmentLoadOp,

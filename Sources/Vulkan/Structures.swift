@@ -356,7 +356,7 @@ public struct ImageCreateInfo {
     public let extent: Extent3D
     public let mipLevels: UInt32
     public let arrayLayers: UInt32
-    public let samples: SampleCountFlags
+    public let samples: OldSampleCountFlags
     public let tiling: ImageTiling
     public let usage: ImageUsageFlags
     public let sharingMode: SharingMode
@@ -369,7 +369,7 @@ public struct ImageCreateInfo {
                 extent: Extent3D,
                 mipLevels: UInt32,
                 arrayLayers: UInt32,
-                samples: SampleCountFlags,
+                samples: OldSampleCountFlags,
                 tiling: ImageTiling,
                 usage: ImageUsageFlags,
                 sharingMode: SharingMode,
@@ -905,7 +905,7 @@ public struct PhysicalDeviceProperties {
 }*/
 
 public struct PushConstantRange: WrapperStruct {
-    public var stageFlags: ShaderStageFlags = .none
+    public var stageFlags: ShaderStageFlags = []
     public var offset = UInt32(0)
     public var size = UInt32(0)
 
@@ -1019,10 +1019,10 @@ public struct SemaphoreCreateInfo: WrapperStruct {
         )
     }
 }
-
+/*
 public class SpecializationInfo {
 
-}
+}*/
 
 public struct SurfaceCapabilities {
     public let minImageCount: UInt32

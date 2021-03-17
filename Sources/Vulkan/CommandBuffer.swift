@@ -69,7 +69,8 @@ public class CommandBuffer: WrapperStruct {
     }
 
     public func beginRenderPass(beginInfo: RenderPassBeginInfo, contents: SubpassContents) {
-        vkCmdBeginRenderPass(pointer, beginInfo.vulkanPointer, contents.vulkan)
+        var beginInfo = beginInfo
+        vkCmdBeginRenderPass(pointer, beginInfo.vulkanArray, contents.vulkan)
     }
 
     public func bindPipeline(pipelineBindPoint: PipelineBindPoint, pipeline: Pipeline) {

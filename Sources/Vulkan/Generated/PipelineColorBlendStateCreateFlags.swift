@@ -11,5 +11,18 @@ public struct PipelineColorBlendStateCreateFlags: OptionSet {
     self.rawValue = rawValue
   }
 
+  public init(fromVulkan: VkPipelineColorBlendStateCreateFlags) {
+    self.rawValue = fromVulkan
+  }
+
+  public init?(fromVulkan: VkPipelineColorBlendStateCreateFlags?) {
+    if let fromVulkan = fromVulkan {
+        self.rawValue = fromVulkan
+    } else {
+        return nil
+    }
+  }
+
   
 }
+

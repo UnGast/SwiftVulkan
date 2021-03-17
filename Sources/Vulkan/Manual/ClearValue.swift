@@ -1,6 +1,6 @@
 import CVulkan
 
-public protocol ClearValue: WrapperStruct {
+public protocol ClearValue: VulkanTypeWrapper {
 }
 
 extension ClearValue where Wrapped == VkClearValue {
@@ -13,6 +13,7 @@ public struct AnyClearValue: ClearValue {
   private let getVulkan: () -> VkClearValue
 
   public init<T: ClearValue>(_ wrapped: T) where T.Wrapped == VkClearValue {
+    var wrapped = wrapped
     self.getVulkan = { wrapped.vulkan }
   }
 
@@ -41,5 +42,25 @@ public enum ClearColorValue: ClearValue {
         uint32: (f1, f2, f3, f4)
       ))
     }
+  }
+}
+
+public struct ClearDepthStencilValue: ClearValue {
+  public var depth: Float
+  public var stencil: UInt32
+
+  public init(
+    depth: Float,
+    stencil: UInt32
+  ) {
+    self.depth = depth
+    self.stencil = stencil
+  }
+
+  public var vulkan: VkClearValue {
+    VkClearValue(depthStencil: VkClearDepthStencilValue(
+      depth: depth,
+      stencil: stencil
+    ))
   }
 }

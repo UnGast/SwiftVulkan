@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public struct Viewport: WrapperStruct {
@@ -27,4 +28,4 @@ public struct Viewport: WrapperStruct {
       maxDepth: maxDepth
     )
   }
-}
+}*/

@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public struct PipelineRasterizationStateCreateInfo: WrapperStruct {
@@ -54,3 +55,4 @@ public struct PipelineRasterizationStateCreateInfo: WrapperStruct {
     )
   }
 }
+*/

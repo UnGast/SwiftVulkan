@@ -36,6 +36,9 @@ public class VulkanApplication {
   @Deferred var pipelineLayout: PipelineLayout
   @Deferred var framebuffers: [Framebuffer]
   @Deferred var commandPool: CommandPool
+  @Deferred var depthImage: Image
+  @Deferred var depthImageMemory: DeviceMemory
+  @Deferred var depthImageView: ImageView
   @Deferred var textureImage: Image
   @Deferred var textureImageMemory: DeviceMemory
   @Deferred var textureImageView: ImageView
@@ -57,13 +60,19 @@ public class VulkanApplication {
 
   let vertices = [
     Vertex(position: Position3(x: -0.5, y: 0.5, z: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 1, y: 0)),
-    Vertex(position: Position3(x: 0.5, y: 0.5, z: 0.5), color: Color(r: 0, g: 1, b: 0), texCoord: Position2(x: 0, y: 0)),
-    Vertex(position: Position3(x: 0.5, y: -0.5, z: 0.5), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 0, y: 1)),
-    Vertex(position: Position3(x: -0.5, y: -0.5, z: 0.5), color: Color(r: 1, g: 0, b: 1), texCoord: Position2(x: 1, y: 1))
+    Vertex(position: Position3(x: 0.5, y: 0.5, z: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 0, y: 0)),
+    Vertex(position: Position3(x: 0.5, y: -0.5, z: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 0, y: 1)),
+    Vertex(position: Position3(x: -0.5, y: -0.5, z: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 1, y: 1)),
+
+    Vertex(position: Position3(x: -0.2, y: 0.8, z: 0.4), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 1, y: 0)),
+    Vertex(position: Position3(x: 0.8, y: 0.8, z: 0.4), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 0, y: 0)),
+    Vertex(position: Position3(x: 0.8, y: -0.2, z: 0.4), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 0, y: 1)),
+    Vertex(position: Position3(x: -0.2, y: -0.2, z: 0.4), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 1, y: 1)),
   ]
 
   let indices: [UInt16] = [
-    0, 1, 2, 0, 2, 3
+    4, 5, 6, 4, 6, 7,
+    0, 1, 2, 0, 2, 3,
   ]
 
   let maxFramesInFlight = 2
@@ -93,9 +102,11 @@ public class VulkanApplication {
 
     try self.createGraphicsPipeline()
 
-    try self.createFramebuffers()
-
     try self.createCommandPool()
+
+    try self.createDepthResources()
+
+    try self.createFramebuffers()
 
     try self.createTextureImage()
 
@@ -275,20 +286,26 @@ public class VulkanApplication {
     return formats[0]
   }
 
+  func createImageView(image: Image, format: Format, aspectFlags: ImageAspectFlags) throws -> ImageView {
+    try ImageView.create(device: device, createInfo: ImageViewCreateInfo(
+      flags: .none,
+      image: image,
+      viewType: .type2D,
+      format: format,
+      components: ComponentMapping.identity,
+      subresourceRange: ImageSubresourceRange(
+        aspectMask: aspectFlags,
+        baseMipLevel: 0,
+        levelCount: 1,
+        baseArrayLayer: 0,
+        layerCount: 1
+      )
+    ))
+  }
+
   func createImageViews() throws {
     self.imageViews = try swapchainImages.map {
-      try ImageView.create(device: device, createInfo: ImageViewCreateInfo(
-        flags: .none, 
-        image: $0, 
-        viewType: .type2D, 
-        format: swapchainImageFormat, 
-        components: ComponentMapping(r: .r, g: .g, b: .b, a: .a), 
-        subresourceRange: ImageSubresourceRange(
-          aspectMask: .color, 
-          baseMipLevel: 0, 
-          levelCount: 1, 
-          baseArrayLayer: 0, 
-          layerCount: 1)))
+      try createImageView(image: $0, format: swapchainImageFormat, aspectFlags: .color)
     }
   }
 
@@ -309,29 +326,47 @@ public class VulkanApplication {
       attachment: 0, layout: .colorAttachmentOptimal 
     )
 
+    let depthAttachment = AttachmentDescription(
+      flags: .none,
+      // maybe should choose this with function as well (like for createDepthImage)
+      format: .D32_SFLOAT, 
+      samples: ._1bit,
+      loadOp: .clear,
+      storeOp: .dontCare,
+      stencilLoadOp: .dontCare,
+      stencilStoreOp: .dontCare,
+      initialLayout: .undefined,
+      finalLayout: .depthStencilAttachmentOptimal
+    )
+
+    let depthAttachmentRef = AttachmentReference(
+      attachment: 1,
+      layout: .depthStencilAttachmentOptimal
+    )
+
     let subpass = SubpassDescription(
       flags: .none,
       pipelineBindPoint: .graphics,
       inputAttachments: nil,
       colorAttachments: [colorAttachmentRef],
       resolveAttachments: nil,
-      depthStencilAttachment: nil,
+      depthStencilAttachment: depthAttachmentRef,
       preserveAttachments: nil
     )
 
     let dependency = SubpassDependency(
       srcSubpass: VK_SUBPASS_EXTERNAL,
       dstSubpass: 0,
-      srcStageMask: .colorAttachmentOutput,
-      dstStageMask: .colorAttachmentOutput,
+      srcStageMask: [.colorAttachmentOutput, .earlyFragmentTests],
+      dstStageMask: [.colorAttachmentOutput, .earlyFragmentTests],
       srcAccessMask: [],
-      dstAccessMask: .colorAttachmentWrite,
+      dstAccessMask: [.colorAttachmentWrite, .depthStencilAttachmentWrite],
       dependencyFlags: .none
     )
 
     let renderPassInfo = RenderPassCreateInfo(
       flags: .none,
-      attachments: [colorAttachment],
+      attachments: [colorAttachment, depthAttachment],
       subpasses: [subpass],
       dependencies: [dependency]
     )
@@ -372,7 +407,7 @@ public class VulkanApplication {
       flags: .none,
       stage: .vertex,
       module: vertexShaderModule,
-      name: "main",
+      pName: "main",
       specializationInfo: nil)
 
     let fragmentShaderModule = try ShaderModule(device: device, createInfo: ShaderModuleCreateInfo(
@@ -382,7 +417,7 @@ public class VulkanApplication {
       flags: .none,
       stage: .fragment,
       module: fragmentShaderModule,
-      name: "main",
+      pName: "main",
       specializationInfo: nil)
 
     let shaderStages = [vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo]
@@ -444,7 +479,7 @@ public class VulkanApplication {
     )
 
     let multisampling = PipelineMultisampleStateCreateInfo(
-      rasterizationSamples: ._1bit,
+      rasterizationSamples: ._1,
       sampleShadingEnable: false,
       minSampleShading: 1,
       sampleMask: nil, 
@@ -470,7 +505,7 @@ public class VulkanApplication {
       blendConstants: (0, 0, 0, 0)
     )
 
-    let dynamicStates = [DynamicState.VIEWPORT, DynamicState.LINE_WIDTH]
+    let dynamicStates = [DynamicState.viewport, DynamicState.lineWidth]
 
     let dynamicState = PipelineDynamicStateCreateInfo(
       dynamicStates: dynamicStates
@@ -484,20 +519,32 @@ public class VulkanApplication {
     let pipelineLayout = try PipelineLayout.create(device: device, createInfo: pipelineLayoutInfo)
 
     let pipelineInfo = GraphicsPipelineCreateInfo(
-      flags: 0,
+      flags: [],
       stages: shaderStages,
       vertexInputState: vertexInputInfo,
       inputAssemblyState: inputAssembly,
-      tessellationState: Void(),
+      tessellationState: nil,
       viewportState: viewportState,
       rasterizationState: rasterizer,
       multisampleState: multisampling,
-      depthStencilState: Void(),
+      depthStencilState: PipelineDepthStencilStateCreateInfo(
+        depthTestEnable: true,
+        depthWriteEnable: true,
+        depthCompareOp: .less,
+        depthBoundsTestEnable: false,
+        stencilTestEnable: false,
+        front: .dontCare,
+        back: .dontCare, 
+        minDepthBounds: 0,
+        maxDepthBounds: 1
+      ),
       colorBlendState: colorBlending,
       dynamicState: nil,
       layout: pipelineLayout,
       renderPass: renderPass,
-      subpass: 0
+      subpass: 0,
+      basePipelineHandle: nil,
+      basePipelineIndex: 0 
     )
 
     let graphicsPipeline = try Pipeline(device: device, createInfo: pipelineInfo)
@@ -511,7 +558,7 @@ public class VulkanApplication {
       let framebufferInfo = FramebufferCreateInfo(
         flags: [],
         renderPass: renderPass,
-        attachments: [imageView],
+        attachments: [imageView, depthImageView],
         width: swapchainExtent.width,
         height: swapchainExtent.height,
         layers: 1 
@@ -699,6 +746,22 @@ public class VulkanApplication {
     try endSingleTimeCommands(commandBuffer: commandBuffer)
   }
 
+  func createDepthResources() throws {
+    // TODO: probably depthFormat should be chosen according to support,
+    // as shown in tutorial
+    let depthFormat = Format.D32_SFLOAT
+
+    (depthImage, depthImageMemory) = try createImage(
+      width: swapchainExtent.width,
+      height: swapchainExtent.height,
+      format: depthFormat,
+      tiling: .optimal,
+      usage: .depthStencilAttachment,
+      properties: .deviceLocal)
+
+    depthImageView = try createImageView(image: depthImage, format: depthFormat, aspectFlags: .depth)
+  }
+
   func createTextureImage() throws {
     let image = try CpuImage(contentsOf: Bundle.module.url(forResource: "test-texture", withExtension: "jpg")!)
     let imageWidth = image.width
@@ -732,20 +795,7 @@ public class VulkanApplication {
   }
 
   func createTextureImageView() throws {
-    textureImageView = try ImageView.create(device: device, createInfo: ImageViewCreateInfo(
-      flags: [],
-      image: textureImage,
-      viewType: .type2D,
-      format: .R8G8B8A8_SRGB /* note */,
-      components: .identity,
-      subresourceRange: ImageSubresourceRange(
-        aspectMask: .color,
-        baseMipLevel: 0,
-        levelCount: 1,
-        baseArrayLayer: 0,
-        layerCount: 1
-      ) 
-    ))
+    textureImageView = try createImageView(image: textureImage, format: .R8G8B8A8_SRGB /* note */, aspectFlags: .color)
   }
 
   func createTextureSampler() throws {
@@ -894,7 +944,9 @@ public class VulkanApplication {
         renderArea: Rect2D(
           offset: Offset2D(x: 0, y: 0), extent: swapchainExtent
         ),
-        clearValues: [ClearColorValue.float32(0, 0, 0, 1).eraseToAny()]
+        clearValues: [
+          ClearColorValue.float32(0, 0, 0, 1).eraseToAny(),
+          ClearDepthStencilValue(depth: 1, stencil: 0).eraseToAny()]
       ), contents: .inline)
 
       commandBuffer.bindPipeline(pipelineBindPoint: .graphics, pipeline: graphicsPipeline)

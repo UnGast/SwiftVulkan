@@ -1,6 +1,6 @@
 import CVulkan
 
-public enum PhysicalDeviceType: UInt32 {
+public enum PhysicalDeviceType: UInt32, VulkanEnumTypeWrapper {
   case other = 0,
 integratedGpu = 1,
 discreteGpu = 2,

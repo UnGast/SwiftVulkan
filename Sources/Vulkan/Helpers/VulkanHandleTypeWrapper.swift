@@ -1,4 +1,4 @@
-public class WrapperClass {
+public class VulkanHandleTypeWrapper {
   public private(set) var destroyed = false
 
   public final func destroy() {

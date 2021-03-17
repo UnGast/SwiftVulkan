@@ -1,6 +1,6 @@
 import CVulkan
 
-public class Pipeline: WrapperClass {
+public class Pipeline: VulkanHandleTypeWrapper {
   public let pointer: VkPipeline
   public let device: Device
 
@@ -14,11 +14,11 @@ public class Pipeline: WrapperClass {
   }
 
   public convenience init(device: Device, createInfo: GraphicsPipelineCreateInfo) throws {
+    var createInfo = createInfo
     var pipelinePointer = VkPipeline(bitPattern: 0)
 
     var opResult = VK_ERROR_INITIALIZATION_FAILED
-    var mutCreateInfo = createInfo
-    withUnsafePointer(to: mutCreateInfo.expVulkan) {
+    withUnsafePointer(to: createInfo.vulkan) {
      opResult = vkCreateGraphicsPipelines(device.pointer, nil, 1, $0, nil, &pipelinePointer)
     } 
 

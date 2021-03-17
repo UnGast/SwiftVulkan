@@ -1,12 +1,14 @@
 import CVulkan
 
-public struct VertexInputBindingDescription: WrapperStruct {
+public struct VertexInputBindingDescription: VulkanTypeWrapper {
   /** Vertex buffer binding id */
 public var binding: UInt32
 /** Distance between vertices in bytes (0 = no advancement) */
 public var stride: UInt32
 /** The rate at which the vertex data is consumed */
 public var inputRate: VertexInputRate
+
+  
 
   public init(
     binding: UInt32,
@@ -19,10 +21,13 @@ self.inputRate = inputRate
   }
 
   public var vulkan: VkVertexInputBindingDescription {
-    VkVertexInputBindingDescription(
-      binding: binding.vulkan,
+    mutating get {
+      
+      return VkVertexInputBindingDescription(
+        binding: binding.vulkan,
 stride: stride.vulkan,
 inputRate: inputRate.vulkan
-    )
+      )
+    }
   }
 }

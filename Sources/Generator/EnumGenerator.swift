@@ -42,7 +42,7 @@ public class EnumGenerator {
     """
     import CVulkan
 
-    public enum \(mappedTypeName): UInt32 {
+    public enum \(mappedTypeName): UInt32, VulkanEnumTypeWrapper {
       case \(cases.joined(separator: ",\n"))
 
       public init(fromVulkan: \(rawTypeName)) {

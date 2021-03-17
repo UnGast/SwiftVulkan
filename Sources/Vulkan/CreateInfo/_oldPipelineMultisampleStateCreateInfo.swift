@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public struct PipelineMultisampleStateCreateInfo: WrapperStruct {
@@ -37,4 +38,4 @@ public struct PipelineMultisampleStateCreateInfo: WrapperStruct {
       alphaToOneEnable: alphaToOneEnable.vulkan
     )
   }
-}
+}*/

@@ -27,7 +27,7 @@ self.layerCount = layerCount
         aspectMask: aspectMask.vulkan,
 mipLevel: mipLevel.vulkan,
 baseArrayLayer: baseArrayLayer.vulkan,
-layerCount: layerCount
+layerCount: layerCount.vulkan
       )
     }
   }

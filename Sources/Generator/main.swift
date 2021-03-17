@@ -29,11 +29,26 @@ struct GeneratorCommand: ParsableCommand {
       "VkSamplerCreateInfo",
       "VkPhysicalDeviceProperties",
       "VkPhysicalDeviceLimits",
-      "VkPhysicalDeviceSparseProperties"
-
-      /*"VkFramebufferCreateInfo",
+      "VkPhysicalDeviceSparseProperties",
+      "VkGraphicsPipelineCreateInfo",
+      "VkPipelineTessellationStateCreateInfo",
+      "VkPipelineDepthStencilStateCreateInfo",
+      "VkPipelineVertexInputStateCreateInfo",
+      "VkPipelineInputAssemblyStateCreateInfo",
+      "VkPipelineRasterizationStateCreateInfo",
+      "VkPipelineMultisampleStateCreateInfo",
+      "VkPipelineColorBlendStateCreateInfo",
+      "VkPipelineDynamicStateCreateInfo",
+      "VkPipelineViewportStateCreateInfo",
+      "VkStencilOpState",
+      "VkPipelineShaderStageCreateInfo",
       "VkVertexInputAttributeDescription",
       "VkVertexInputBindingDescription",
+      "VkRect2D",
+      "VkViewport",
+      "VkSpecializationMapEntry"
+
+      /*"VkFramebufferCreateInfo",
       "VkBufferCopy",
       "VkDescriptorPoolCreateInfo",
       "VkDescriptorPoolSize",
@@ -51,7 +66,19 @@ struct GeneratorCommand: ParsableCommand {
       "VkAccessFlags",
       "VkImageAspectFlags",
       "VkImageViewCreateFlags",
-      "VkSamplerCreateFlags"
+      "VkSamplerCreateFlags",
+      "VkPipelineDepthStencilStateCreateFlags",
+      "VkPipelineTessellationStateCreateFlags",
+      "VkPipelineViewportStateCreateFlags",
+      "VkPipelineInputAssemblyStateCreateFlags",
+      "VkPipelineVertexInputStateCreateFlags",
+      "VkPipelineMultisampleStateCreateFlags",
+      "VkPipelineRasterizationStateCreateFlags",
+      "VkPipelineDynamicStateCreateFlags",
+      "VkCullModeFlags",
+      "VkSampleCountFlags",
+      "VkPipelineShaderStageCreateFlags",
+      "VkShaderStageFlags",
     ]
 
     let generatedEnumsWhitelist = [
@@ -61,7 +88,10 @@ struct GeneratorCommand: ParsableCommand {
       "VkSamplerAddressMode",
       "VkBorderColor",
       "VkCompareOp",
-      "VkPhysicalDeviceType"
+      "VkPhysicalDeviceType",
+      "VkStencilOp",
+      "VkPrimitiveTopology",
+      "VkDynamicState"
     ]
 
     for type in xml.registry.types.type {

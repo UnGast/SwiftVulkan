@@ -6,7 +6,7 @@
 import CVulkan
 import Dispatch
 
-public class Swapchain: WrapperClass, WrapperStruct {
+public class Swapchain: VulkanHandleTypeWrapper, WrapperStruct {
     public let pointer: VkSwapchainKHR
     public let device: Device
 

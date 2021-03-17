@@ -1,6 +1,6 @@
 import CVulkan
 
-public class DeviceMemory: WrapperClass {
+public class DeviceMemory: VulkanHandleTypeWrapper {
     private let device: Device
     public let pointer: VkDeviceMemory
 

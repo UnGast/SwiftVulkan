@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public struct PipelineViewportStateCreateInfo: WrapperStruct {
@@ -20,4 +21,4 @@ public struct PipelineViewportStateCreateInfo: WrapperStruct {
       pScissors: scissors.vulkanPointer
     )
   }
-}
+}*/

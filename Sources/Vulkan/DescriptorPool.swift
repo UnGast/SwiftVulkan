@@ -54,7 +54,7 @@ public struct DescriptorPoolCreateFlags: OptionSet, WrapperStruct {
     public static let updateAfterBind = Self(rawValue: 0x00000002)
 }
 
-public class DescriptorPool: WrapperClass, WrapperStruct {
+public class DescriptorPool: VulkanHandleTypeWrapper, WrapperStruct {
 
     public let pointer: VkDescriptorPool
     public let device: Device

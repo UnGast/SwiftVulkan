@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class DescriptorSetLayout: WrapperClass, WrapperStruct {
+public class DescriptorSetLayout: VulkanHandleTypeWrapper, WrapperStruct {
     public let pointer: VkDescriptorSetLayout
     public let device: Device
 

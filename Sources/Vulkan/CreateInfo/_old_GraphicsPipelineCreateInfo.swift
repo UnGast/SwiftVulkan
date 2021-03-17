@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public struct GraphicsPipelineCreateInfo: WrapperStruct {
@@ -9,7 +10,7 @@ public struct GraphicsPipelineCreateInfo: WrapperStruct {
   public var viewportState: PipelineViewportStateCreateInfo
   public var rasterizationState: PipelineRasterizationStateCreateInfo
   public var multisampleState: PipelineMultisampleStateCreateInfo
-  public var depthStencilState: Void
+  public var depthStencilState: PipelineDepthStencilState
   public var colorBlendState: PipelineColorBlendStateCreateInfo?
   public var dynamicState: PipelineDynamicStateCreateInfo?
   public var layout: PipelineLayout
@@ -83,4 +84,4 @@ public struct GraphicsPipelineCreateInfo: WrapperStruct {
       )
     }
   }
-}
+}*/

@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public enum DynamicState: UInt32, WrapperStruct {
@@ -56,4 +57,4 @@ public enum DynamicState: UInt32, WrapperStruct {
   public var vulkan: VkDynamicState {
     VkDynamicState(self.rawValue)
   }
-}
+}*/

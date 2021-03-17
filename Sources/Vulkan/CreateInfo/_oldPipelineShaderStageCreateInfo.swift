@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public struct PipelineShaderStageCreateInfo: WrapperStruct {
@@ -39,4 +40,4 @@ public struct PipelineShaderStageCreateInfo: WrapperStruct {
             pName: name.vulkan,
             pSpecializationInfo: nil)
     }
-}
+}*/

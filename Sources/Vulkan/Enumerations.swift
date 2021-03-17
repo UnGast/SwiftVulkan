@@ -302,7 +302,7 @@ public struct PipelineStageFlags: WrapperStruct, OptionSet {
     }
 }
 
-public struct SampleCountFlags: OptionSet {
+public struct OldSampleCountFlags: OptionSet {
     public let rawValue: UInt32
 
     public init(rawValue: UInt32) {
@@ -321,20 +321,21 @@ public struct SampleCountFlags: OptionSet {
         }
     }
 
-    public static let none = SampleCountFlags(rawValue: 0)
-    public static let _1bit = SampleCountFlags(rawValue: 0x00000001)
-    public static let _2bit = SampleCountFlags(rawValue: 0x00000002)
-    public static let _4bit = SampleCountFlags(rawValue: 0x00000004)
-    public static let _8bit = SampleCountFlags(rawValue: 0x00000008)
-    public static let _16bit = SampleCountFlags(rawValue: 0x00000010)
-    public static let _32bit = SampleCountFlags(rawValue: 0x00000020)
-    public static let _64bit = SampleCountFlags(rawValue: 0x00000040)
+    public static let none = OldSampleCountFlags(rawValue: 0)
+    public static let _1bit = OldSampleCountFlags(rawValue: 0x00000001)
+    public static let _2bit = OldSampleCountFlags(rawValue: 0x00000002)
+    public static let _4bit = OldSampleCountFlags(rawValue: 0x00000004)
+    public static let _8bit = OldSampleCountFlags(rawValue: 0x00000008)
+    public static let _16bit = OldSampleCountFlags(rawValue: 0x00000010)
+    public static let _32bit = OldSampleCountFlags(rawValue: 0x00000020)
+    public static let _64bit = OldSampleCountFlags(rawValue: 0x00000040)
 
     var vulkanValue: VkSampleCountFlagBits {
         return VkSampleCountFlagBits(self.rawValue)
     }
 }
 
+/*
 public struct ShaderStageFlags: OptionSet {
     public let rawValue: UInt32
 
@@ -363,7 +364,7 @@ public struct ShaderStageFlags: OptionSet {
     var vulkan: VkShaderStageFlags {
         return VkShaderStageFlags(self.rawValue)
     }
-}
+}*/
 
 public struct SubpassDescriptionFlags: OptionSet {
     public let rawValue: UInt32

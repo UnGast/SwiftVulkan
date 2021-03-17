@@ -1,6 +1,6 @@
 import CVulkan
 
-public class Framebuffer: WrapperClass {
+public class Framebuffer: VulkanHandleTypeWrapper {
 
   public let pointer: VkFramebuffer
   public let device: Device
@@ -23,6 +23,10 @@ public class Framebuffer: WrapperClass {
     }
 
     throw opResult.toResult()
+  }
+
+  public var vulkan: Optional<VkFramebuffer> {
+    pointer
   }
 
   override public func destroyUnderlying() {

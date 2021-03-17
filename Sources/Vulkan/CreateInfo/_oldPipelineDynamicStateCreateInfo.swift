@@ -1,3 +1,4 @@
+/*
 import CVulkan
 
 public struct PipelineDynamicStateCreateInfo: WrapperStruct {
@@ -16,4 +17,4 @@ public struct PipelineDynamicStateCreateInfo: WrapperStruct {
       pDynamicStates: dynamicStates.vulkanPointer
     )
   }
-}
+}*/
