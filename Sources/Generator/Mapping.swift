@@ -32,6 +32,14 @@ func mapTypeNameToSwift(_ rawName: String) -> String {
   }
 }
 
+func mapMemberNameToSwift(_ cName: String) -> String {
+  var cName = cName
+  if Regex("^[0-9].*").matches(cName) {
+    cName = "_" + cName
+  }
+  return escapeIfSwiftKeyword(cName)
+}
+
 func mapMember(_ member: XML.Accessor, vulkanStorageName: String = "vulkan", registry: Registry) -> (swiftType: String, swiftConversion: String, cConversion: String) {
   let cMemberName = member["name"].text ?? ""
   let cTypeName = member["type"].text!
