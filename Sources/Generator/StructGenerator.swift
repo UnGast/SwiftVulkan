@@ -108,6 +108,11 @@ class StructGenerator {
         }
       
       case Regex("^p([A-Z].*)"):
+        if (rawMember.type == "char") {
+          processSimpleRawMember(rawMember)
+          continue
+        }
+
         var baseName = Regex.lastMatch!.captures[0]!
         baseName = baseName.first!.lowercased() + baseName.dropFirst()
 

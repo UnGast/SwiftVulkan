@@ -54,7 +54,7 @@ func mapMember(_ member: XML.Accessor, vulkanStorageName: String = "vulkan", reg
   } else if registry.isBitmask(typeName: cTypeName) {
     //swiftConversion = "\(swiftTypeName)(rawValue: \())"
 
-  } else if cTypeName == "char" && Regex("\\[(.*?)\\]").matches(member.text ?? "") {
+  } else if cTypeName == "char" && ((member.text ?? "").contains("*") || Regex("\\[(.*?)\\]").matches(member.text ?? "")) {
     swiftType = "String"
     swiftConversion = "\"FIXED LENGTH STRING CONVERSION NOT IMPLEMENTED\""//"String(fromVulkan: \(vulkanStorageName).\(cMemberName))"
 
