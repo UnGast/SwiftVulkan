@@ -1005,6 +1005,7 @@ public class VulkanApplication {
     try createImageViews()
     try createRenderPass()
     try createGraphicsPipeline()
+    try createDepthResources()
     try createFramebuffers()
     try createUniformBuffers()
     try createDescriptorPool()
@@ -1013,6 +1014,9 @@ public class VulkanApplication {
   }
 
   func cleanupSwapchain() {
+    depthImageView.destroy()
+    depthImage.destroy()
+    depthImageMemory.destroy()
     framebuffers.forEach { $0.destroy() }
     CommandBuffer.free(commandBuffers: commandBuffers, device: device, commandPool: commandPool)
     graphicsPipeline.destroy()

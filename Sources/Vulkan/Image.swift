@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class Image {
+public class Image: VulkanHandleTypeWrapper {
     public let pointer: VkImage
     public let device: Device
     let swapchain: Swapchain?
@@ -52,13 +52,8 @@ public class Image {
         return MemoryRequirements(memReqs[0])
     }()
 
-    deinit {
+    override public func destroyUnderlying() {
         // if this image belongs to a swapchain, it will be destroyed along with it
-        if swapchain == nil {
-            if boundMemory != nil {
-                boundMemory = nil
-            }
-            vkDestroyImage(self.device.pointer, self.pointer, nil)
-        }
+        vkDestroyImage(self.device.pointer, self.pointer, nil)
     }
 }
