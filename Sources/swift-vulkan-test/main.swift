@@ -1101,7 +1101,7 @@ public class VulkanApplication {
       0, 1, 0, -cameraPosition.y,
       0, 0, 1, -cameraPosition.z,
       0, 0, 0, 1
-    ]).transposed, projection: Mat4.projection(aspectRatio: aspectRatio, fov: 90).transposed)
+    ]).transposed, projection: Mat4.projection(aspectRatio: aspectRatio, fov: 90, near: 0.1, far: 10).transposed)
 
     var dataPointer: UnsafeMutableRawPointer? = nil
     try uniformBuffersMemory[Int(currentImage)].mapMemory(

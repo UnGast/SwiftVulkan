@@ -37,15 +37,15 @@ public struct Mat4: CustomDebugStringConvertible {
 
   public static let zero = Self([Float](repeating: 0, count: 16))
 
-  public static func projection(aspectRatio: Float, fov: Float) -> Mat4 {
-    let near = Float(1.0)
-    let screenWidth = 2 * near * tan(fov / 2)
+  public static func projection(aspectRatio: Float, fov: Float, near: Float, far: Float) -> Mat4 {
+    let screenDistance = Float(1)
+    let screenWidth = 2 * screenDistance * tan(fov / 2)
     let screenHeight = screenWidth / aspectRatio 
 
     return Mat4([
       1/screenWidth, 0, 0, 0,
       0, 1/screenHeight, 0, 0,
-      0, 0, 1, 0,
+      0, 0, 1/(far - near), -(near / (far - near )),
       0, 0, 1, 0
     ])
   }
