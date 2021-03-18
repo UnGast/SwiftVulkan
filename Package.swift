@@ -30,10 +30,11 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "swift-vulkan-test",
-            dependencies: ["CSDL2", "CVulkan", "Vulkan", "CSDL2Vulkan", "Swim"],
+            dependencies: ["CSDL2", "CVulkan", "Vulkan", "CSDL2Vulkan", "Swim", "CTinyObjLoader"],
             resources: [
                 .copy("Resources")
             ]),
+        .target(name: "CTinyObjLoader"),
         .target(name: "Generator", dependencies: [.product(name: "Path", package: "Path.swift"), "SwiftyXMLParser", "Regex", .product(name: "ArgumentParser", package: "swift-argument-parser")]),
         .systemLibrary(name: "CVulkan"),
         .systemLibrary(name: "CSDL2Vulkan"),

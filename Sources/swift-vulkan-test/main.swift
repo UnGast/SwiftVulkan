@@ -3,6 +3,7 @@ import CSDL2
 import CSDL2Vulkan
 import CVulkan
 import Vulkan
+import CTinyObjLoader
 
 // SPRIV Compiler? https://github.com/stuartcarnie/SwiftSPIRV-Cross
 
@@ -58,7 +59,7 @@ public class VulkanApplication {
 
   var cameraPosition = Position3(x: 0, y: 0, z: 0)
 
-  let vertices = [
+  var vertices: [Vertex] = []/*[
     Vertex(position: Position3(x: -0.5, y: 0.5, z: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 1, y: 0)),
     Vertex(position: Position3(x: 0.5, y: 0.5, z: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 0, y: 0)),
     Vertex(position: Position3(x: 0.5, y: -0.5, z: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 0, y: 1)),
@@ -68,12 +69,12 @@ public class VulkanApplication {
     Vertex(position: Position3(x: 0.8, y: 0.8, z: 0.4), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 0, y: 0)),
     Vertex(position: Position3(x: 0.8, y: -0.2, z: 0.4), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 0, y: 1)),
     Vertex(position: Position3(x: -0.2, y: -0.2, z: 0.4), color: Color(r: 0, g: 0, b: 1), texCoord: Position2(x: 1, y: 1)),
-  ]
+  ]*/
 
-  let indices: [UInt16] = [
+  var indices: [UInt32] = []/*[
     4, 5, 6, 4, 6, 7,
     0, 1, 2, 0, 2, 3,
-  ]
+  ]*/
 
   let maxFramesInFlight = 2
   var currentFrameIndex = 0
@@ -113,6 +114,8 @@ public class VulkanApplication {
     try self.createTextureImageView()
 
     try self.createTextureSampler()
+
+    try self.loadModel()
 
     try self.createVertexBuffer()
 
@@ -763,7 +766,7 @@ public class VulkanApplication {
   }
 
   func createTextureImage() throws {
-    let image = try CpuImage(contentsOf: Bundle.module.url(forResource: "test-texture", withExtension: "jpg")!)
+    let image = try CpuImage(contentsOf: Bundle.module.url(forResource: "viking_room", withExtension: "png")!)
     let imageWidth = image.width
     let imageHeight = image.height
     let channelCount = 4 
@@ -841,8 +844,60 @@ public class VulkanApplication {
     stagingBufferMemory.free()
   }
 
+  func loadModel() throws {
+    var pAttrib = UnsafeMutablePointer<tinyobj_attrib_t>.allocate(capacity: 1)
+    tinyobj_attrib_init(pAttrib)
+    var pShapes: UnsafeMutablePointer<tinyobj_shape_t>?
+    var numShapes: Int = 0
+    var pMaterials: UnsafeMutablePointer<tinyobj_material_t>?
+    var numMaterials = 0
+
+    //tinyobj_parse_mtl_file(materials_out: UnsafeMutablePointer<UnsafeMutablePointer<tinyobj_material_t>?>!, num_materials_out: UnsafeMutablePointer<Int>!, filename: UnsafePointer<Int8>!, obj_filename: UnsafePointer<Int8>!, file_reader: file_reader_callback!, ctx: UnsafeMutableRawPointer!)
+    tinyobj_parse_obj(
+      pAttrib,
+      &pShapes,
+      &numShapes,
+      &pMaterials,
+      &numMaterials,
+      "",
+      { _, _, _, _, dataPointerPointer, dataSizePointer in
+        let fileUrl = Bundle.module.url(forResource: "viking_room", withExtension: "obj")!
+        let data = try! Data(contentsOf: fileUrl)
+        let dataPointer = UnsafeMutableBufferPointer<Int8>.allocate(capacity: data.count)
+        data.copyBytes(to: dataPointer)
+        dataPointerPointer?.pointee = dataPointer.baseAddress
+        dataSizePointer?.pointee = dataPointer.count
+      }, nil, UInt32(TINYOBJ_FLAG_TRIANGULATE))
+
+    let attrib = pAttrib.pointee;
+    let shapes = Array(UnsafeBufferPointer(start: pShapes, count: numShapes))
+    let materials = Array(UnsafeBufferPointer(start: pMaterials, count: numMaterials))
+    pShapes?.deallocate()
+    pMaterials?.deallocate()
+
+    for shape in shapes {
+      for index in shape.face_offset..<shape.face_offset + shape.length {
+        let face = attrib.faces[Int(index)]
+        let vertex = Vertex(
+          position: Position3(
+            x: attrib.vertices[Int(face.v_idx * 3 + 0)],
+            y: attrib.vertices[Int(face.v_idx * 3 + 1)],
+            z: attrib.vertices[Int(face.v_idx * 3 + 2)]
+          ), color: Color(
+            r: 0, g: 0, b: 0
+          ), texCoord: Position2(
+            x: attrib.texcoords[Int(face.vt_idx * 2 + 0)],
+            y: 1 - attrib.texcoords[Int(face.vt_idx * 2 + 1)]
+          )
+        )
+        vertices.append(vertex)
+        indices.append(index)
+      }
+    }
+  }
+
   func createIndexBuffer() throws {
-    let bufferSize = DeviceSize(MemoryLayout<UInt16>.size * indices.count)
+    let bufferSize = DeviceSize(MemoryLayout.size(ofValue: indices[0]) * indices.count)
 
     let (stagingBuffer, stagingBufferMemory) = try createBuffer(size: bufferSize, usage: .transferSrc, properties: [.hostVisible, .hostCoherent])
 
@@ -952,7 +1007,7 @@ public class VulkanApplication {
       commandBuffer.bindPipeline(pipelineBindPoint: .graphics, pipeline: graphicsPipeline)
 
       commandBuffer.bindVertexBuffers(firstBinding: 0, buffers: [vertexBuffer], offsets: [0])
-      commandBuffer.bindIndexBuffer(buffer: indexBuffer, offset: 0, indexType: VK_INDEX_TYPE_UINT16)
+      commandBuffer.bindIndexBuffer(buffer: indexBuffer, offset: 0, indexType: VK_INDEX_TYPE_UINT32)
 
       commandBuffer.bindDescriptorSets(
         pipelineBindPoint: .graphics,
