@@ -4,6 +4,7 @@ import CSDL2Vulkan
 import CVulkan
 import Vulkan
 import CTinyObjLoader
+import GfxMath
 
 // SPRIV Compiler? https://github.com/stuartcarnie/SwiftSPIRV-Cross
 
@@ -57,7 +58,7 @@ public class VulkanApplication {
   @Deferred var renderFinishedSemaphores: [Semaphore]
   @Deferred var inFlightFences: [Fence]
 
-  var cameraPosition = Position3(x: 0, y: 0, z: 0)
+  var camera = Camera(position: FVec3([0.01, 0.01, 0.01]))
 
   var vertices: [Vertex] = []/*[
     Vertex(position: Position3(x: -0.5, y: 0.5, z: 0.5), color: Color(r: 1, g: 0, b: 0), texCoord: Position2(x: 1, y: 0)),
@@ -141,6 +142,8 @@ public class VulkanApplication {
       800, 600,
       SDL_WINDOW_SHOWN.rawValue | SDL_WINDOW_VULKAN.rawValue | SDL_WINDOW_RESIZABLE.rawValue
     )
+
+    SDL_SetRelativeMouseMode(SDL_TRUE)
   }
 
   func getSDLInstanceExtensions() throws -> [String] {
@@ -845,6 +848,9 @@ public class VulkanApplication {
   }
 
   func loadModel() throws {
+    vertices = []
+    indices = []
+
     var pAttrib = UnsafeMutablePointer<tinyobj_attrib_t>.allocate(capacity: 1)
     tinyobj_attrib_init(pAttrib)
     var pShapes: UnsafeMutablePointer<tinyobj_shape_t>?
@@ -852,7 +858,6 @@ public class VulkanApplication {
     var pMaterials: UnsafeMutablePointer<tinyobj_material_t>?
     var numMaterials = 0
 
-    //tinyobj_parse_mtl_file(materials_out: UnsafeMutablePointer<UnsafeMutablePointer<tinyobj_material_t>?>!, num_materials_out: UnsafeMutablePointer<Int>!, filename: UnsafePointer<Int8>!, obj_filename: UnsafePointer<Int8>!, file_reader: file_reader_callback!, ctx: UnsafeMutableRawPointer!)
     tinyobj_parse_obj(
       pAttrib,
       &pShapes,
@@ -894,6 +899,19 @@ public class VulkanApplication {
         indices.append(index)
       }
     }
+
+    // ground plane
+    let groundPlaneStartIndex = UInt32(vertices.count)
+    vertices.append(contentsOf: [
+      Vertex(position: Position3(x: -10, y: -10, z: 10), color: Color(r: 1, g: 1, b: 1), texCoord: Position2(x: 0, y: 0)),
+      Vertex(position: Position3(x: 10, y: -10, z: 10), color: Color(r: 1, g: 1, b: 1), texCoord: Position2(x: 0, y: 0)),
+      Vertex(position: Position3(x: 10, y: -10, z: -10), color: Color(r: 1, g: 1, b: 1), texCoord: Position2(x: 0, y: 0)),
+      Vertex(position: Position3(x: -10, y: -10, z: -10), color: Color(r: 1, g: 1, b: 1), texCoord: Position2(x: 0, y: 0))
+    ])
+    indices.append(contentsOf: [
+      groundPlaneStartIndex, groundPlaneStartIndex + 1, groundPlaneStartIndex + 2,
+      groundPlaneStartIndex, groundPlaneStartIndex + 2, groundPlaneStartIndex + 3
+    ])
   }
 
   func createIndexBuffer() throws {
@@ -1112,6 +1130,10 @@ public class VulkanApplication {
     imagesInFlightWithFences[imageIndex] = inFlightFence
     inFlightFence.reset()
 
+    let timestamp = Date.timeIntervalSinceReferenceDate
+    let progress = timestamp.truncatingRemainder(dividingBy: 2) / 2
+    //camera.yaw = Float(progress * 360)
+    //camera.pitch = Float(progress * 360)
     try updateUniformBuffer(currentImage: imageIndex)
 
     try queue.submit(submits: [
@@ -1150,17 +1172,16 @@ public class VulkanApplication {
     SDL_GetWindowSize(window, &windowWidth, &windowHeight)
     let aspectRatio = Float(windowWidth) / Float(windowHeight)
 
-    let uniformBufferObject = UniformBufferObject(model: Mat4([
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1
-    ]), view: Mat4([
-      1, 0, 0, -cameraPosition.x,
-      0, 1, 0, -cameraPosition.y,
-      0, 0, 1, -cameraPosition.z,
-      0, 0, 0, 1
-    ]).transposed, projection: Mat4.projection(aspectRatio: aspectRatio, fov: 90, near: 0.1, far: 10).transposed)
+    let uniformBufferObject = UniformBufferObject(
+      model: FMat4.identity/*newRotation(yaw: 0, pitch: 0)*/.matmul(FMat4([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      ])),
+      view: camera.viewMatrix.transposed,
+      projection: FMat4.newProjection(
+        aspectRatio: aspectRatio, fov: 90, near: 0.1, far: 100).transposed)
 
     var dataPointer: UnsafeMutableRawPointer? = nil
     try uniformBuffersMemory[Int(currentImage)].mapMemory(
@@ -1180,15 +1201,23 @@ public class VulkanApplication {
         device.waitIdle()
         exit(0)
       } else if event.type == SDL_KEYDOWN.rawValue {
+        let speed = Float(0.5)
+        print("FORWARD", camera.forward)
+        print("RIGHT", camera.right)
+        print("UP", camera.up)
         if event.key.keysym.sym == SDLK_UP {
-          cameraPosition.z += 0.5
+          camera.position += camera.forward * speed
         } else if event.key.keysym.sym == SDLK_DOWN {
-          cameraPosition.z -= 0.5
+          camera.position -= camera.forward * speed
         } else if event.key.keysym.sym == SDLK_RIGHT {
-          cameraPosition.x += 0.5
+          camera.position += camera.right * speed
         } else if event.key.keysym.sym == SDLK_LEFT {
-          cameraPosition.x -= 0.5
+          camera.position -= camera.right * speed
         }
+      } else if event.type == SDL_MOUSEMOTION.rawValue {
+        camera.yaw += Float(event.motion.xrel)
+        camera.pitch -= Float(event.motion.yrel)
+        camera.pitch = min(89, max(-89, camera.pitch))
       }
     }
     
