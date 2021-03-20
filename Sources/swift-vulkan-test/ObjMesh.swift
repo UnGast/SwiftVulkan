@@ -1,7 +1,9 @@
 import CTinyObjLoader
 import Foundation
+import GfxMath
 
 public class ObjMesh: Mesh {
+  public var modelTransformation: FMat4 = .identity
   private let fileUrl: URL
 
   public var vertices: [Vertex] = []
@@ -33,7 +35,6 @@ public class ObjMesh: Mesh {
         "",
         { stringUrl, _, _, _, dataPointerPointer, dataSizePointer in
           let typed = stringUrl?.assumingMemoryBound(to: Int8.self)
-          print("STRIGN URL", String(cString: typed!))
           let data = try! Data(contentsOf: URL(string: String(cString: typed!))!)
           let dataPointer = UnsafeMutableBufferPointer<Int8>.allocate(capacity: data.count)
           data.copyBytes(to: dataPointer)
@@ -52,13 +53,13 @@ public class ObjMesh: Mesh {
       for index in shape.face_offset..<shape.face_offset + shape.length {
         let face = attrib.faces[Int(index)]
         let vertex = Vertex(
-          position: Position3(
+          position: FVec3(
             x: attrib.vertices[Int(face.v_idx * 3 + 0)],
             y: attrib.vertices[Int(face.v_idx * 3 + 1)],
             z: attrib.vertices[Int(face.v_idx * 3 + 2)]
           ), color: Color(
-            r: 0, g: 0, b: 0
-          ), texCoord: Position2(
+            r: 0, g: 0, b: 0, a: 0
+          ), texCoord: FVec2(
             x: attrib.texcoords[Int(face.vt_idx * 2 + 0)],
             y: 1 - attrib.texcoords[Int(face.vt_idx * 2 + 1)]
           )
@@ -71,10 +72,10 @@ public class ObjMesh: Mesh {
     // ground plane
     let groundPlaneStartIndex = UInt32(vertices.count)
     vertices.append(contentsOf: [
-      Vertex(position: Position3(x: -10, y: -10, z: 10), color: Color(r: 1, g: 1, b: 1), texCoord: Position2(x: 0, y: 0)),
-      Vertex(position: Position3(x: 10, y: -10, z: 10), color: Color(r: 1, g: 1, b: 1), texCoord: Position2(x: 0, y: 0)),
-      Vertex(position: Position3(x: 10, y: -10, z: -10), color: Color(r: 1, g: 1, b: 1), texCoord: Position2(x: 0, y: 0)),
-      Vertex(position: Position3(x: -10, y: -10, z: -10), color: Color(r: 1, g: 1, b: 1), texCoord: Position2(x: 0, y: 0))
+      Vertex(position: FVec3(x: -10, y: -10, z: 10), color: Color(r: 1, g: 255, b: 1, a: 1), texCoord: FVec2(x: 0, y: 0)),
+      Vertex(position: FVec3(x: 10, y: -10, z: 10), color: Color(r: 1, g: 255, b: 1, a: 255), texCoord: FVec2(x: 0, y: 0)),
+      Vertex(position: FVec3(x: 10, y: -10, z: -10), color: Color(r: 1, g: 1, b: 1, a: 255), texCoord: FVec2(x: 0, y: 0)),
+      Vertex(position: FVec3(x: -10, y: -10, z: -10), color: Color(r: 1, g: 1, b: 1, a: 255), texCoord: FVec2(x: 0, y: 0))
     ])
     indices.append(contentsOf: [
       groundPlaneStartIndex, groundPlaneStartIndex + 1, groundPlaneStartIndex + 2,

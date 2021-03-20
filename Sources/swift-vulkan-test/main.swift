@@ -431,32 +431,8 @@ public class VulkanApplication {
 
     let shaderStages = [vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo]
 
-    let vertexInputBindingDescription = VertexInputBindingDescription(
-      binding: 0,
-      stride: UInt32(MemoryLayout<Vertex>.stride),
-      inputRate: .vertex
-    )
-
-    let vertexInputAttributeDescriptions = [
-      VertexInputAttributeDescription(
-        location: 0,
-        binding: 0,
-        format: .R32G32B32_SFLOAT,
-        offset: 0
-      ),
-      VertexInputAttributeDescription(
-        location: 1,
-        binding: 0,
-        format: .R32G32B32_SFLOAT,
-        offset: UInt32(MemoryLayout<Position3>.size)
-      ),
-      VertexInputAttributeDescription(
-        location: 2,
-        binding: 0,
-        format: .R32G32_SFLOAT,
-        offset: UInt32(MemoryLayout<Position3>.size + MemoryLayout<Color>.size)
-      )
-    ]
+    let vertexInputBindingDescription = Vertex.inputBindingDescription
+    let vertexInputAttributeDescriptions = Vertex.inputAttributeDescriptions
 
     let vertexInputInfo = PipelineVertexInputStateCreateInfo(
       vertexBindingDescriptions: [vertexInputBindingDescription],
@@ -829,6 +805,12 @@ public class VulkanApplication {
 
   func loadVertexData() throws {
     try objMesh.load()
+    objMesh.modelTransformation = FMat4([
+      1, 0, 0, 10,
+      0, 1, 0, 0, 
+      0, 0, 1, 0,
+      0, 0, 0, 1
+    ])
 
     let meshes: [Mesh] = [cubeMesh, objMesh]
 
@@ -844,7 +826,9 @@ public class VulkanApplication {
   }
 
   func createVertexBuffer() throws {
-    let bufferSize = DeviceSize(MemoryLayout<Vertex>.stride * vertices.count)
+    let vertexData = vertices.flatMap { $0.data }
+
+    let bufferSize = DeviceSize(MemoryLayout<Float>.size * vertexData.count)
     let (stagingBuffer, stagingBufferMemory) = try createBuffer(
       size: bufferSize,
       usage: .transferSrc,
@@ -852,7 +836,7 @@ public class VulkanApplication {
 
     var cpuVertexBufferMemory: UnsafeMutableRawPointer? = nil
     try stagingBufferMemory.mapMemory(offset: 0, size: bufferSize, flags: .none, data: &cpuVertexBufferMemory)
-    cpuVertexBufferMemory!.copyMemory(from: vertices, byteCount: MemoryLayout<Vertex>.stride * vertices.count)
+    cpuVertexBufferMemory!.copyMemory(from: vertexData, byteCount: MemoryLayout<Float>.size * vertexData.count)
     stagingBufferMemory.unmapMemory()
 
     (vertexBuffer, vertexBufferMemory) = try createBuffer(
