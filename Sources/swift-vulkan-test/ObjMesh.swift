@@ -3,6 +3,7 @@ import Foundation
 import GfxMath
 
 public class ObjMesh: Mesh {
+  public var rotationQuaternion: Quaternion<Float> = .identity
   public var modelTransformation: FMat4 = .identity
   private let fileUrl: URL
 
@@ -68,18 +69,5 @@ public class ObjMesh: Mesh {
         indices.append(index)
       }
     }
-
-    // ground plane
-    let groundPlaneStartIndex = UInt32(vertices.count)
-    vertices.append(contentsOf: [
-      Vertex(position: FVec3(x: -10, y: -10, z: 10), color: Color(r: 1, g: 255, b: 1, a: 1), texCoord: FVec2(x: 0, y: 0)),
-      Vertex(position: FVec3(x: 10, y: -10, z: 10), color: Color(r: 1, g: 255, b: 1, a: 255), texCoord: FVec2(x: 0, y: 0)),
-      Vertex(position: FVec3(x: 10, y: -10, z: -10), color: Color(r: 1, g: 1, b: 1, a: 255), texCoord: FVec2(x: 0, y: 0)),
-      Vertex(position: FVec3(x: -10, y: -10, z: -10), color: Color(r: 1, g: 1, b: 1, a: 255), texCoord: FVec2(x: 0, y: 0))
-    ])
-    indices.append(contentsOf: [
-      groundPlaneStartIndex, groundPlaneStartIndex + 1, groundPlaneStartIndex + 2,
-      groundPlaneStartIndex, groundPlaneStartIndex + 2, groundPlaneStartIndex + 3
-    ])
   }
 }

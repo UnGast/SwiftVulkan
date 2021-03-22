@@ -58,6 +58,7 @@ public class VulkanApplication {
   @Deferred var renderFinishedSemaphores: [Semaphore]
   @Deferred var inFlightFences: [Fence]
 
+  let planeMesh = PlaneMesh()
   let cubeMesh = CubeMesh()
   let objMesh = ObjMesh(fileUrl: Bundle.module.url(forResource: "viking_room", withExtension: "obj")!)
 
@@ -811,11 +812,19 @@ public class VulkanApplication {
       0, 0, 1, 0,
       0, 0, 0, 1
     ])
+    objMesh.rotationQuaternion = Quaternion(angle: 35, axis: FVec3(0, 0, 1))
 
-    let meshes: [Mesh] = [cubeMesh, objMesh]
+    cubeMesh.modelTransformation = FMat4([
+      1, 0, 0, 0,
+      0, 1, 0, 4,
+      0, 0, 1, 0,
+      0, 0, 0, 1
+    ])
+    cubeMesh.rotationQuaternion = Quaternion(angle: 15, axis: FVec3(1, 0, 0))
+    let meshes: [Mesh] = [cubeMesh, objMesh, planeMesh]
 
     for mesh in meshes {
-      let newVertices = mesh.vertices
+      let newVertices = mesh.transformedVertices
       let newIndices = mesh.indices.map {
         $0 + UInt32(vertices.count)
       }
