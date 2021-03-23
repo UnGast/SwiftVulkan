@@ -84,8 +84,10 @@ public class VulkanApplication {
   let maxFramesInFlight = 2
   var currentFrameIndex = 0
   var imagesInFlightWithFences: [UInt32: Fence] = [:]
+  var testFunc: (() -> ())? = nil
 
   public init() throws {
+    testFunc?()
     self.setupSdl()
 
     try self.createInstance()
@@ -807,8 +809,8 @@ public class VulkanApplication {
   func loadVertexData() throws {
     try objMesh.load()
     objMesh.modelTransformation = FMat4([
-      1, 0, 0, 10,
-      0, 1, 0, 0, 
+      1, 0, 0, 0,
+      0, 1, 0, 10, 
       0, 0, 1, 0,
       0, 0, 0, 1
     ])

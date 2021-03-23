@@ -51,22 +51,27 @@ public class ObjMesh: Mesh {
     pMaterials?.deallocate()
 
     for shape in shapes {
-      for index in shape.face_offset..<shape.face_offset + shape.length {
-        let face = attrib.faces[Int(index)]
-        let vertex = Vertex(
-          position: FVec3(
-            x: attrib.vertices[Int(face.v_idx * 3 + 0)],
-            y: attrib.vertices[Int(face.v_idx * 3 + 1)],
-            z: attrib.vertices[Int(face.v_idx * 3 + 2)]
-          ), color: Color(
-            r: 0, g: 0, b: 0, a: 0
-          ), texCoord: FVec2(
-            x: attrib.texcoords[Int(face.vt_idx * 2 + 0)],
-            y: 1 - attrib.texcoords[Int(face.vt_idx * 2 + 1)]
+      for faceIndex in shape.face_offset..<shape.face_offset + shape.length {
+        for vertexIndex in 0..<3 {
+
+          let rawVertex = attrib.faces[Int(faceIndex) * 3 + vertexIndex]
+
+          let vertex = Vertex(
+            position: FVec3(
+              x: attrib.vertices[Int(rawVertex.v_idx * 3 + 0)],
+              y: attrib.vertices[Int(rawVertex.v_idx * 3 + 1)],
+              z: attrib.vertices[Int(rawVertex.v_idx * 3 + 2)]
+            ), color: Color(
+              r: 0, g: 0, b: 0, a: 0
+            ), texCoord: FVec2(
+              x: rawVertex.vt_idx > 0 ? attrib.texcoords[Int(rawVertex.vt_idx * 2 + 0)] : -1,
+              y: rawVertex.vt_idx > 0 ? 1 - attrib.texcoords[Int(rawVertex.vt_idx * 2 + 1)] : -1
+            )
           )
-        )
-        vertices.append(vertex)
-        indices.append(index)
+
+          vertices.append(vertex)
+          indices.append(UInt32(vertices.count - 1))
+        }
       }
     }
   }
