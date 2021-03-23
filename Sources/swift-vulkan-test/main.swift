@@ -1149,9 +1149,7 @@ public class VulkanApplication {
         exit(0)
       } else if event.type == SDL_KEYDOWN.rawValue {
         let speed = Float(0.5)
-        print("FORWARD", camera.forward)
-        print("RIGHT", camera.right)
-        print("UP", camera.up)
+
         if event.key.keysym.sym == SDLK_UP {
           camera.position += camera.forward * speed
         } else if event.key.keysym.sym == SDLK_DOWN {
@@ -1160,11 +1158,16 @@ public class VulkanApplication {
           camera.position += camera.right * speed
         } else if event.key.keysym.sym == SDLK_LEFT {
           camera.position -= camera.right * speed
+        } else if event.key.keysym.sym == SDLK_ESCAPE {
+          SDL_SetRelativeMouseMode(SDL_FALSE)
         }
+
       } else if event.type == SDL_MOUSEMOTION.rawValue {
         camera.yaw += Float(event.motion.xrel)
         camera.pitch -= Float(event.motion.yrel)
         camera.pitch = min(89, max(-89, camera.pitch))
+      } else if event.type == SDL_MOUSEBUTTONDOWN.rawValue {
+        SDL_SetRelativeMouseMode(SDL_TRUE)
       }
     }
     
