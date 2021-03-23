@@ -5,6 +5,7 @@ import CVulkan
 import Vulkan
 import CTinyObjLoader
 import GfxMath
+import CSkia
 
 // SPRIV Compiler? https://github.com/stuartcarnie/SwiftSPIRV-Cross
 
@@ -756,6 +757,8 @@ public class VulkanApplication {
     let imageHeight = image.height
     let channelCount = 4 
     let imageDataSize = imageWidth * imageHeight * channelCount
+
+    let skiaDrawnDataPointer = testDraw(Int32(imageWidth), Int32(imageHeight))
     //let image = CpuImage(width: 200, height: 200, rgba: Array(repeating: 255, count: imageDataSize))
 
 
@@ -764,7 +767,7 @@ public class VulkanApplication {
     
     var dataPointer: UnsafeMutableRawPointer? = nil
     try stagingBufferMemory.mapMemory(offset: 0, size: DeviceSize(imageDataSize), flags: .none, data: &dataPointer)
-    dataPointer?.copyMemory(from: image.getData(), byteCount: imageDataSize)
+    dataPointer?.copyMemory(from: skiaDrawnDataPointer!, byteCount: imageDataSize)
     stagingBufferMemory.unmapMemory()
 
     (textureImage, textureImageMemory) = try createImage(
