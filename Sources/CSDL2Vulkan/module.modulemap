@@ -1,4 +1,0 @@
-module CSDL2Vulkan [system] {
-  header "shim.h"
-  export *
-}

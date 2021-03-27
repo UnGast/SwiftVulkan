@@ -2,38 +2,11 @@
   "object": {
     "pins": [
       {
-        "package": "Cnanovg",
-        "repositoryURL": "https://github.com/UnGast/Cnanovg.git",
+        "package": "CVulkan",
+        "repositoryURL": "https://github.com/UnGast/CVulkan.git",
         "state": {
           "branch": "master",
-          "revision": "b6ca44619bf68833a81ddcb23c9396219acd9b35",
-          "version": null
-        }
-      },
-      {
-        "package": "ColorizeSwift",
-        "repositoryURL": "https://github.com/mtynior/ColorizeSwift.git",
-        "state": {
-          "branch": null,
-          "revision": "2a354639173d021f4648cf1912b2b00a3a7cd83c",
-          "version": "1.6.0"
-        }
-      },
-      {
-        "package": "CombineX",
-        "repositoryURL": "https://github.com/cx-org/CombineX.git",
-        "state": {
-          "branch": "master",
-          "revision": "b9afefe14653f02a80a9f5aa546859e99073d0c8",
-          "version": null
-        }
-      },
-      {
-        "package": "CSDL2",
-        "repositoryURL": "https://github.com/UnGast/CSDL2.git",
-        "state": {
-          "branch": "master",
-          "revision": "4721763511cd8b8aee0612790df579cf5b163148",
+          "revision": "b9c2763af6281cc5949483cf9abff35f35f5d2aa",
           "version": null
         }
       },
@@ -41,9 +14,9 @@
         "package": "Path.swift",
         "repositoryURL": "https://github.com/mxcl/Path.swift.git",
         "state": {
-          "branch": "master",
-          "revision": "891d70ec7cb448829acb8a2d73970b088fd9e5a7",
-          "version": null
+          "branch": null,
+          "revision": "142d4bc1118602f3679c777d2e0da89c227cd918",
+          "version": "1.2.0"
         }
       },
       {
@@ -65,47 +38,11 @@
         }
       },
       {
-        "package": "GLUtils",
-        "repositoryURL": "https://github.com/UnGast/swift-gl-utils",
-        "state": {
-          "branch": "master",
-          "revision": "b04851b2c252c72c5bf50a69dde5514c9f386897",
-          "version": null
-        }
-      },
-      {
-        "package": "GL",
-        "repositoryURL": "https://github.com/UnGast/swift-opengl.git",
-        "state": {
-          "branch": "master",
-          "revision": "229ef7cdbfe1948948171e17a7d44d9c03ae4b65",
-          "version": null
-        }
-      },
-      {
-        "package": "XML",
-        "repositoryURL": "https://github.com/kelvin13/swiftxml",
-        "state": {
-          "branch": "master",
-          "revision": "91ae89c58e5a478191c27d44c31bd9bae281fefd",
-          "version": null
-        }
-      },
-      {
         "package": "SwiftyXMLParser",
         "repositoryURL": "https://github.com/yahoojapan/SwiftyXMLParser.git",
         "state": {
           "branch": "master",
           "revision": "ec7f183642adf429babd867d1a38c5c6912408ba",
-          "version": null
-        }
-      },
-      {
-        "package": "Swim",
-        "repositoryURL": "https://github.com/t-ae/swim.git",
-        "state": {
-          "branch": "master",
-          "revision": "e8e3dc5f6a6f58af40a5c341cb7fbf0d7324dc74",
           "version": null
         }
       }
