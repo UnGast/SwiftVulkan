@@ -5,7 +5,7 @@ import CVulkan
 import Vulkan
 import CTinyObjLoader
 import GfxMath
-import CSkia
+import class SwiftGUI.CpuBufferDrawingSurface
 
 // SPRIV Compiler? https://github.com/stuartcarnie/SwiftSPIRV-Cross
 
@@ -46,6 +46,8 @@ public class VulkanApplication {
   @Deferred var textureImageMemory: DeviceMemory
   @Deferred var textureImageView: ImageView
   @Deferred var textureSampler: Sampler
+  @Deferred var gui: GUI
+  @Deferred var guiSurface: SwiftGUI.CpuBufferDrawingSurface
   @Deferred var vertexBuffer: Buffer
   @Deferred var vertexBufferMemory: DeviceMemory
   @Deferred var indexBuffer: Buffer
@@ -116,6 +118,10 @@ public class VulkanApplication {
     try self.createDepthResources()
 
     try self.createFramebuffers()
+
+    try self.createGUI()
+
+    try self.createGUISurface()
 
     try self.createTextureImage()
 
@@ -751,23 +757,33 @@ public class VulkanApplication {
     depthImageView = try createImageView(image: depthImage, format: depthFormat, aspectFlags: .depth)
   }
 
+  func createGUI() throws {
+    gui = GUI()
+  }
+
+  func createGUISurface() throws {
+    guiSurface = SwiftGUI.CpuBufferDrawingSurface(size: ISize2(Int(swapchainExtent.width), Int(swapchainExtent.height)))
+    gui.surface = guiSurface
+  }
+
   func createTextureImage() throws {
     let image = try CpuImage(contentsOf: Bundle.module.url(forResource: "viking_room", withExtension: "png")!)
-    let imageWidth = image.width
-    let imageHeight = image.height
+    let imageWidth = guiSurface.size.width
+    let imageHeight = guiSurface.size.height
     let channelCount = 4 
-    let imageDataSize = imageWidth * imageHeight * channelCount
+    //let imageDataSize = imageWidth * imageHeight * channelCount
+    let dataSize = Int(guiSurface.size.width * guiSurface.size.height * 4)
 
-    let skiaDrawnDataPointer = testDraw(Int32(imageWidth), Int32(imageHeight))
+    gui.update()
+    //let skiaDrawnDataPointer = testDraw(Int32(imageWidth), Int32(imageHeight))
     //let image = CpuImage(width: 200, height: 200, rgba: Array(repeating: 255, count: imageDataSize))
 
-
     let (stagingBuffer, stagingBufferMemory) = try createBuffer(
-      size: DeviceSize(imageDataSize), usage: [.transferSrc], properties: [.hostVisible, .hostCoherent])
+      size: DeviceSize(dataSize), usage: [.transferSrc], properties: [.hostVisible, .hostCoherent])
     
     var dataPointer: UnsafeMutableRawPointer? = nil
-    try stagingBufferMemory.mapMemory(offset: 0, size: DeviceSize(imageDataSize), flags: .none, data: &dataPointer)
-    dataPointer?.copyMemory(from: skiaDrawnDataPointer!, byteCount: imageDataSize)
+    try stagingBufferMemory.mapMemory(offset: 0, size: DeviceSize(dataSize), flags: .none, data: &dataPointer)
+    dataPointer?.copyMemory(from: guiSurface.buffer, byteCount: dataSize)
     stagingBufferMemory.unmapMemory()
 
     (textureImage, textureImageMemory) = try createImage(

@@ -24,24 +24,21 @@ let package = Package(
         .package(url: "https://github.com/sharplet/Regex.git", from: "2.1.0"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.4.0"),
         .package(name: "Swim", url: "https://github.com/t-ae/swim.git", .branch("master")),
-        .package(name: "GfxMath", path: "../swift-gfx-math")
+        .package(name: "GfxMath", path: "../swift-gfx-math"),
+        .package(name: "SwiftGUI", path: "../swift-gui"),
+        .package(name: "SwiftGUIBackendSkia", path: "../swift-gui-backend-skia")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "swift-vulkan-test",
-            dependencies: ["CSDL2", "CVulkan", "Vulkan", "CSDL2Vulkan", "Swim", "CTinyObjLoader", "GfxMath", "CSkia"],
+            dependencies: ["CSDL2", "CVulkan", "Vulkan", "CSDL2Vulkan", "Swim", "CTinyObjLoader", "GfxMath", "SwiftGUI", .product(name: "SwiftGUIBackendSkia", package: "SwiftGUIBackendSkia")],
             resources: [
                 .copy("Resources")
             ]
         ),
         .target(name: "CTinyObjLoader"),
-        .target(name: "CSkia", cSettings: [.headerSearchPath("../../skia"), .headerSearchPath("../../skia/include/core/")], cxxSettings: [.headerSearchPath("./")], linkerSettings: [
-            .linkedLibrary("skia"),
-            .linkedLibrary("fontconfig"),
-            .linkedLibrary("GL")
-        ]),
         .target(name: "Generator", dependencies: [.product(name: "Path", package: "Path.swift"), "SwiftyXMLParser", "Regex", .product(name: "ArgumentParser", package: "swift-argument-parser")]),
         .systemLibrary(name: "CVulkan"),
         .systemLibrary(name: "CSDL2Vulkan"),
