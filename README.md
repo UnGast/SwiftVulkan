@@ -1,14 +1,16 @@
 # Vulkan + Swift
 
-Following [vulkan-tutorial.com](https://vulkan-tutorial.com) and creating Swift bindings along the way I managed to get this running (tested on Ubuntu 20.04, GTX 770):
+This library contains Swift bindings for Vulkan that are largely generated.
 
-<img alt="screenshot" src="demo.png?raw=true" width="300"/>
+You can find a demo application here: [SwiftVulkanDemo](https://github.com/UnGast/SwiftVulkanDemo).
+
+<img alt="screenshot" src="https://github.com/UnGast/SwiftVulkanDemo/raw/master/Docs/Assets/screenshot.png?raw=true" width="300"/>
 
 <br><br>
 
-I intent to create a complete renderer. Maybe even a raytracing renderer.
+Documentation will be written later. If you have question or problems just open an issue.
 
 <br>
 
-A good amount of the bindings has been taken from: [alexanderuv/vulkanSwift](https://github.com/alexanderuv/vulkanSwift).
+The general approach and a good amount of bindings have been taken from: [alexanderuv/vulkanSwift](https://github.com/alexanderuv/vulkanSwift).
 
