@@ -8,6 +8,10 @@ You can find a demo application here: [SwiftVulkanDemo](https://github.com/UnGas
 
 <br><br>
 
+There are still some types and functions for which there is no binding. I'm adding as I need them for my projects.
+
+<br>
+
 Documentation will be written later. If you have question or problems just open an issue.
 
 <br>
