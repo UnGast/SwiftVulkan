@@ -83,6 +83,8 @@ func mapMember(_ member: XML.Accessor, vulkanStorageName: String = "vulkan", reg
 
     if registry.isBitmask(typeName: cTypeName) {
       cConversion = "?" + cConversion + " ?? 0"
+    } else if cTypeName == "uint32_t" {
+      cConversion = "?" + cConversion + " ?? 0"
     } else {
       cConversion = "?" + cConversion
     }

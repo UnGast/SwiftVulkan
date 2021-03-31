@@ -18,3 +18,12 @@ Documentation will be written later. If you have question or problems just open 
 
 The general approach and a good amount of bindings have been taken from: [alexanderuv/vulkanSwift](https://github.com/alexanderuv/vulkanSwift).
 
+<br>
+<br>
+
+# List of things that could cause bugs
+
+- uint32_t type fields that are marked as optional will get a value of 0 if not specified
+  - this could overwrite the default value of the specification (if there is any)
+  - but something like this is necessary because some fields are marked as optional, but they are not recognized as optional when imported into swift
+  - example: DescriptorSetLayoutBinding.descriptorCount
