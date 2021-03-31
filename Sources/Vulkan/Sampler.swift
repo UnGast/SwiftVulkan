@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class Sampler: WrapperStruct {
+public class Sampler: VulkanHandleTypeWrapper, WrapperStruct {
     public let pointer: VkSampler
     public let device: Device
 
@@ -25,6 +25,10 @@ public class Sampler: WrapperStruct {
         }
 
         throw opResult.toResult()
+    }
+
+    override public func destroyUnderlying() {
+        vkDestroySampler(device.pointer, pointer, nil)
     }
 
     public var vulkan: Optional<VkSampler> {

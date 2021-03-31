@@ -17,6 +17,7 @@ public var texelBufferView: [BufferView]
 
   var vImageInfo: [VkDescriptorImageInfo]? = nil
 var vBufferInfo: [VkDescriptorBufferInfo]? = nil
+var vTexelBufferView: [VkBufferView?]? = nil
 
   public init(
     dstSet: DescriptorSet,
@@ -42,6 +43,7 @@ self.texelBufferView = texelBufferView
     mutating get {
       vImageInfo = imageInfo.vulkanArray
 vBufferInfo = bufferInfo.vulkanArray
+vTexelBufferView = texelBufferView.vulkanArray
       return VkWriteDescriptorSet(
         sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 pNext: nil,
@@ -52,7 +54,7 @@ descriptorCount: descriptorCount.vulkan,
 descriptorType: descriptorType.vulkan,
 pImageInfo: vImageInfo,
 pBufferInfo: vBufferInfo,
-pTexelBufferView: texelBufferView.vulkan
+pTexelBufferView: vTexelBufferView
       )
     }
   }

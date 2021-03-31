@@ -5,7 +5,8 @@ public struct PipelineLayoutCreateInfo: VulkanTypeWrapper {
 public var setLayouts: [DescriptorSetLayout]
 public var pushConstantRanges: [PushConstantRange]
 
-  var vPushConstantRanges: [VkPushConstantRange]? = nil
+  var vSetLayouts: [VkDescriptorSetLayout?]? = nil
+var vPushConstantRanges: [VkPushConstantRange]? = nil
 
   public init(
     flags: PipelineLayoutCreateFlags? = nil,
@@ -19,13 +20,14 @@ self.pushConstantRanges = pushConstantRanges
 
   public var vulkan: VkPipelineLayoutCreateInfo {
     mutating get {
-      vPushConstantRanges = pushConstantRanges.vulkanArray
+      vSetLayouts = setLayouts.vulkanArray
+vPushConstantRanges = pushConstantRanges.vulkanArray
       return VkPipelineLayoutCreateInfo(
         sType: VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 pNext: nil,
 flags: flags?.vulkan ?? 0,
 setLayoutCount: UInt32(setLayouts.count),
-pSetLayouts: setLayouts.vulkan,
+pSetLayouts: vSetLayouts,
 pushConstantRangeCount: UInt32(pushConstantRanges.count),
 pPushConstantRanges: vPushConstantRanges
       )

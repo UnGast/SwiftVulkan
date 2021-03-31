@@ -116,25 +116,22 @@ class StructGenerator {
         var baseName = Regex.lastMatch!.captures[0]!
         baseName = baseName.first!.lowercased() + baseName.dropFirst()
 
+        let backingPropertyName = "v" + baseName.first!.uppercased() + baseName.dropFirst()
+        var pointerBackingPropertySingleType = rawMember.type
+
         if registry.isHandle(typeName: rawMember.type) {
-          if rawMember.optional {
-            toCMemberMappings[rawMember.name] = "\(baseName)?.vulkan"
-          } else {
-            toCMemberMappings[rawMember.name] = "\(baseName).vulkan"
-          }
-        } else {
-          let backingPropertyName = "v" + baseName.first!.uppercased() + baseName.dropFirst()
-
-          pointerBackingProperties.append("var \(backingPropertyName): [\(rawMember.type)]? = nil")
-
-          if rawMember.optional {
-            pointerBackingAssignments.append("\(backingPropertyName) = \(baseName)?.vulkanArray")
-          } else {
-            pointerBackingAssignments.append("\(backingPropertyName) = \(baseName).vulkanArray")
-          }
-
-          toCMemberMappings[rawMember.name] = backingPropertyName
+          pointerBackingPropertySingleType += "?"
         }
+
+        pointerBackingProperties.append("var \(backingPropertyName): [\(pointerBackingPropertySingleType)]? = nil")
+
+        if rawMember.optional {
+          pointerBackingAssignments.append("\(backingPropertyName) = \(baseName)?.vulkanArray")
+        } else {
+          pointerBackingAssignments.append("\(backingPropertyName) = \(baseName).vulkanArray")
+        }
+
+        toCMemberMappings[rawMember.name] = backingPropertyName
 
         //let arrayCountNameRegex = try! Regex(string: "^\(baseName.dropLast())Count")
         if rawMember.lengthMemberName != nil/* || rawMembers.contains(where: { arrayCountNameRegex.matches($0.name) })*/ {

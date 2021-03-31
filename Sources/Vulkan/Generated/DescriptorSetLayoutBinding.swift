@@ -11,7 +11,7 @@ public var descriptorCount: UInt32?
 public var stageFlags: ShaderStageFlags
 public var immutableSamplers: [Sampler]?
 
-  
+  var vImmutableSamplers: [VkSampler?]? = nil
 
   public init(
     binding: UInt32,
@@ -29,13 +29,13 @@ self.immutableSamplers = immutableSamplers
 
   public var vulkan: VkDescriptorSetLayoutBinding {
     mutating get {
-      
+      vImmutableSamplers = immutableSamplers?.vulkanArray
       return VkDescriptorSetLayoutBinding(
         binding: binding.vulkan,
 descriptorType: descriptorType.vulkan,
 descriptorCount: descriptorCount?.vulkan ?? 0,
 stageFlags: stageFlags.vulkan,
-pImmutableSamplers: immutableSamplers?.vulkan
+pImmutableSamplers: vImmutableSamplers
       )
     }
   }

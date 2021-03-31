@@ -1,3 +1,4 @@
+@available(deprecated, message: "use VulkanTypeWrapper")
 public protocol WrapperStruct {
   associatedtype Wrapped
 

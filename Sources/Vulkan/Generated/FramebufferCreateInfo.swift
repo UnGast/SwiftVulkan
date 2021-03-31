@@ -8,7 +8,7 @@ public var width: UInt32
 public var height: UInt32
 public var layers: UInt32
 
-  
+  var vAttachments: [VkImageView?]? = nil
 
   public init(
     flags: FramebufferCreateFlags? = nil,
@@ -28,14 +28,14 @@ self.layers = layers
 
   public var vulkan: VkFramebufferCreateInfo {
     mutating get {
-      
+      vAttachments = attachments.vulkanArray
       return VkFramebufferCreateInfo(
         sType: VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
 pNext: nil,
 flags: flags?.vulkan ?? 0,
 renderPass: renderPass.vulkan,
 attachmentCount: UInt32(attachments.count),
-pAttachments: attachments.vulkan,
+pAttachments: vAttachments,
 width: width.vulkan,
 height: height.vulkan,
 layers: layers.vulkan
