@@ -17,11 +17,12 @@ public class DescriptorSet: WrapperStruct {
     }
 
     public class func allocate(device: Device, allocateInfo: DescriptorSetAllocateInfo) -> [DescriptorSet] {
+        var allocateInfo = allocateInfo
         var pointers: [VkDescriptorSet?] = Array(repeating: nil, count: Int(allocateInfo.descriptorSetCount))
         
         vkAllocateDescriptorSets(
             device.pointer,
-            allocateInfo.vulkanPointer,
+            [allocateInfo.vulkan],
             &pointers)
         
         return pointers.map {

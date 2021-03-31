@@ -1,8 +1,10 @@
 import CVulkan
 
-public struct DescriptorPoolSize: WrapperStruct {
+public struct DescriptorPoolSize: VulkanTypeWrapper {
   public var type: DescriptorType
 public var descriptorCount: UInt32
+
+  
 
   public init(
     type: DescriptorType,
@@ -13,9 +15,12 @@ self.descriptorCount = descriptorCount
   }
 
   public var vulkan: VkDescriptorPoolSize {
-    VkDescriptorPoolSize(
-      type: type.vulkan,
-descriptorCount: descriptorCount
-    )
+    mutating get {
+      
+      return VkDescriptorPoolSize(
+        type: type.vulkan,
+descriptorCount: descriptorCount.vulkan
+      )
+    }
   }
 }

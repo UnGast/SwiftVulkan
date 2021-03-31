@@ -42,13 +42,15 @@ public class Device {
         descriptorWrites: [WriteDescriptorSet]?, 
         descriptorCopies: [CopyDescriptorSet]?
     ) {
+        var descriptorWrites = descriptorWrites
+
         if descriptorCopies != nil {
             fatalError("IMPLEMENT descriptorCopies")
         }
 
         vkUpdateDescriptorSets(
             self.pointer,
-            UInt32(descriptorWrites?.count ?? 0), descriptorWrites?.vulkanPointer,
+            UInt32(descriptorWrites?.count ?? 0), descriptorWrites?.vulkanArray,
             0, nil)
             /*UInt32(descriptorCopies?.count ?? 0), descriptorCopies?.vulkanPointer)*/
     }

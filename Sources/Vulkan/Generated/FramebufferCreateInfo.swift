@@ -1,15 +1,17 @@
 import CVulkan
 
-public struct FramebufferCreateInfo: WrapperStruct {
-  public var flags: FramebufferCreateFlags
+public struct FramebufferCreateInfo: VulkanTypeWrapper {
+  public var flags: FramebufferCreateFlags?
 public var renderPass: RenderPass
 public var attachments: [ImageView]
 public var width: UInt32
 public var height: UInt32
 public var layers: UInt32
 
+  
+
   public init(
-    flags: FramebufferCreateFlags,
+    flags: FramebufferCreateFlags? = nil,
 renderPass: RenderPass,
 attachments: [ImageView],
 width: UInt32,
@@ -25,16 +27,19 @@ self.layers = layers
   }
 
   public var vulkan: VkFramebufferCreateInfo {
-    VkFramebufferCreateInfo(
-      sType: VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+    mutating get {
+      
+      return VkFramebufferCreateInfo(
+        sType: VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
 pNext: nil,
-flags: flags.vulkan,
+flags: flags?.vulkan ?? 0,
 renderPass: renderPass.vulkan,
 attachmentCount: UInt32(attachments.count),
-pAttachments: attachments.vulkanPointer,
+pAttachments: attachments.vulkan,
 width: width.vulkan,
 height: height.vulkan,
 layers: layers.vulkan
-    )
+      )
+    }
   }
 }

@@ -1,12 +1,14 @@
 import CVulkan
 
-public struct BufferCopy: WrapperStruct {
+public struct BufferCopy: VulkanTypeWrapper {
   /** Specified in bytes */
 public var srcOffset: DeviceSize
 /** Specified in bytes */
 public var dstOffset: DeviceSize
 /** Specified in bytes */
 public var size: DeviceSize
+
+  
 
   public init(
     srcOffset: DeviceSize,
@@ -19,10 +21,13 @@ self.size = size
   }
 
   public var vulkan: VkBufferCopy {
-    VkBufferCopy(
-      srcOffset: srcOffset.vulkan,
+    mutating get {
+      
+      return VkBufferCopy(
+        srcOffset: srcOffset.vulkan,
 dstOffset: dstOffset.vulkan,
 size: size.vulkan
-    )
+      )
+    }
   }
 }

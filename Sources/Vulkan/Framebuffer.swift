@@ -11,7 +11,10 @@ public class Framebuffer: VulkanHandleTypeWrapper {
   }
 
   public convenience init(device: Device, createInfo: FramebufferCreateInfo) throws {
+    var createInfo = createInfo
+
     var rawFramebuffer = VkFramebuffer(bitPattern: 0)
+    
     var opResult = VK_ERROR_INITIALIZATION_FAILED
     withUnsafePointer(to: createInfo.vulkan) {
       opResult = vkCreateFramebuffer(device.pointer, $0, nil, &rawFramebuffer)

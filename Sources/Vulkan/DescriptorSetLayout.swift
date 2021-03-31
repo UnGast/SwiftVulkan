@@ -14,37 +14,22 @@ public class DescriptorSetLayout: VulkanHandleTypeWrapper, WrapperStruct {
     public class func create(
         device: Device, 
         createInfo: DescriptorSetLayoutCreateInfo) throws -> DescriptorSetLayout {
+            var createInfo = createInfo
 
-        var layout = VkDescriptorSetLayout(bitPattern: 0)
-        /*let bindings = createInfo.bindings.map { return VkDescriptorSetLayoutBinding(
-                binding: $0.binding,
-                descriptorType: $0.descriptorType.vulkan,
-                descriptorCount: $0.descriptorCount,
-                stageFlags: UInt32($0.stageFlags.rawValue),
-                pImmutableSamplers: $0.immutableSamplers?.vulkanPointer
-        ) }
+            var layout = VkDescriptorSetLayout(bitPattern: 0)
+            let opResult: VkResult = withUnsafePointer(to: createInfo.vulkan) {
+                return vkCreateDescriptorSetLayout(device.pointer, $0, nil, &layout)
+            }
 
-        let ci = VkDescriptorSetLayoutCreateInfo(
-                sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-                pNext: nil,
-                flags: createInfo.flags.rawValue,
-                bindingCount: UInt32(createInfo.bindings.count),
-                pBindings: bindings.vulkanPointer
-        )*/
+            guard opResult == VK_SUCCESS else {
+                throw opResult.toResult()
+            }
 
-        let opResult: VkResult = withUnsafePointer(to: createInfo.vulkan) {
-            return vkCreateDescriptorSetLayout(device.pointer, $0, nil, &layout)
-        }
-
-        guard opResult == VK_SUCCESS else {
-            throw opResult.toResult()
-        }
-
-        return DescriptorSetLayout(pointer: layout!, device: device)
+            return DescriptorSetLayout(pointer: layout!, device: device)
     }
 
     public var vulkan: Optional<VkDescriptorSetLayout> {
-        pointer
+        Optional(pointer)
     }
 
     override public func destroyUnderlying() {

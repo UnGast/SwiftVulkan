@@ -69,6 +69,8 @@ public class DescriptorPool: VulkanHandleTypeWrapper, WrapperStruct {
     }
 
     public class func create(device: Device, createInfo: DescriptorPoolCreateInfo) throws -> DescriptorPool {
+        var createInfo = createInfo
+        
         var pool = VkDescriptorPool(bitPattern: 0)
 
         let opResult = withUnsafePointer(to: createInfo.vulkan) {

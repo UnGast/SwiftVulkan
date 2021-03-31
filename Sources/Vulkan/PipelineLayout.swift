@@ -2,16 +2,18 @@
 import CVulkan
 
 public class PipelineLayout: WrapperStruct {
-    public var vulkanValue: VkPipelineLayout
+    public var pointer: VkPipelineLayout
     public var device: Device
 
-    init(vulkanValue: VkPipelineLayout,
+    init(pointer: VkPipelineLayout,
             device: Device) {
-        self.vulkanValue = vulkanValue
+        self.pointer = pointer 
         self.device = device
     }
 
     public class func create(device: Device, createInfo: PipelineLayoutCreateInfo) throws -> PipelineLayout {
+        var createInfo = createInfo
+
         var pipelineLayout = VkPipelineLayout(bitPattern: 0)
 
         let opResult = withUnsafePointer(to: createInfo.vulkan) {
@@ -22,14 +24,14 @@ public class PipelineLayout: WrapperStruct {
             throw opResult.toResult()
         }
 
-        return PipelineLayout(vulkanValue: pipelineLayout!, device: device)
+        return PipelineLayout(pointer: pipelineLayout!, device: device)
     }
 
     public var vulkan: VkPipelineLayout? {
-        vulkanValue
+       pointer 
     }
 
     deinit {
-        vkDestroyPipelineLayout(self.device.pointer, self.vulkanValue, nil)
+        vkDestroyPipelineLayout(self.device.pointer, self.pointer, nil)
     }
 }

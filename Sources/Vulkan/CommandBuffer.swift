@@ -85,6 +85,17 @@ public class CommandBuffer: WrapperStruct {
         vkCmdBindIndexBuffer(pointer, buffer.pointer, offset, indexType)
     }
 
+    public func pushConstants(layout: PipelineLayout, stageFlags: ShaderStageFlags, offset: UInt32, size: UInt32, values: UnsafeRawPointer) {
+        vkCmdPushConstants(pointer, layout.pointer, stageFlags.vulkan, offset, size, values)
+        /*void vkCmdPushConstants(
+    VkCommandBuffer                             commandBuffer,
+    VkPipelineLayout                            layout,
+    VkShaderStageFlags                          stageFlags,
+    uint32_t                                    offset,
+    uint32_t                                    size,
+    const void*                                 pValues);*/
+    }
+
     public func draw(vertexCount: UInt32, instanceCount: UInt32, firstVertex: UInt32, firstInstance: UInt32) {
         vkCmdDraw(pointer, vertexCount, instanceCount, firstVertex, firstInstance)
     }
@@ -102,7 +113,7 @@ public class CommandBuffer: WrapperStruct {
             vkCmdBindDescriptorSets(
                 pointer,
                 pipelineBindPoint.vulkan,
-                layout.vulkanValue,
+                layout.pointer,
                 firstSet,
                 UInt32(descriptorSets.count),
                 descriptorSets.vulkan,
@@ -126,7 +137,8 @@ public class CommandBuffer: WrapperStruct {
     }
 
     public func copyBuffer(srcBuffer: Buffer, dstBuffer: Buffer, regions: [BufferCopy]) {
-        vkCmdCopyBuffer(pointer, srcBuffer.pointer, dstBuffer.pointer, UInt32(regions.count), regions.vulkanPointer)
+        var regions = regions
+        vkCmdCopyBuffer(pointer, srcBuffer.pointer, dstBuffer.pointer, UInt32(regions.count), regions.vulkanArray)
     }
 
     public func copyBufferToImage(srcBuffer: Buffer, dstImage: Image, dstImageLayout: ImageLayout, regions: [BufferImageCopy]) {

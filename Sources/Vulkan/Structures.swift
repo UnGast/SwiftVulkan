@@ -607,7 +607,7 @@ public struct MemoryType {
         self.heapIndex = memType.heapIndex
     }
 }
-
+/*
 public struct PipelineLayoutCreateInfo {
     public var flags: Flags = .none
     public var setLayouts: [DescriptorSetLayout] = []
@@ -642,7 +642,7 @@ public struct PipelineLayoutCreateInfo {
                 pPushConstantRanges: pushConstantRanges.vulkanPointer
         )
     }
-}
+}*/
 
 public struct PhysicalDeviceFeatures {
     public var robustBufferAccess: Bool
@@ -903,7 +903,7 @@ public struct PhysicalDeviceProperties {
     let limits: Any? = nil // TODO: add later if needed
     let sparseProperties: Any? = nil // TODO: add later if needed
 }*/
-
+/*
 public struct PushConstantRange: WrapperStruct {
     public var stageFlags: ShaderStageFlags = []
     public var offset = UInt32(0)
@@ -916,7 +916,7 @@ public struct PushConstantRange: WrapperStruct {
                 size: self.size
         )
     }
-}
+}*/
 
 public struct QueueFamilyProperties {
     public let index: UInt32

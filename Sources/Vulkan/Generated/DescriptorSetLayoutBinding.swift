@@ -1,21 +1,24 @@
 import CVulkan
 
-public struct DescriptorSetLayoutBinding: WrapperStruct {
+public struct DescriptorSetLayoutBinding: VulkanTypeWrapper {
   /** Binding number for this entry */
 public var binding: UInt32
 /** Type of the descriptors in this binding */
 public var descriptorType: DescriptorType
-public var descriptorCount: UInt32
+/** Number of descriptors in this binding */
+public var descriptorCount: UInt32?
 /** Shader stages this binding is visible to */
 public var stageFlags: ShaderStageFlags
 public var immutableSamplers: [Sampler]?
 
+  
+
   public init(
     binding: UInt32,
 descriptorType: DescriptorType,
-descriptorCount: UInt32,
+descriptorCount: UInt32? = nil,
 stageFlags: ShaderStageFlags,
-immutableSamplers: [Sampler]?
+immutableSamplers: [Sampler]? = nil
   ) {
     self.binding = binding
 self.descriptorType = descriptorType
@@ -25,12 +28,15 @@ self.immutableSamplers = immutableSamplers
   }
 
   public var vulkan: VkDescriptorSetLayoutBinding {
-    VkDescriptorSetLayoutBinding(
-      binding: binding.vulkan,
+    mutating get {
+      
+      return VkDescriptorSetLayoutBinding(
+        binding: binding.vulkan,
 descriptorType: descriptorType.vulkan,
-descriptorCount: descriptorCount,
+descriptorCount: descriptorCount?.vulkan ?? 0,
 stageFlags: stageFlags.vulkan,
-pImmutableSamplers: immutableSamplers?.vulkanPointer
-    )
+pImmutableSamplers: immutableSamplers?.vulkan
+      )
+    }
   }
 }

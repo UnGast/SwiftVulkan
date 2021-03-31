@@ -1,9 +1,11 @@
 import CVulkan
 
-public struct DescriptorSetAllocateInfo: WrapperStruct {
+public struct DescriptorSetAllocateInfo: VulkanTypeWrapper {
   public var descriptorPool: DescriptorPool
 public var descriptorSetCount: UInt32
 public var setLayouts: [DescriptorSetLayout]
+
+  
 
   public init(
     descriptorPool: DescriptorPool,
@@ -16,12 +18,15 @@ self.setLayouts = setLayouts
   }
 
   public var vulkan: VkDescriptorSetAllocateInfo {
-    VkDescriptorSetAllocateInfo(
-      sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+    mutating get {
+      
+      return VkDescriptorSetAllocateInfo(
+        sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 pNext: nil,
 descriptorPool: descriptorPool.vulkan,
-descriptorSetCount: descriptorSetCount,
-pSetLayouts: setLayouts.vulkanPointer
-    )
+descriptorSetCount: descriptorSetCount.vulkan,
+pSetLayouts: setLayouts.vulkan
+      )
+    }
   }
 }
