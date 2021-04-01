@@ -29,4 +29,8 @@ public class DescriptorSet: WrapperStruct {
             DescriptorSet(pointer: $0!, device: device)
         }
     }
+
+    public class func free(device: Device, descriptorPool: DescriptorPool, descriptorSets: [DescriptorSet]) {
+        vkFreeDescriptorSets(device.pointer, descriptorPool.pointer, UInt32(descriptorSets.count), descriptorSets.vulkan)
+    }
 }
