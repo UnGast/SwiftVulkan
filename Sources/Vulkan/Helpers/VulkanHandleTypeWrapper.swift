@@ -2,8 +2,10 @@ public class VulkanHandleTypeWrapper {
   public private(set) var destroyed = false
 
   public final func destroy() {
-    destroyUnderlying()
-    destroyed = true
+    if !destroyed {
+      destroyUnderlying()
+      destroyed = true
+    }
   }
 
   public func destroyUnderlying() {
