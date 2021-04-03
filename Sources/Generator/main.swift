@@ -59,7 +59,9 @@ struct GeneratorCommand: ParsableCommand {
       "VkDescriptorSetAllocateInfo",
       "VkDescriptorImageInfo",
       "VkDescriptorBufferInfo",
-      "VkWriteDescriptorSet"]
+      "VkWriteDescriptorSet",
+      
+      "VkEventCreateInfo"]
 
     let generatedFlagsWhitelist = [
       "VkPipelineColorBlendStateCreateFlags",
@@ -81,7 +83,9 @@ struct GeneratorCommand: ParsableCommand {
       "VkSampleCountFlags",
       "VkPipelineShaderStageCreateFlags",
       "VkShaderStageFlags",
-      "VkPipelineLayoutCreateFlags"
+      "VkPipelineLayoutCreateFlags",
+
+      "VkEventCreateFlags"
     ]
 
     let generatedEnumsWhitelist = [

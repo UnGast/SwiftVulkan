@@ -132,6 +132,10 @@ public class CommandBuffer: WrapperStruct {
                 UInt32(imageMemoryBarriers.count), imageMemoryBarriers.vulkan) 
     }
 
+    public func setEvent(event: Event, stageMask: PipelineStageFlags) {
+        vkCmdSetEvent(pointer, event.pointer, stageMask.vulkan)
+    }
+
     public func endRenderPass() {
         vkCmdEndRenderPass(pointer)
     }

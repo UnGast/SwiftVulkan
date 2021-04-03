@@ -30,6 +30,10 @@ public class Fence: WrapperStruct {
         throw opResult.toResult()
     }
 
+    public var status: Result {
+        vkGetFenceStatus(device.pointer, pointer).toResult()
+    }
+
     public var vulkan: Optional<VkFence> {
         Optional(pointer)
     }
