@@ -21,9 +21,11 @@ The general approach and a good amount of bindings have been taken from: [alexan
 <br>
 <br>
 
-# List of things that could cause bugs
+# List of things that could cause bugs / lead to confusion
 
 - uint32_t type fields that are marked as optional will get a value of 0 if not specified
   - this could overwrite the default value of the specification (if there is any)
   - but something like this is necessary because some fields are marked as optional, but they are not recognized as optional when imported into swift
   - example: DescriptorSetLayoutBinding.descriptorCount
+- DeviceMemory.free calls DeviceMemory.destroy which calls vkFreeMemory
+  - there is no vkDestroyMemory, but the base class for the wrappers requires a destroy function to call when it is deinitialized

@@ -23,7 +23,7 @@ public class DeviceMemory: VulkanHandleTypeWrapper {
     }
 
     public func free() {
-        vkFreeMemory(device.pointer, pointer, nil)
+        destroy()
     }
 
     public func mapMemory(offset: DeviceSize, size: DeviceSize, flags: MemoryMapFlags, data: inout UnsafeMutableRawPointer?) throws {
