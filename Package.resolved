@@ -11,15 +11,6 @@
         }
       },
       {
-        "package": "Path.swift",
-        "repositoryURL": "https://github.com/mxcl/Path.swift.git",
-        "state": {
-          "branch": null,
-          "revision": "142d4bc1118602f3679c777d2e0da89c227cd918",
-          "version": "1.2.0"
-        }
-      },
-      {
         "package": "Regex",
         "repositoryURL": "https://github.com/sharplet/Regex.git",
         "state": {

@@ -1,5 +1,4 @@
 import Foundation
-import Path
 import SwiftyXMLParser
 import ArgumentParser
 
@@ -8,9 +7,9 @@ struct GeneratorCommand: ParsableCommand {
   @Argument var filter: [String] = []
 
   func run() throws {
-    let vulkanDefinitionsFilePath = Path.cwd / "vk.xml"
+    let vulkanDefinitionsFileUrl = Bundle.module.url(forResource: "vk", withExtension: "xml")!
 
-    let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFilePath))
+    let xml = try! XML.parse(try! String(contentsOf: vulkanDefinitionsFileUrl))
 
     let registry = Registry(fromXml: xml.registry)
 
@@ -137,9 +136,12 @@ struct GeneratorCommand: ParsableCommand {
   func processGeneratorOutput(_ typeName: String, _ typeDefinition: String) throws {
     print(typeDefinition)
     if !dryRun {
-      let path = Path.cwd/"Sources/Vulkan/Generated"/(typeName + ".swift")
-      try path.touch()
-      try typeDefinition.write(to: path)
+      let fileManager = FileManager()
+      let path = fileManager.currentDirectoryPath + "/Sources/Vulkan/Generated/\(typeName).swift"
+      if !fileManager.fileExists(atPath: path) {
+        fileManager.createFile(atPath: path, contents: nil)
+      }
+      try typeDefinition.write(toFile: path, atomically: false, encoding: .utf8)
     }
   }
 }
