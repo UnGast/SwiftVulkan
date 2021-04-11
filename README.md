@@ -29,3 +29,4 @@ The general approach and a good amount of bindings have been taken from: [alexan
   - example: DescriptorSetLayoutBinding.descriptorCount
 - DeviceMemory.free calls DeviceMemory.destroy which calls vkFreeMemory
   - there is no vkDestroyMemory, but the base class for the wrappers requires a destroy function to call when it is deinitialized
+- there are no VK_API_VERSION_X_X constants, because they are implemented as macros which are not available in swift; use vkMakeApiVersion(x, x, x) instead
