@@ -6,7 +6,7 @@
 import CVulkan
 
 public typealias DeviceSize = UInt64
-
+/*
 public struct ApplicationInfo {
     // not supported for now
     public let next: Any? = nil
@@ -27,7 +27,7 @@ public struct ApplicationInfo {
         self.engineVersion = engineVersion.rawVersion
         self.apiVersion = apiVersion.rawVersion
     }
-}
+}*/
 /*
 public struct ComponentMapping {
     public let r: ComponentSwizzle

@@ -26,3 +26,16 @@ public struct EventCreateFlags: OptionSet {
   
 }
 
+public struct EventCreateFlagBits: OptionSet {
+  public var rawValue: UInt32
+
+  public init(rawValue: UInt32) {
+    self.rawValue = rawValue
+  }
+
+  public var vulkan: VkEventCreateFlagBits {
+    VkEventCreateFlagBits(rawValue)
+  }
+
+  
+}

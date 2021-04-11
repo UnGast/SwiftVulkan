@@ -14,6 +14,7 @@ struct GeneratorCommand: ParsableCommand {
     let registry = Registry(fromXml: xml.registry)
 
     let generatedStructWhitelist = [
+      "VkApplicationInfo",
       "VkPipelineColorBlendStateCreateInfo",
       "VkPipelineColorBlendAttachmentState",
       "VkMemoryBarrier",
