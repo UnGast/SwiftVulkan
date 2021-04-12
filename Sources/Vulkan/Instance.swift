@@ -82,7 +82,7 @@ public class Instance {
         }
 
         if opResult == VK_SUCCESS {
-            return SurfaceKHR(instance: self,  surface: surface!)
+            return SurfaceKHR(instance: self,  pointer: surface!)
         }
         
         throw opResult.toResult()

@@ -1162,7 +1162,7 @@ public struct SwapchainCreateInfo {
                 sType: VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
                 pNext: self.pNext,
                 flags: VkSwapchainCreateFlagsKHR(self.flags.rawValue),
-                surface: self.surface.vulkanPointer,
+                surface: self.surface.pointer,
                 minImageCount: self.minImageCount,
                 imageFormat: self.imageFormat.vulkan,
                 imageColorSpace: self.imageColorSpace.vulkanValue,
