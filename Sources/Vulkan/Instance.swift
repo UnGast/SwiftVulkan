@@ -14,17 +14,21 @@ public class Instance {
     }
 
     public class func createInstance(createInfo info: InstanceCreateInfo) throws -> Instance {
+        var info = info
+
         let arrEnabledLayerNames = info.enabledLayerNames.map { $0.asCString() }
         let enabledLayerNamesPtr = UnsafePointer(arrEnabledLayerNames)
 
         let arrEnabledExtensionNames = info.enabledExtensionNames.map { $0.asCString() }
         let enabledExtensionNamesPtr = UnsafePointer(arrEnabledExtensionNames)
 
+        var vApplicationInfo = info.applicationInfo != nil ? [info.applicationInfo!.vulkan] : []
+
         let cCreateInfo = VkInstanceCreateInfo(
             sType: VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
             pNext: nil,
             flags: 0,
-            pApplicationInfo: nil, // &appInfo,
+            pApplicationInfo: vApplicationInfo,
             enabledLayerCount: UInt32(info.enabledLayerNames.count),
             ppEnabledLayerNames: enabledLayerNamesPtr,
             enabledExtensionCount: UInt32(info.enabledExtensionNames.count),

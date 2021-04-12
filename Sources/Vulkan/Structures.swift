@@ -521,7 +521,7 @@ public struct ImageSubresourceRange {
 public struct InstanceCreateInfo {
     public let next: Any? = nil
     public let flags = 0
-    public let applicationInfo: ApplicationInfo?
+    public var applicationInfo: ApplicationInfo?
     public let enabledLayerNames: [String]
     public let enabledExtensionNames: [String]
 
