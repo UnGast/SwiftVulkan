@@ -4,7 +4,7 @@ import CVulkan
 public class Queue {
     public let pointer: VkQueue
 
-    init(fromVulkan pointer: VkQueue) {
+    public init(pointer: VkQueue) {
         self.pointer = pointer
     }
 
@@ -12,7 +12,7 @@ public class Queue {
         var queueArr = [VkQueue?](repeating: VkQueue(bitPattern: 0), count: 1)
         vkGetDeviceQueue(device.pointer, UInt32(presentFamilyIndex), 0, &queueArr)
 
-        return Queue(fromVulkan: queueArr[0]!)
+        return Queue(pointer: queueArr[0]!)
     }
 
     public func submit(submits: [SubmitInfo], fence: Fence?) throws {

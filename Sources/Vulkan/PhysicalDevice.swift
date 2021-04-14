@@ -9,9 +9,9 @@ public class PhysicalDevice {
     public let instance: Instance
     public let pointer: VkPhysicalDevice
 
-    init(instance: Instance, vulkanDevice: VkPhysicalDevice) {
+    public init(instance: Instance, pointer: VkPhysicalDevice) {
         self.instance = instance
-        self.pointer = vulkanDevice
+        self.pointer = pointer
     }
 
     public lazy var properties: PhysicalDeviceProperties = {
@@ -210,7 +210,7 @@ public class PhysicalDevice {
         }
         
         if opResult == VK_SUCCESS {
-            return Device(instance: instance, device: device!)
+            return Device(instance: instance, pointer: device!)
         }
 
         throw opResult.toResult()

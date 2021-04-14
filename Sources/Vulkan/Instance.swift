@@ -117,7 +117,7 @@ public class Instance {
             }
 
             for device in devices {
-                let item = PhysicalDevice(instance: self, vulkanDevice: device!)
+                let item = PhysicalDevice(instance: self, pointer: device!)
                 result.append(item)
             }
         }

@@ -10,10 +10,10 @@ public class Device {
     public let instance: Instance
     public let pointer: VkDevice
 
-    init(instance: Instance,
-         device: VkDevice) {
+    public init(instance: Instance,
+         pointer: VkDevice) {
         self.instance = instance
-        self.pointer = device
+        self.pointer = pointer 
     }
 
     public func allocateDescriptorSets(allocateInfo info: DescriptorSetAllocateInfo) throws -> DescriptorSet {

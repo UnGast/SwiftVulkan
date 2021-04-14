@@ -42,7 +42,7 @@ public class CommandPool {
     private let device: Device
     public let pointer: VkCommandPool
 
-    init(device: Device, pointer: VkCommandPool) {
+    public init(device: Device, pointer: VkCommandPool) {
         self.device = device
         self.pointer = pointer
     }
