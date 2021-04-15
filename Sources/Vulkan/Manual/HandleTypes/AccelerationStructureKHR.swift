@@ -2,7 +2,7 @@ import CVulkan
 
 public class AccelerationStructureKHR: VulkanHandleTypeWrapper {
     private let device: Device
-    private let pointer: VkAccelerationStructureKHR
+    public let pointer: VkAccelerationStructureKHR
 
     public init(device: Device, pointer: VkAccelerationStructureKHR) {
         self.device = device

@@ -150,6 +150,21 @@ public class CommandBuffer: WrapperStruct {
         vkCmdCopyBufferToImage(pointer, srcBuffer.vulkan, dstImage.vulkan, dstImageLayout.vulkan, UInt32(regions.count), regions.vulkanArray)
     }
 
+    public func buildAccelerationStructuresKHR(device: Device, infos: [AccelerationStructureBuildGeometryInfoKHR], buildRangeInfos: [[AccelerationStructureBuildRangeInfoKHR]]) {
+        var infos = infos
+        var buildRangeInfos = buildRangeInfos
+        let pvkCmdBuildAccelerationStructuresKHR = unsafeBitCast(
+            vkGetDeviceProcAddr(device.pointer, "vkCmdBuildAccelerationStructuresKHR"),
+            to: PFN_vkCmdBuildAccelerationStructuresKHR.self)
+        
+        var mappedBuildRangeInfos = [UnsafePointer<VkAccelerationStructureBuildRangeInfoKHR>?]()
+        for index in 0..<buildRangeInfos.count {
+            mappedBuildRangeInfos.append(buildRangeInfos[index].vulkan)
+        }
+        
+        pvkCmdBuildAccelerationStructuresKHR(pointer, UInt32(infos.count), infos.vulkan, mappedBuildRangeInfos)
+    }
+
     public func end() {
         vkEndCommandBuffer(pointer)
     }
