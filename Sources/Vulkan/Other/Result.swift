@@ -38,8 +38,13 @@ public enum Result: Int32, Error {
 }
 
 extension VkResult {
-    func toResult() -> Result {
+    @available(deprecated, message: "use .toSwift()")
+    public func toResult() -> Result {
         return Result(rawValue: self.rawValue)!
+    }
+
+    public func toSwift() -> Result {
+        toResult()
     }
 }
 

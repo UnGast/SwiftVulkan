@@ -107,6 +107,9 @@ class StructGenerator {
           processSimpleRawMember(rawMember)
         }
       
+      case Regex("^pp.*?"):
+        toCMemberMappings[rawMember.name] = "nil"
+      
       case Regex("^p([A-Z].*)"):
         if (rawMember.type == "char") {
           processSimpleRawMember(rawMember)

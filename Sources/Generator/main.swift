@@ -61,7 +61,14 @@ struct GeneratorCommand: ParsableCommand {
       "VkDescriptorBufferInfo",
       "VkWriteDescriptorSet",
       
-      "VkEventCreateInfo"]
+      "VkEventCreateInfo",
+      
+      "VkBufferDeviceAddressInfo",
+      "VkAccelerationStructureGeometryTrianglesDataKHR",
+      "VkAccelerationStructureGeometryKHR",
+      "VkAccelerationStructureGeometryAabbsDataKHR",
+      "VkAccelerationStructureGeometryInstancesDataKHR",
+      "VkAccelerationStructureBuildGeometryInfoKHR"]
 
     let generatedFlagsWhitelist = [
       "VkPipelineColorBlendStateCreateFlags",
@@ -85,7 +92,11 @@ struct GeneratorCommand: ParsableCommand {
       "VkShaderStageFlags",
       "VkPipelineLayoutCreateFlags",
 
-      "VkEventCreateFlags"
+      "VkEventCreateFlags",
+
+      "VkGeometryFlagsKHR",
+      "VkBuildAccelerationStructureFlagsKHR",
+      "VkAccelerationStructureCreateFlagsKHR"
     ]
 
     let generatedEnumsWhitelist = [
@@ -98,7 +109,12 @@ struct GeneratorCommand: ParsableCommand {
       "VkPhysicalDeviceType",
       "VkStencilOp",
       "VkPrimitiveTopology",
-      "VkDynamicState"
+      "VkDynamicState",
+
+      "VkGeometryTypeKHR",
+      "VkAccelerationStructureTypeKHR",
+      "VkBuildAccelerationStructureModeKHR",
+      "VkIndexType"
     ]
 
     for type in xml.registry.types.type {
