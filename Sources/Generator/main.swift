@@ -68,7 +68,8 @@ struct GeneratorCommand: ParsableCommand {
       "VkAccelerationStructureGeometryKHR",
       "VkAccelerationStructureGeometryAabbsDataKHR",
       "VkAccelerationStructureGeometryInstancesDataKHR",
-      "VkAccelerationStructureBuildGeometryInfoKHR"]
+      "VkAccelerationStructureBuildGeometryInfoKHR",
+      "VkAccelerationStructureBuildSizesInfoKHR"]
 
     let generatedFlagsWhitelist = [
       "VkPipelineColorBlendStateCreateFlags",
@@ -114,7 +115,8 @@ struct GeneratorCommand: ParsableCommand {
       "VkGeometryTypeKHR",
       "VkAccelerationStructureTypeKHR",
       "VkBuildAccelerationStructureModeKHR",
-      "VkIndexType"
+      "VkIndexType",
+      "VkAccelerationStructureBuildTypeKHR"
     ]
 
     for type in xml.registry.types.type {

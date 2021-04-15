@@ -32,6 +32,35 @@ public class AccelerationStructureKHR: VulkanHandleTypeWrapper {
         pointer
     }
 
+    public static func getBuildSizes(device: Device, buildType: AccelerationStructureBuildTypeKHR, buildInfo: AccelerationStructureBuildGeometryInfoKHR, maxPrimitiveCounts: [UInt32]) -> AccelerationStructureBuildSizesInfoKHR {
+        var buildInfo = buildInfo
+
+        let pvkGetAccelerationStructureBuildSizesKHR = unsafeBitCast(
+            vkGetDeviceProcAddr(device.pointer, "vkGetAccelerationStructureBuildSizesKHR"),
+            to: PFN_vkGetAccelerationStructureBuildSizesKHR.self)
+
+        var sizeInfo = VkAccelerationStructureBuildSizesInfoKHR(
+            sType: VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR,
+            pNext: nil,
+            accelerationStructureSize: 0,
+            updateScratchSize: 0,
+            buildScratchSize: 0
+        )
+
+        pvkGetAccelerationStructureBuildSizesKHR(
+            device.pointer,
+            buildType.vulkan,
+            [buildInfo.vulkan],
+            maxPrimitiveCounts,
+            &sizeInfo)
+
+        return AccelerationStructureBuildSizesInfoKHR(
+            accelerationStructureSize: sizeInfo.accelerationStructureSize,
+            updateScratchSize: sizeInfo.updateScratchSize,
+            buildScratchSize: sizeInfo.buildScratchSize
+        )
+    }
+
     override public func destroyUnderlying() {
         let pvkDestroyAccelerationStructureKHR = unsafeBitCast(
             vkGetDeviceProcAddr(device.pointer, "vkDestroyAccelerationStructureKHR"),
