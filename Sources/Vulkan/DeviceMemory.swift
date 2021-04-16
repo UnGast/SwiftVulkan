@@ -26,25 +26,21 @@ public class DeviceMemory: VulkanHandleTypeWrapper {
         destroy()
     }
 
+    @available(*, deprecated, message: "use mapMemory -> UnsafeMutableRawPointer")
     public func mapMemory(offset: DeviceSize, size: DeviceSize, flags: MemoryMapFlags, data: inout UnsafeMutableRawPointer?) throws {
-        
-        //var rawPointer: UnsafeMutableRawPointer?  = nil
-
         let opResult = withUnsafeMutablePointer(to: &data) { ptr in
             return vkMapMemory(device.pointer, self.pointer, offset, size, flags.vulkan, ptr)
         }
 
-        /*guard opResult == VK_SUCCESS || rawPointer == nil else {
+        guard opResult == VK_SUCCESS && data != nil else {
             throw opResult.toResult()
-        }*/
+        }
+    }
 
-        /*if let rawPointer = rawPointer {
-            let dataSize = MemoryLayout.size(ofValue: data)
-        
-            withUnsafePointer(to: data) {
-                rawPointer.copyMemory(from: $0, byteCount: dataSize)
-            }
-        }*/
+    public func mapMemory(offset: DeviceSize, size: DeviceSize, flags: MemoryMapFlags) throws -> UnsafeMutableRawPointer {
+        var result: UnsafeMutableRawPointer?
+        try mapMemory(offset: offset, size: size, flags: flags, data: &result)
+        return result!
     }
 
     public func unmapMemory() {
