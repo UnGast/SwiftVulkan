@@ -96,6 +96,14 @@ public class Buffer: VulkanHandleTypeWrapper, WrapperStruct {
         self.boundMemory = memory
     }
 
+    public func getDeviceAddressKHR() -> DeviceAddress {
+        let pvkGetBufferDeviceAddressKHR = unsafeBitCast(
+            vkGetDeviceProcAddr(device.pointer, "vkGetBufferDeviceAddressKHR"),
+            to: PFN_vkGetBufferDeviceAddressKHR.self)
+        var deviceAddressInfo = BufferDeviceAddressInfo(buffer: self)
+        return pvkGetBufferDeviceAddressKHR(device.pointer, [deviceAddressInfo.vulkan])
+    }
+
     override public func destroyUnderlying() {
         vkDestroyBuffer(self.device.pointer, self.pointer, nil)
     }

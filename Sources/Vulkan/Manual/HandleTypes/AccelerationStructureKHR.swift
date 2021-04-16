@@ -61,6 +61,17 @@ public class AccelerationStructureKHR: VulkanHandleTypeWrapper {
         )
     }
 
+    public func getDeviceAddressKHR() -> DeviceAddress {
+        let pvkGetAccelerationStructureDeviceAddressKHR = unsafeBitCast(
+            vkGetDeviceProcAddr(device.pointer, "vkGetAccelerationStructureDeviceAddressKHR"),
+            to: PFN_vkGetAccelerationStructureDeviceAddressKHR.self)
+
+        var accelerationStructureDeviceAddressInfo = AccelerationStructureDeviceAddressInfoKHR(
+            accelerationStructure: self)
+
+        return pvkGetAccelerationStructureDeviceAddressKHR(device.pointer, [accelerationStructureDeviceAddressInfo.vulkan])
+    }
+
     override public func destroyUnderlying() {
         let pvkDestroyAccelerationStructureKHR = unsafeBitCast(
             vkGetDeviceProcAddr(device.pointer, "vkDestroyAccelerationStructureKHR"),
