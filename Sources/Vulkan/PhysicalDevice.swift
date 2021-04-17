@@ -69,6 +69,20 @@ public class PhysicalDevice {
         )
     }()
 
+    public func getExtensionProperties<T>(type: T) -> T {
+        var extensionProperties = type
+        withUnsafeMutablePointer(to: &extensionProperties) {
+            var basicProperties = VkPhysicalDeviceProperties()
+            var propertiesContainer = VkPhysicalDeviceProperties2(
+                sType: VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+                pNext: $0,
+                properties: basicProperties
+            )
+            vkGetPhysicalDeviceProperties2(pointer, &propertiesContainer)
+        }
+        return extensionProperties
+    }
+
     public func getFormatProperties(for format: Format) -> FormatProperties {
         var props = [ VkFormatProperties() ]
         vkGetPhysicalDeviceFormatProperties(self.pointer, format.vulkan, &props)
