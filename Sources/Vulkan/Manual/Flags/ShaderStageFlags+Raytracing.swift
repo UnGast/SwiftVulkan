@@ -4,6 +4,6 @@ extension ShaderStageFlags {
     }
 
     public static var closestHitKhr: Self {
-        Self(rawValue: 0x00000200)
+        Self(rawValue: 0x00000400)
     }
 }
