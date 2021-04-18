@@ -1,6 +1,6 @@
 import CVulkan
 
-public class Pipeline: VulkanHandleTypeWrapper {
+public class Pipeline: VulkanHandleTypeWrapper, VulkanTypeWrapper{
   public let pointer: VkPipeline
   public let device: Device
 

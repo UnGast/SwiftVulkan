@@ -1,15 +1,17 @@
 
 import CVulkan
 
-public class DescriptorSet: WrapperStruct {
-
+public class DescriptorSet: VulkanHandleTypeWrapper, VulkanTypeWrapper {
     public let pointer: VkDescriptorSet
     public let device: Device
+    public let descriptorPool: DescriptorPool
 
     init(pointer: VkDescriptorSet,
-        device: Device) {
+        device: Device,
+        descriptorPool: DescriptorPool) {
         self.pointer = pointer
         self.device = device
+        self.descriptorPool = descriptorPool
     }
 
     public var vulkan: VkDescriptorSet? {
@@ -26,11 +28,36 @@ public class DescriptorSet: WrapperStruct {
             &pointers)
         
         return pointers.map {
-            DescriptorSet(pointer: $0!, device: device)
+            DescriptorSet(pointer: $0!, device: device, descriptorPool: allocateInfo.descriptorPool)
         }
     }
 
+    public class func update(
+        device: Device,
+        descriptorWrites: [WriteDescriptorSet]? = nil, 
+        descriptorCopies: [CopyDescriptorSet]? = nil) {
+            var descriptorWrites = descriptorWrites
+
+            if descriptorCopies != nil {
+                fatalError("IMPLEMENT descriptorCopies")
+            }
+
+            vkUpdateDescriptorSets(
+                device.pointer,
+                UInt32(descriptorWrites?.count ?? 0), descriptorWrites?.vulkanArray,
+                0, nil)
+    }
+
     public class func free(device: Device, descriptorPool: DescriptorPool, descriptorSets: [DescriptorSet]) {
+        var descriptorSets = descriptorSets
         vkFreeDescriptorSets(device.pointer, descriptorPool.pointer, UInt32(descriptorSets.count), descriptorSets.vulkan)
+    }
+
+    public func free() {
+        Self.free(device: device, descriptorPool: descriptorPool, descriptorSets: [self])
+    }
+
+    override public func destroyUnderlying() {
+        free()
     }
 }

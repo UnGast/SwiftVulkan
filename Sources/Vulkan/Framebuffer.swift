@@ -1,6 +1,6 @@
 import CVulkan
 
-public class Framebuffer: VulkanHandleTypeWrapper {
+public class Framebuffer: VulkanHandleTypeWrapper, VulkanTypeWrapper{
 
   public let pointer: VkFramebuffer
   public let device: Device

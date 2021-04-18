@@ -138,7 +138,7 @@ class StructGenerator {
         if rawMember.optional {
           pointerBackingAssignments.append("\(backingPropertyName) = \(baseName)?.vulkanArray")
         } else {
-          pointerBackingAssignments.append("\(backingPropertyName) = \(baseName).vulkanArray")
+          pointerBackingAssignments.append("\(backingPropertyName) = Optional(\(baseName).vulkanArray)")
         }
 
         toCMemberMappings[rawMember.name] = backingPropertyName

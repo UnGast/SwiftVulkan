@@ -1,7 +1,7 @@
 import Foundation
 import CVulkan
 
-public class ShaderModule: VulkanHandleTypeWrapper {
+public class ShaderModule: VulkanHandleTypeWrapper, VulkanTypeWrapper{
   public let pointer: VkShaderModule 
 
   let device: Device

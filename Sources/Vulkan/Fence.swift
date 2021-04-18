@@ -5,7 +5,7 @@
 import Foundation
 import CVulkan
 
-public class Fence: WrapperStruct {
+public class Fence: VulkanHandleTypeWrapper, VulkanTypeWrapper {
     public let device: Device
     public let pointer: VkFence
 
@@ -15,6 +15,7 @@ public class Fence: WrapperStruct {
     }
 
     public convenience init(device: Device, createInfo: FenceCreateInfo) throws {
+        var createInfo = createInfo
         var fencePointer = VkFence(bitPattern: 0)
 
         var opResult = VK_SUCCESS
@@ -43,7 +44,8 @@ public class Fence: WrapperStruct {
     }
 
     public static func wait(for fences: [Fence], waitAll: Bool, timeout: UInt64) {
-        vkWaitForFences(fences[0].device.pointer, UInt32(fences.count), fences.vulkanPointer, waitAll.vulkan, timeout)
+        var fences = fences
+        vkWaitForFences(fences[0].device.pointer, UInt32(fences.count), fences.vulkan, waitAll.vulkan, timeout)
     }
 
     public func reset() {
@@ -51,10 +53,11 @@ public class Fence: WrapperStruct {
     }
 
     public static func reset(fences: [Fence]) {
-        vkResetFences(fences[0].device.pointer, UInt32(fences.count), fences.vulkanPointer)
+        var fences = fences
+        vkResetFences(fences[0].device.pointer, UInt32(fences.count), fences.vulkan)
     }
 
-    deinit {
+    override public func destroyUnderlying() {
         vkDestroyFence(device.pointer, pointer, nil)
     }
 }

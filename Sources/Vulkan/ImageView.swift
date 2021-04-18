@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class ImageView: VulkanHandleTypeWrapper, WrapperStruct {
+public class ImageView: VulkanHandleTypeWrapper, VulkanTypeWrapper{
     public let pointer: VkImageView
     public let device: Device
 

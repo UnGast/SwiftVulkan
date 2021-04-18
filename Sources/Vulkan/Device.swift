@@ -5,7 +5,7 @@
 
 import CVulkan
 
-public class Device {
+public class Device: VulkanHandleTypeWrapper, VulkanTypeWrapper {
 
     public let instance: Instance
     public let pointer: VkDevice
@@ -16,51 +16,15 @@ public class Device {
         self.pointer = pointer 
     }
 
-    public func allocateDescriptorSets(allocateInfo info: DescriptorSetAllocateInfo) throws -> DescriptorSet {
-        var descriptor = VkDescriptorSet(bitPattern: 0)
-
-        let ai = VkDescriptorSetAllocateInfo(
-            sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO, 
-            pNext: nil, 
-            descriptorPool: info.descriptorPool.pointer, 
-            descriptorSetCount: info.descriptorSetCount, 
-            pSetLayouts: info.setLayouts.vulkanPointer 
-        )
-
-        let opResult = withUnsafePointer(to: ai) {
-            return vkAllocateDescriptorSets(self.pointer, $0, &descriptor)
-        }
-
-        guard opResult == VK_SUCCESS else {
-            throw opResult.toResult()
-        }
-
-        return DescriptorSet(pointer: descriptor!, device: self)
-    }
-
-    public func updateDescriptorSets(
-        descriptorWrites: [WriteDescriptorSet]?, 
-        descriptorCopies: [CopyDescriptorSet]?
-    ) {
-        var descriptorWrites = descriptorWrites
-
-        if descriptorCopies != nil {
-            fatalError("IMPLEMENT descriptorCopies")
-        }
-
-        vkUpdateDescriptorSets(
-            self.pointer,
-            UInt32(descriptorWrites?.count ?? 0), descriptorWrites?.vulkanArray,
-            0, nil)
-            /*UInt32(descriptorCopies?.count ?? 0), descriptorCopies?.vulkanPointer)*/
+    public var vulkan: VkDevice? {
+        pointer
     }
 
     public func waitIdle() {
         vkDeviceWaitIdle(pointer)
     }
 
-    deinit {
-        print("Destroying device")
+    override public func destroyUnderlying() {
         vkDestroyDevice(pointer, nil)
     }
 }

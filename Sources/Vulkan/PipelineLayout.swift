@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class PipelineLayout: WrapperStruct {
+public class PipelineLayout: VulkanHandleTypeWrapper, VulkanTypeWrwapper {
     public var pointer: VkPipelineLayout
     public var device: Device
 
@@ -31,7 +31,7 @@ public class PipelineLayout: WrapperStruct {
        pointer 
     }
 
-    deinit {
+    override public func destroyUnderlying() {
         vkDestroyPipelineLayout(self.device.pointer, self.pointer, nil)
     }
 }

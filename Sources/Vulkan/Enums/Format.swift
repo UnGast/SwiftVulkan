@@ -1,6 +1,6 @@
 import CVulkan
 
-public enum Format: UInt32, WrapperStruct {
+public enum Format: UInt32 {
   case UNDEFINED = 0
   case
     R4G4_UNORM_PACK8 = 1

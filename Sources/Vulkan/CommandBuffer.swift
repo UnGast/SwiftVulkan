@@ -29,11 +29,14 @@ public class CommandBufferAllocateInfo {
     }
 }
 
-public class CommandBuffer: WrapperStruct {
-
+public class CommandBuffer: VulkanHandleTypeWrapper, VulkanTypeWrapper {
+    public let device: Device
+    public let commandPool: CommandPool
     public let pointer: VkCommandBuffer
 
-    init(pointer: VkCommandBuffer) {
+    init(device: Device, commandPool: CommandPool, pointer: VkCommandBuffer) {
+        self.device = device
+        self.commandPool = commandPool
         self.pointer = pointer
     }
 
@@ -53,11 +56,16 @@ public class CommandBuffer: WrapperStruct {
             throw opResult.toResult()
         }
 
-        return CommandBuffer(pointer: output!)
+        return CommandBuffer(device: device, commandPool: info.commandPool, pointer: output!)
     }
 
     public class func free(commandBuffers: [CommandBuffer], device: Device, commandPool: CommandPool) {
-        vkFreeCommandBuffers(device.pointer, commandPool.pointer, UInt32(commandBuffers.count), commandBuffers.vulkanPointer)
+        var commandBuffers = commandBuffers
+        vkFreeCommandBuffers(device.pointer, commandPool.pointer, UInt32(commandBuffers.count), commandBuffers.vulkan)
+    }
+
+    public func free() {
+        Self.free(commandBuffers: [self], device: device, commandPool: commandPool)
     }
 
     public var vulkan: Optional<VkCommandBuffer> {
@@ -65,7 +73,8 @@ public class CommandBuffer: WrapperStruct {
     }
 
     public func begin(_ beginInfo: CommandBufferBeginInfo) {
-        vkBeginCommandBuffer(pointer, beginInfo.vulkanPointer) 
+        var beginInfo = beginInfo
+        vkBeginCommandBuffer(pointer, beginInfo.vulkanArray) 
     }
 
     public func beginRenderPass(beginInfo: RenderPassBeginInfo, contents: SubpassContents) {
@@ -78,7 +87,8 @@ public class CommandBuffer: WrapperStruct {
     }
 
     public func bindVertexBuffers(firstBinding: UInt32, buffers: [Buffer], offsets: [DeviceSize]) {
-        vkCmdBindVertexBuffers(pointer, firstBinding, UInt32(buffers.count) - firstBinding, buffers.vulkanPointer, offsets.vulkanPointer)
+        var buffers = buffers
+        vkCmdBindVertexBuffers(pointer, firstBinding, UInt32(buffers.count) - firstBinding, buffers.vulkan, offsets)
     }
 
     public func bindIndexBuffer(buffer: Buffer, offset: DeviceSize, indexType: VkIndexType) {
@@ -110,6 +120,7 @@ public class CommandBuffer: WrapperStruct {
         firstSet: UInt32,
         descriptorSets: [DescriptorSet],
         dynamicOffsets: [UInt32]) {
+            var descriptorSets = descriptorSets
             vkCmdBindDescriptorSets(
                 pointer,
                 pipelineBindPoint.vulkan,
@@ -118,7 +129,7 @@ public class CommandBuffer: WrapperStruct {
                 UInt32(descriptorSets.count),
                 descriptorSets.vulkan,
                 UInt32(dynamicOffsets.count),
-                Optional(dynamicOffsets.vulkan))
+                Optional(dynamicOffsets))
     }
 
     public func pipelineBarrier(
@@ -167,5 +178,9 @@ public class CommandBuffer: WrapperStruct {
 
     public func end() {
         vkEndCommandBuffer(pointer)
+    }
+
+    override public func destroyUnderlying() {
+        free()
     }
 }

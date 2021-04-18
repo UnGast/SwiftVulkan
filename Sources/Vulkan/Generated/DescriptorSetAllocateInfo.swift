@@ -24,7 +24,7 @@ self.setLayouts = setLayouts
   public var vulkan: VkDescriptorSetAllocateInfo {
     mutating get {
       vNext = next == nil ? nil : [next!]
-vSetLayouts = setLayouts.vulkanArray
+vSetLayouts = Optional(setLayouts.vulkanArray)
       return VkDescriptorSetAllocateInfo(
         sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 pNext: vNext,

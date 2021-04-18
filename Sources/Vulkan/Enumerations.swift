@@ -234,7 +234,7 @@ public struct MemoryPropertyFlags: OptionSet {
     }
 }
 
-public struct PipelineStageFlags: WrapperStruct, OptionSet {
+public struct PipelineStageFlags: OptionSet {
     public let rawValue: UInt32
 
     public init(rawValue: UInt32) {

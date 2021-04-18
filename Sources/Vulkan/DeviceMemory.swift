@@ -1,6 +1,6 @@
 import CVulkan
 
-public class DeviceMemory: VulkanHandleTypeWrapper {
+public class DeviceMemory: VulkanHandleTypeWrapper, VulkanTypeWrapper {
     private let device: Device
     public let pointer: VkDeviceMemory
 
@@ -8,6 +8,10 @@ public class DeviceMemory: VulkanHandleTypeWrapper {
         device: Device) {
         self.pointer = pointer
         self.device = device
+    }
+
+    public var vulkan: Optional<VkDeviceMemory> {
+        pointer
     }
 
     public class func allocateMemory(

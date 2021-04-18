@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class DescriptorSetLayout: VulkanHandleTypeWrapper, WrapperStruct {
+public class DescriptorSetLayout: VulkanHandleTypeWrapper, VulkanTypeWrapper{
     public let pointer: VkDescriptorSetLayout
     public let device: Device
 
@@ -29,7 +29,7 @@ public class DescriptorSetLayout: VulkanHandleTypeWrapper, WrapperStruct {
     }
 
     public var vulkan: Optional<VkDescriptorSetLayout> {
-        Optional(pointer)
+        pointer
     }
 
     override public func destroyUnderlying() {

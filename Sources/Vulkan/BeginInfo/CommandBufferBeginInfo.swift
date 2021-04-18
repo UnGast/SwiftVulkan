@@ -1,6 +1,6 @@
 import CVulkan
 
-public struct CommandBufferBeginInfo: WrapperStruct {
+public struct CommandBufferBeginInfo: VulkanTypeWrapper {
   public var flags: Flags
   public var inheritanceInfo: Void?
 
@@ -10,12 +10,14 @@ public struct CommandBufferBeginInfo: WrapperStruct {
   }
 
   public var vulkan: VkCommandBufferBeginInfo {
-    VkCommandBufferBeginInfo(
-      sType: VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-      pNext: nil,
-      flags: flags.rawValue,
-      pInheritanceInfo: nil
-    )
+    mutating get {
+      VkCommandBufferBeginInfo(
+        sType: VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        pNext: nil,
+        flags: flags.rawValue,
+        pInheritanceInfo: nil
+      )
+    }
   }
 
   public struct Flags: OptionSet {

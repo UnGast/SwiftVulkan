@@ -38,7 +38,7 @@ import CVulkan
     }
 }*/
 
-public struct DescriptorPoolCreateFlags: OptionSet, WrapperStruct {
+public struct DescriptorPoolCreateFlags: OptionSet {
     public let rawValue: UInt32
 
     public init(rawValue: UInt32) {
@@ -54,7 +54,7 @@ public struct DescriptorPoolCreateFlags: OptionSet, WrapperStruct {
     public static let updateAfterBind = Self(rawValue: 0x00000002)
 }
 
-public class DescriptorPool: VulkanHandleTypeWrapper, WrapperStruct {
+public class DescriptorPool: VulkanHandleTypeWrapper, VulkanTypeWrapper {
 
     public let pointer: VkDescriptorPool
     public let device: Device

@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class Image: VulkanHandleTypeWrapper {
+public class Image: VulkanHandleTypeWrapper, VulkanTypeWrapper{
     public let pointer: VkImage
     public let device: Device
     let swapchain: Swapchain?

@@ -1,4 +1,4 @@
-extension UInt32: WrapperStruct {
+extension UInt32: VulkanTypeWrapper {
   public init(fromVulkan: Self) {
     self = fromVulkan
   }

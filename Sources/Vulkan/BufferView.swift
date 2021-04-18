@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class BufferView: VulkanHandleTypeWrapper, WrapperStruct {
+public class BufferView: VulkanHandleTypeWrapper, VulkanTypeWrapper{
     let pointer: VkBufferView
     let device: Device
 

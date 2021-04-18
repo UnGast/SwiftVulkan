@@ -49,6 +49,7 @@ struct GeneratorCommand: ParsableCommand {
       "VkSpecializationMapEntry",
       "VkPipelineLayoutCreateInfo",
       "VkPushConstantRange",
+      "VkFenceCreateInfo",
 
       "VkFramebufferCreateInfo",
       "VkBufferCopy",
@@ -72,7 +73,8 @@ struct GeneratorCommand: ParsableCommand {
       "VkAccelerationStructureBuildGeometryInfoKHR",
       "VkAccelerationStructureBuildSizesInfoKHR",
       "VkAccelerationStructureBuildRangeInfoKHR",
-      "VkAccelerationStructureInstanceKHR"]
+      "VkAccelerationStructureInstanceKHR",
+      "VkWriteDescriptorSetAccelerationStructureKHR"]
 
     let generatedFlagsWhitelist = [
       "VkPipelineColorBlendStateCreateFlags",
@@ -95,6 +97,8 @@ struct GeneratorCommand: ParsableCommand {
       "VkPipelineShaderStageCreateFlags",
       "VkShaderStageFlags",
       "VkPipelineLayoutCreateFlags",
+      "VkFenceCreateFlags",
+      "VkFramebufferCreateFlags",
 
       "VkEventCreateFlags",
 

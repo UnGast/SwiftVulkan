@@ -1,7 +1,7 @@
 
 import CVulkan
 
-public class Sampler: VulkanHandleTypeWrapper, WrapperStruct {
+public class Sampler: VulkanHandleTypeWrapper, VulkanTypeWrapper{
     public let pointer: VkSampler
     public let device: Device
 
@@ -32,6 +32,6 @@ public class Sampler: VulkanHandleTypeWrapper, WrapperStruct {
     }
 
     public var vulkan: Optional<VkSampler> {
-        Optional(pointer)
+        pointer
     }
 }

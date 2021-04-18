@@ -25,8 +25,8 @@ self.pushConstantRanges = pushConstantRanges
   public var vulkan: VkPipelineLayoutCreateInfo {
     mutating get {
       vNext = next == nil ? nil : [next!]
-vSetLayouts = setLayouts.vulkanArray
-vPushConstantRanges = pushConstantRanges.vulkanArray
+vSetLayouts = Optional(setLayouts.vulkanArray)
+vPushConstantRanges = Optional(pushConstantRanges.vulkanArray)
       return VkPipelineLayoutCreateInfo(
         sType: VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 pNext: vNext,

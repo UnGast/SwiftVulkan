@@ -44,12 +44,12 @@ public class BufferCreateInfo {
                 usage: self.usage.vulkan,
                 sharingMode: self.sharingMode.vulkanValue,
                 queueFamilyIndexCount: UInt32(self.queueFamilyIndices?.count ?? 0),
-                pQueueFamilyIndices: self.queueFamilyIndices?.vulkanPointer
+                pQueueFamilyIndices: self.queueFamilyIndices
         )
     }
 }
 
-public class Buffer: VulkanHandleTypeWrapper, WrapperStruct {
+public class Buffer: VulkanHandleTypeWrapper, VulkanTypeWrapper{
     public let pointer: VkBuffer
     public let device: Device
 

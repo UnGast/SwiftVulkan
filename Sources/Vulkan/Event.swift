@@ -1,12 +1,16 @@
 import CVulkan
 
-public class Event: VulkanHandleTypeWrapper {
+public class Event: VulkanHandleTypeWrapper, VulkanTypeWrapper {
     public let pointer: VkEvent
     public let device: Device
 
     init(device: Device, pointer: VkEvent) {
         self.pointer = pointer 
         self.device = device
+    }
+
+    public var vulkan: Optional<VkEvent> {
+      pointer
     }
 
     public convenience init(device: Device, createInfo: EventCreateInfo) throws {
