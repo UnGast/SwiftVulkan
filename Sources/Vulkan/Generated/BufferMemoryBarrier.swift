@@ -1,7 +1,8 @@
 import CVulkan
 
 public struct BufferMemoryBarrier: VulkanTypeWrapper {
-  /** Memory accesses from the source of the dependency to synchronize */
+  public var next: Any?
+/** Memory accesses from the source of the dependency to synchronize */
 public var srcAccessMask: AccessFlags
 /** Memory accesses from the destination of the dependency to synchronize */
 public var dstAccessMask: AccessFlags
@@ -16,10 +17,11 @@ public var offset: DeviceSize
 /** Amount of bytes to sync */
 public var size: DeviceSize
 
-  
+  var vNext: [Any]? = nil
 
   public init(
-    srcAccessMask: AccessFlags,
+    next: Any? = nil,
+srcAccessMask: AccessFlags,
 dstAccessMask: AccessFlags,
 srcQueueFamilyIndex: UInt32,
 dstQueueFamilyIndex: UInt32,
@@ -27,7 +29,8 @@ buffer: Buffer,
 offset: DeviceSize,
 size: DeviceSize
   ) {
-    self.srcAccessMask = srcAccessMask
+    self.next = next
+self.srcAccessMask = srcAccessMask
 self.dstAccessMask = dstAccessMask
 self.srcQueueFamilyIndex = srcQueueFamilyIndex
 self.dstQueueFamilyIndex = dstQueueFamilyIndex
@@ -38,10 +41,10 @@ self.size = size
 
   public var vulkan: VkBufferMemoryBarrier {
     mutating get {
-      
+      vNext = next == nil ? nil : [next!]
       return VkBufferMemoryBarrier(
         sType: VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-pNext: nil,
+pNext: vNext,
 srcAccessMask: srcAccessMask.vulkan,
 dstAccessMask: dstAccessMask.vulkan,
 srcQueueFamilyIndex: srcQueueFamilyIndex.vulkan,

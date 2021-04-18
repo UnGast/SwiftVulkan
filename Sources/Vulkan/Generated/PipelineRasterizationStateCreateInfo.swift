@@ -1,7 +1,8 @@
 import CVulkan
 
 public struct PipelineRasterizationStateCreateInfo: VulkanTypeWrapper {
-  public var flags: PipelineRasterizationStateCreateFlags?
+  public var next: Any?
+public var flags: PipelineRasterizationStateCreateFlags?
 public var depthClampEnable: Bool
 public var rasterizerDiscardEnable: Bool
 /** optional (GL45) */
@@ -14,10 +15,11 @@ public var depthBiasClamp: Float
 public var depthBiasSlopeFactor: Float
 public var lineWidth: Float
 
-  
+  var vNext: [Any]? = nil
 
   public init(
-    flags: PipelineRasterizationStateCreateFlags? = nil,
+    next: Any? = nil,
+flags: PipelineRasterizationStateCreateFlags? = nil,
 depthClampEnable: Bool,
 rasterizerDiscardEnable: Bool,
 polygonMode: PolygonMode,
@@ -29,7 +31,8 @@ depthBiasClamp: Float,
 depthBiasSlopeFactor: Float,
 lineWidth: Float
   ) {
-    self.flags = flags
+    self.next = next
+self.flags = flags
 self.depthClampEnable = depthClampEnable
 self.rasterizerDiscardEnable = rasterizerDiscardEnable
 self.polygonMode = polygonMode
@@ -44,10 +47,10 @@ self.lineWidth = lineWidth
 
   public var vulkan: VkPipelineRasterizationStateCreateInfo {
     mutating get {
-      
+      vNext = next == nil ? nil : [next!]
       return VkPipelineRasterizationStateCreateInfo(
         sType: VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-pNext: nil,
+pNext: vNext,
 flags: flags?.vulkan ?? 0,
 depthClampEnable: depthClampEnable.vulkan,
 rasterizerDiscardEnable: rasterizerDiscardEnable.vulkan,

@@ -1,7 +1,8 @@
 import CVulkan
 
 public struct PipelineShaderStageCreateInfo: VulkanTypeWrapper {
-  public var flags: PipelineShaderStageCreateFlags?
+  public var next: Any?
+public var flags: PipelineShaderStageCreateFlags?
 /** Shader stage */
 public var stage: ShaderStageFlagBits
 /** Module containing entry point */
@@ -10,16 +11,19 @@ public var module: ShaderModule
 public var pName: String
 public var specializationInfo: SpecializationInfo?
 
-  var vSpecializationInfo: [VkSpecializationInfo]? = nil
+  var vNext: [Any]? = nil
+var vSpecializationInfo: [VkSpecializationInfo]? = nil
 
   public init(
-    flags: PipelineShaderStageCreateFlags? = nil,
+    next: Any? = nil,
+flags: PipelineShaderStageCreateFlags? = nil,
 stage: ShaderStageFlagBits,
 module: ShaderModule,
 pName: String,
 specializationInfo: SpecializationInfo? = nil
   ) {
-    self.flags = flags
+    self.next = next
+self.flags = flags
 self.stage = stage
 self.module = module
 self.pName = pName
@@ -28,10 +32,11 @@ self.specializationInfo = specializationInfo
 
   public var vulkan: VkPipelineShaderStageCreateInfo {
     mutating get {
-      vSpecializationInfo = specializationInfo?.vulkanArray
+      vNext = next == nil ? nil : [next!]
+vSpecializationInfo = specializationInfo?.vulkanArray
       return VkPipelineShaderStageCreateInfo(
         sType: VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-pNext: nil,
+pNext: vNext,
 flags: flags?.vulkan ?? 0,
 stage: stage.vulkan,
 module: module.vulkan,

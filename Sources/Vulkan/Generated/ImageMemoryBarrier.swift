@@ -1,7 +1,8 @@
 import CVulkan
 
 public struct ImageMemoryBarrier: VulkanTypeWrapper {
-  /** Memory accesses from the source of the dependency to synchronize */
+  public var next: Any?
+/** Memory accesses from the source of the dependency to synchronize */
 public var srcAccessMask: AccessFlags
 /** Memory accesses from the destination of the dependency to synchronize */
 public var dstAccessMask: AccessFlags
@@ -18,10 +19,11 @@ public var image: Image
 /** Subresource range to sync */
 public var subresourceRange: ImageSubresourceRange
 
-  
+  var vNext: [Any]? = nil
 
   public init(
-    srcAccessMask: AccessFlags,
+    next: Any? = nil,
+srcAccessMask: AccessFlags,
 dstAccessMask: AccessFlags,
 oldLayout: ImageLayout,
 newLayout: ImageLayout,
@@ -30,7 +32,8 @@ dstQueueFamilyIndex: UInt32,
 image: Image,
 subresourceRange: ImageSubresourceRange
   ) {
-    self.srcAccessMask = srcAccessMask
+    self.next = next
+self.srcAccessMask = srcAccessMask
 self.dstAccessMask = dstAccessMask
 self.oldLayout = oldLayout
 self.newLayout = newLayout
@@ -42,10 +45,10 @@ self.subresourceRange = subresourceRange
 
   public var vulkan: VkImageMemoryBarrier {
     mutating get {
-      
+      vNext = next == nil ? nil : [next!]
       return VkImageMemoryBarrier(
         sType: VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-pNext: nil,
+pNext: vNext,
 srcAccessMask: srcAccessMask.vulkan,
 dstAccessMask: dstAccessMask.vulkan,
 oldLayout: oldLayout.vulkan,

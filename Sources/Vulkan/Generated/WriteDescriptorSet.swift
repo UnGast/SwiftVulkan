@@ -1,7 +1,8 @@
 import CVulkan
 
 public struct WriteDescriptorSet: VulkanTypeWrapper {
-  /** Destination descriptor set */
+  public var next: Any?
+/** Destination descriptor set */
 public var dstSet: DescriptorSet
 /** Binding within the destination descriptor set to write */
 public var dstBinding: UInt32
@@ -15,12 +16,14 @@ public var imageInfo: [DescriptorImageInfo]
 public var bufferInfo: [DescriptorBufferInfo]
 public var texelBufferView: [BufferView]
 
-  var vImageInfo: [VkDescriptorImageInfo]? = nil
+  var vNext: [Any]? = nil
+var vImageInfo: [VkDescriptorImageInfo]? = nil
 var vBufferInfo: [VkDescriptorBufferInfo]? = nil
 var vTexelBufferView: [VkBufferView?]? = nil
 
   public init(
-    dstSet: DescriptorSet,
+    next: Any? = nil,
+dstSet: DescriptorSet,
 dstBinding: UInt32,
 dstArrayElement: UInt32,
 descriptorCount: UInt32,
@@ -29,7 +32,8 @@ imageInfo: [DescriptorImageInfo],
 bufferInfo: [DescriptorBufferInfo],
 texelBufferView: [BufferView]
   ) {
-    self.dstSet = dstSet
+    self.next = next
+self.dstSet = dstSet
 self.dstBinding = dstBinding
 self.dstArrayElement = dstArrayElement
 self.descriptorCount = descriptorCount
@@ -41,12 +45,13 @@ self.texelBufferView = texelBufferView
 
   public var vulkan: VkWriteDescriptorSet {
     mutating get {
-      vImageInfo = imageInfo.vulkanArray
+      vNext = next == nil ? nil : [next!]
+vImageInfo = imageInfo.vulkanArray
 vBufferInfo = bufferInfo.vulkanArray
 vTexelBufferView = texelBufferView.vulkanArray
       return VkWriteDescriptorSet(
         sType: VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-pNext: nil,
+pNext: vNext,
 dstSet: dstSet.vulkan,
 dstBinding: dstBinding.vulkan,
 dstArrayElement: dstArrayElement.vulkan,

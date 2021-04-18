@@ -1,7 +1,8 @@
 import CVulkan
 
 public struct SamplerCreateInfo: VulkanTypeWrapper {
-  public var flags: SamplerCreateFlags?
+  public var next: Any?
+public var flags: SamplerCreateFlags?
 /** Filter mode for magnification */
 public var magFilter: Filter
 /** Filter mode for minifiation */
@@ -21,10 +22,11 @@ public var maxLod: Float
 public var borderColor: BorderColor
 public var unnormalizedCoordinates: Bool
 
-  
+  var vNext: [Any]? = nil
 
   public init(
-    flags: SamplerCreateFlags? = nil,
+    next: Any? = nil,
+flags: SamplerCreateFlags? = nil,
 magFilter: Filter,
 minFilter: Filter,
 mipmapMode: SamplerMipmapMode,
@@ -41,7 +43,8 @@ maxLod: Float,
 borderColor: BorderColor,
 unnormalizedCoordinates: Bool
   ) {
-    self.flags = flags
+    self.next = next
+self.flags = flags
 self.magFilter = magFilter
 self.minFilter = minFilter
 self.mipmapMode = mipmapMode
@@ -61,10 +64,10 @@ self.unnormalizedCoordinates = unnormalizedCoordinates
 
   public var vulkan: VkSamplerCreateInfo {
     mutating get {
-      
+      vNext = next == nil ? nil : [next!]
       return VkSamplerCreateInfo(
         sType: VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-pNext: nil,
+pNext: vNext,
 flags: flags?.vulkan ?? 0,
 magFilter: magFilter.vulkan,
 minFilter: minFilter.vulkan,

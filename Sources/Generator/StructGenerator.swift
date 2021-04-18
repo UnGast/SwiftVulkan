@@ -78,7 +78,14 @@ class StructGenerator {
         continue
 
       case "pNext":
-        toCMemberMappings[rawMember.name] = "nil"
+        // same approach as for any p* member; see below for more general handling of p*
+        // TODO: maybe should handle pNext same as any p*
+        exposedMembers.append(ExposedMember(
+          name: "next", type: "Any?", optional: rawMember.optional 
+        ))
+        pointerBackingProperties.append("var vNext: [Any]? = nil")
+        pointerBackingAssignments.append("vNext = next == nil ? nil : [next!]")
+        toCMemberMappings[rawMember.name] = "vNext"
         continue
 
       case "flags":

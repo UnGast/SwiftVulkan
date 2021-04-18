@@ -1,7 +1,8 @@
 import CVulkan
 
 public struct AccelerationStructureBuildGeometryInfoKHR: VulkanTypeWrapper {
-  public var type: AccelerationStructureTypeKHR
+  public var next: Any?
+public var type: AccelerationStructureTypeKHR
 public var flags: BuildAccelerationStructureFlagsKHR?
 public var mode: BuildAccelerationStructureModeKHR
 public var srcAccelerationStructure: AccelerationStructureKHR?
@@ -10,10 +11,12 @@ public var geometryCount: UInt32?
 public var geometries: [AccelerationStructureGeometryKHR]?
 public var scratchData: DeviceOrHostAddressKHR
 
-  var vGeometries: [VkAccelerationStructureGeometryKHR]? = nil
+  var vNext: [Any]? = nil
+var vGeometries: [VkAccelerationStructureGeometryKHR]? = nil
 
   public init(
-    type: AccelerationStructureTypeKHR,
+    next: Any? = nil,
+type: AccelerationStructureTypeKHR,
 flags: BuildAccelerationStructureFlagsKHR? = nil,
 mode: BuildAccelerationStructureModeKHR,
 srcAccelerationStructure: AccelerationStructureKHR? = nil,
@@ -22,7 +25,8 @@ geometryCount: UInt32? = nil,
 geometries: [AccelerationStructureGeometryKHR]? = nil,
 scratchData: DeviceOrHostAddressKHR
   ) {
-    self.type = type
+    self.next = next
+self.type = type
 self.flags = flags
 self.mode = mode
 self.srcAccelerationStructure = srcAccelerationStructure
@@ -34,10 +38,11 @@ self.scratchData = scratchData
 
   public var vulkan: VkAccelerationStructureBuildGeometryInfoKHR {
     mutating get {
-      vGeometries = geometries?.vulkanArray
+      vNext = next == nil ? nil : [next!]
+vGeometries = geometries?.vulkanArray
       return VkAccelerationStructureBuildGeometryInfoKHR(
         sType: VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
-pNext: nil,
+pNext: vNext,
 type: type.vulkan,
 flags: flags?.vulkan ?? 0,
 mode: mode.vulkan,

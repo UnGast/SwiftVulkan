@@ -1,7 +1,8 @@
 import CVulkan
 
 public struct GraphicsPipelineCreateInfo: VulkanTypeWrapper {
-  /** Pipeline creation flags */
+  public var next: Any?
+/** Pipeline creation flags */
 public var flags: PipelineCreateFlags?
 public var stages: [PipelineShaderStageCreateInfo]
 public var vertexInputState: PipelineVertexInputStateCreateInfo?
@@ -22,7 +23,8 @@ public var basePipelineHandle: Pipeline?
 /** If VK_PIPELINE_CREATE_DERIVATIVE_BIT is set and this value is not -1, it specifies an index into pCreateInfos of the base pipeline this is a derivative of */
 public var basePipelineIndex: Int32
 
-  var vStages: [VkPipelineShaderStageCreateInfo]? = nil
+  var vNext: [Any]? = nil
+var vStages: [VkPipelineShaderStageCreateInfo]? = nil
 var vVertexInputState: [VkPipelineVertexInputStateCreateInfo]? = nil
 var vInputAssemblyState: [VkPipelineInputAssemblyStateCreateInfo]? = nil
 var vTessellationState: [VkPipelineTessellationStateCreateInfo]? = nil
@@ -34,7 +36,8 @@ var vColorBlendState: [VkPipelineColorBlendStateCreateInfo]? = nil
 var vDynamicState: [VkPipelineDynamicStateCreateInfo]? = nil
 
   public init(
-    flags: PipelineCreateFlags? = nil,
+    next: Any? = nil,
+flags: PipelineCreateFlags? = nil,
 stages: [PipelineShaderStageCreateInfo],
 vertexInputState: PipelineVertexInputStateCreateInfo? = nil,
 inputAssemblyState: PipelineInputAssemblyStateCreateInfo? = nil,
@@ -51,7 +54,8 @@ subpass: UInt32,
 basePipelineHandle: Pipeline? = nil,
 basePipelineIndex: Int32
   ) {
-    self.flags = flags
+    self.next = next
+self.flags = flags
 self.stages = stages
 self.vertexInputState = vertexInputState
 self.inputAssemblyState = inputAssemblyState
@@ -71,7 +75,8 @@ self.basePipelineIndex = basePipelineIndex
 
   public var vulkan: VkGraphicsPipelineCreateInfo {
     mutating get {
-      vStages = stages.vulkanArray
+      vNext = next == nil ? nil : [next!]
+vStages = stages.vulkanArray
 vVertexInputState = vertexInputState?.vulkanArray
 vInputAssemblyState = inputAssemblyState?.vulkanArray
 vTessellationState = tessellationState?.vulkanArray
@@ -83,7 +88,7 @@ vColorBlendState = colorBlendState?.vulkanArray
 vDynamicState = dynamicState?.vulkanArray
       return VkGraphicsPipelineCreateInfo(
         sType: VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-pNext: nil,
+pNext: vNext,
 flags: flags?.vulkan ?? 0,
 stageCount: UInt32(stages.count),
 pStages: vStages,

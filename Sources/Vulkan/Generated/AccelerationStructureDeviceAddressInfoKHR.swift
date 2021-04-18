@@ -1,22 +1,25 @@
 import CVulkan
 
 public struct AccelerationStructureDeviceAddressInfoKHR: VulkanTypeWrapper {
-  public var accelerationStructure: AccelerationStructureKHR
+  public var next: Any?
+public var accelerationStructure: AccelerationStructureKHR
 
-  
+  var vNext: [Any]? = nil
 
   public init(
-    accelerationStructure: AccelerationStructureKHR
+    next: Any? = nil,
+accelerationStructure: AccelerationStructureKHR
   ) {
-    self.accelerationStructure = accelerationStructure
+    self.next = next
+self.accelerationStructure = accelerationStructure
   }
 
   public var vulkan: VkAccelerationStructureDeviceAddressInfoKHR {
     mutating get {
-      
+      vNext = next == nil ? nil : [next!]
       return VkAccelerationStructureDeviceAddressInfoKHR(
         sType: VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
-pNext: nil,
+pNext: vNext,
 accelerationStructure: accelerationStructure.vulkan
       )
     }
