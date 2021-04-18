@@ -72,7 +72,8 @@ struct GeneratorCommand: ParsableCommand {
       "VkAccelerationStructureBuildGeometryInfoKHR",
       "VkAccelerationStructureBuildSizesInfoKHR",
       "VkAccelerationStructureBuildRangeInfoKHR",
-      "VkAccelerationStructureInstanceKHR"]
+      "VkAccelerationStructureInstanceKHR",
+      "VkWriteDescriptorSetAccelerationStructureKHR"]
 
     let generatedFlagsWhitelist = [
       "VkPipelineColorBlendStateCreateFlags",

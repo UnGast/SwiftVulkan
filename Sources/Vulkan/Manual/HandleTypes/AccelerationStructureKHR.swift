@@ -1,6 +1,6 @@
 import CVulkan
 
-public class AccelerationStructureKHR: VulkanHandleTypeWrapper {
+public class AccelerationStructureKHR: VulkanHandleTypeWrapper, VulkanTypeWrapper {
     private let device: Device
     public let pointer: VkAccelerationStructureKHR
 

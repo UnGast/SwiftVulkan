@@ -30,6 +30,24 @@ public class DescriptorSet: WrapperStruct {
         }
     }
 
+    public class func update(
+        device: Device,
+        descriptorWrites: [WriteDescriptorSet]? = nil,
+        descriptorCopies: [CopyDescriptorSet]? = nil
+    ) {
+        var descriptorWrites = descriptorWrites
+
+        if descriptorCopies != nil {
+            fatalError("IMPLEMENT descriptorCopies")
+        }
+
+        vkUpdateDescriptorSets(
+            device.pointer,
+            UInt32(descriptorWrites?.count ?? 0), descriptorWrites?.vulkanArray,
+            0, nil)
+            /*UInt32(descriptorCopies?.count ?? 0), descriptorCopies?.vulkanPointer)*/
+    }
+
     public class func free(device: Device, descriptorPool: DescriptorPool, descriptorSets: [DescriptorSet]) {
         vkFreeDescriptorSets(device.pointer, descriptorPool.pointer, UInt32(descriptorSets.count), descriptorSets.vulkan)
     }
