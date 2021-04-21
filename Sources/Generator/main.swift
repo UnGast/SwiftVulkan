@@ -102,7 +102,9 @@ struct GeneratorCommand: ParsableCommand {
       "VkGeometryFlagsKHR",
       "VkGeometryInstanceFlagsKHR",
       "VkBuildAccelerationStructureFlagsKHR",
-      "VkAccelerationStructureCreateFlagsKHR"
+      "VkAccelerationStructureCreateFlagsKHR",
+
+      "VkImageUsageFlags"
     ]
 
     let generatedEnumsWhitelist = [

@@ -122,7 +122,7 @@ public struct ImageAspectFlags: OptionSet {
         return VkImageAspectFlags(self.rawValue)
     }
 }*/
-
+/*
 public struct ImageUsageFlags: OptionSet {
     public let rawValue: UInt32
 
@@ -140,10 +140,10 @@ public struct ImageUsageFlags: OptionSet {
     public static let inputAttachment = ImageUsageFlags(rawValue: 1 << 7)
     public static let shadingRateImage = ImageUsageFlags(rawValue: 1 << 8)
 
-    var vulkan: VkImageUsageFlagBits {
+    public var vulkan: VkImageUsageFlagBits {
         return VkImageUsageFlagBits(self.rawValue)
     }
-}
+}*/
 
 public struct FormatFeatureFlags: OptionSet {
     public let rawValue: UInt32
@@ -489,7 +489,7 @@ public enum ImageTiling: UInt32 {
          linear = 1,
          drmFormatModifier = 1000158000
 
-    var vulkan: VkImageTiling {
+    public var vulkan: VkImageTiling {
         return VkImageTiling(self.rawValue)
     }
 }

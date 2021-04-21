@@ -430,7 +430,7 @@ public struct ImageCreateInfo {
                 arrayLayers: self.arrayLayers,
                 samples: self.samples.vulkanValue,
                 tiling: self.tiling.vulkan,
-                usage: self.usage.vulkan.rawValue,
+                usage: self.usage.vulkan,
                 sharingMode: self.sharingMode.vulkanValue,
                 queueFamilyIndexCount: self.queueFamilyIndices == nil ? 0 : UInt32(self.queueFamilyIndices!.count),
                 pQueueFamilyIndices: self.queueFamilyIndices,
