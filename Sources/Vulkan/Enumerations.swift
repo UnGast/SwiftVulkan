@@ -479,7 +479,7 @@ public enum ImageLayout: UInt32 {
          shadingRateOptimal = 1000164003,
          fragmentDensityMapOptimal = 1000218000
 
-    var vulkan: VkImageLayout {
+    public var vulkan: VkImageLayout {
         VkImageLayout(self.rawValue)
     }
 }

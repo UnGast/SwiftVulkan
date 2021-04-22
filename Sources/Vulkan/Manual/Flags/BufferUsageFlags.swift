@@ -25,7 +25,7 @@ public struct BufferUsageFlags: OptionSet {
     public static let accelerationStructureStorageKhr = BufferUsageFlags(rawValue: 0x00100000)
     public static let accelerationStructureBuildInputReadOnlyKhr = BufferUsageFlags(rawValue: 0x00080000)
 
-    var vulkan: VkBufferUsageFlags {
+    public var vulkan: VkBufferUsageFlags {
         return VkBufferUsageFlags(self.rawValue)
     }
 }
