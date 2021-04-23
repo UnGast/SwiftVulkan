@@ -9,8 +9,8 @@ public class Instance {
 
     public let pointer: VkInstance
 
-    init(rawInstance: VkInstance) {
-        self.pointer = rawInstance
+    public init(pointer: VkInstance) {
+        self.pointer = pointer 
     }
 
     public class func createInstance(createInfo info: InstanceCreateInfo) throws -> Instance {
@@ -70,7 +70,7 @@ public class Instance {
         // opResult = vkCreateDebugReportCallbackEXT(instancePtr!, &infoArr, nil, &callback)
 
         if opResult == VK_SUCCESS {
-            return Instance(rawInstance: instancePtr!)
+            return Instance(pointer: instancePtr!)
         }
         
         throw opResult.toResult()
