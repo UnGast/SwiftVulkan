@@ -55,7 +55,7 @@ public class Buffer: VulkanHandleTypeWrapper, WrapperStruct {
 
     public var boundMemory: DeviceMemory? = nil
 
-    init(pointer: VkBuffer,
+    public init(pointer: VkBuffer,
         device: Device) {
         self.pointer = pointer
         self.device = device
