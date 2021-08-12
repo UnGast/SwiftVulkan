@@ -1,3 +1,11 @@
+# Not maintained anymore
+
+The approach used in these bindings generates lots of compiler warnings, because of the way pointers to Vulkan API structs are generated under the hood.
+
+In future projects I will use the pure Vulkan API. It works well enough with Swift's C interop. Currently it's not worth the effort for me to work on these bindings.
+
+<br>
+
 # Vulkan + Swift
 
 This library contains Swift bindings for Vulkan that are largely generated.
